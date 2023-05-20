@@ -1,1 +1,1 @@
-# eb-app instructions
+# web-app instructions
