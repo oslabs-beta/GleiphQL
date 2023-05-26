@@ -24,6 +24,7 @@ const FilmType = new GraphQLObjectType({
     characters: { 
       type: new GraphQLList(PeopleType),
       resolve(parent) {
+        // Reference fetch functions below line 300
         return fetchCharacters(parent);
       } 
     }
@@ -190,8 +191,8 @@ const VehicleType = new GraphQLObjectType({
     edited: { type: GraphQLString },
     films: {
       type: new GraphQLList(FilmType),
-      resolve(parent, args) {
-        return _.filter(fetchFilms, {vehicleId: parent.id })
+      resolve(parent) {
+        return fetchFilms(parent);
       }
     }
   })
@@ -203,12 +204,14 @@ const RootQuery = new GraphQLObjectType({
   // https://swapi.dev/documentation#root, Can declare all the foot fields here:
   fields: {
     film: {
-      type: FilmType,
+      type: FilmType, // reference the field type from above
       args: { 
-        id: { type: GraphQLInt } 
+        id: { type: GraphQLInt } // args represent what id we're searching for
       },
+      // use async function
       resolve: async (_, args) => {
         try {
+          // fetch field type using the input argument, and return it upon success
           const response = await fetch(`http://swapi.dev/api/films/${args.id}/`);
           const data = await response.json();
           return data;
@@ -218,7 +221,7 @@ const RootQuery = new GraphQLObjectType({
         }
       }
     },
-    // people (single)
+    // Very similar approach for all fields. Rinse and repeat resolve approach
     people: {
       type: PeopleType,
       args: { id: { type: GraphQLID } },
@@ -233,7 +236,7 @@ const RootQuery = new GraphQLObjectType({
         }
       } 
     },
-    // planets
+    
     planet: {
       type: PlanetType,
       args: { id: { type: GraphQLString } },
@@ -248,7 +251,7 @@ const RootQuery = new GraphQLObjectType({
         }
       }
     },
-    // species
+    
     species: {
       type: SpeciesType,
       args: { id: { type: GraphQLString } },
@@ -263,7 +266,7 @@ const RootQuery = new GraphQLObjectType({
         }
       }
     },
-    // starships
+    
     starship: {
       type: StarshipType, 
       args: { id: { type: GraphQLString } },
@@ -278,7 +281,7 @@ const RootQuery = new GraphQLObjectType({
         }
       }
     },
-    // vehicles
+    
     vehicle: {
       type: VehicleType,
       args: { id: { type: GraphQLString } },
@@ -297,8 +300,11 @@ const RootQuery = new GraphQLObjectType({
 });
 
 // Defining functions to fetch lists of fields
+// parent represents the argument that was queried from the parent field
+// Structure of these functions is very similar to the resolvers from above, except that we're mapping through the entire field for values that match the parent argument
 const fetchFilms = async(parent) => {
   try {
+    // Since the nested values return a swapi url link, we can fetch the data from those returned urls
     const filmPromises = parent.films.map(async (filmUrl) => {
       const response = await fetch(filmUrl);
       const filmData = await response.json();
@@ -312,7 +318,7 @@ const fetchFilms = async(parent) => {
   }
 };
 
-
+// The remaining functions follow very similar approach as fetchFilms
 const fetchCharacters = async(parent) => {
   try {
     const characterPromises = parent.characters.map(async (characterUrl) => {
