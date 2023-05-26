@@ -20,6 +20,6 @@
     "noFallthroughCasesInSwitch": true
   },
   "include": ["src/**/*.ts", "resolvers.ts"],
-  "exclude": ["node_modules"],
+  "exclude": ["node_modules", "../../server/"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
