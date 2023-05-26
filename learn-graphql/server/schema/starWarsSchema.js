@@ -23,26 +23,8 @@ const FilmType = new GraphQLObjectType({
     release_date: { type: GraphQLString },
     characters: { 
       type: new GraphQLList(PeopleType),
-      resolve: async (parent, args) => {
-        try {
-          const response = await fetch(`http://swapi.dev/api/people/`);
-          const data = await response.json();
-          // console.log(`this is data: ${JSON.stringify(data)}`)
-          console.log(`parent: ${JSON.stringify(parent.edisode_id)}`)
-          console.log(`args: ${JSON.stringify(args.id)}`)
-
-          const dataArr = _.values(data); // Convert the object into an array of values
-          console.log(`data array: ${JSON.stringify(dataArr)}`)
-          // const filteredData = _.filter(dataArr, (item) => {
-          //   // add logic here
-          //   console.log(`items: ${item}`)
-          // });
-          
-        } catch(error) {
-          console.error(error);
-          throw new Error(`Unable to fetch characters list from inside RootQuery`);
-        }
-        //return _.filter(fetchCharacters, {characterId: parent.id })
+      resolve(parent) {
+        return fetchCharacters(parent);
       } 
     }
   })
@@ -66,34 +48,26 @@ const PeopleType = new GraphQLObjectType({
     edited: { type: GraphQLString },
     films: { 
       type: new GraphQLList(FilmType),
-      // CHECK THIS RESOLVER
-      resolve(parent, args) {
-        // DOUBLE CHECK TO SEE THAT THERE'S A FILMS GROUP IN ROOT QUERY
-        return _.filter(fetchFilms, {characterId: parent.id })
+      resolve(parent) {
+        return fetchFilms(parent);
       } 
     },
     species: {
       type: new GraphQLList(SpeciesType),
-      // CHECK THIS RESOLVER
-      resolve(parent, args) {
-        // DOUBLE CHECK TO SEE THAT THERE'S A FILMS GROUP IN ROOT QUERY
-        return _.filter(fetchSpecies, {speciesId: parent.id })
+      resolve(parent) {
+        return fetchSpecies(parent);
       }
     },
     starships: {
       type: new GraphQLList(StarshipType),
-      // CHECK THIS RESOLVER
-      resolve(parent, args) {
-        // DOUBLE CHECK TO SEE THAT THERE'S A FILMS GROUP IN ROOT QUERY
-        return _.filter(fetchStarships, {starshipId: parent.id })
+      resolve(parent) {
+        return fetchStarships(parent);
       }
     },
     vehicles: {
       type: new GraphQLList(VehicleType),
-      // CHECK THIS RESOLVER
-      resolve(parent, args) {
-        // DOUBLE CHECK TO SEE THAT THERE'S A FILMS GROUP IN ROOT QUERY
-        return _.filter(fetchVehicles, {vehicleId: parent.id })
+      resolve(parent) {
+        return fetchVehicles(parent);
       }
     }
   })
@@ -117,18 +91,14 @@ const PlanetType = new GraphQLObjectType({
     edited: { type: GraphQLString },
     residents: {
       type: new GraphQLList(PeopleType),
-      // CHECK THIS RESOLVER
-      resolve(parent, args) {
-         // DOUBLE CHECK TO SEE THAT THERE'S A FILMS GROUP IN ROOT QUERY
-        return _.filter(fetchCharacters, {residentId: parent.id })
+      resolve(parent) {
+        return fetchCharacters(parent);
       }
     },
     films: { 
       type: new GraphQLList(FilmType),
-      // CHECK THIS RESOLVER
-      resolve(parent, args) {
-        // DOUBLE CHECK TO SEE THAT THERE'S A FILMS GROUP IN ROOT QUERY
-        return _.filter(fetchFilms, {characterId: parent.id })
+      resolve(parent) {
+        return fetchFilms(parent);
       } 
     }
   })
@@ -152,14 +122,14 @@ const SpeciesType = new GraphQLObjectType({
     edited: { type: GraphQLString },
     people: {
       type: new GraphQLList(PeopleType),
-      resolve(parent, args) {
-        return _.filter(fetchCharacters, {peopleId: parent.id })
+      resolve(parent) {
+        return fetchFilms(parent);
       }
     },
     films: {
       type: new GraphQLList(FilmType),
-      resolve(parent, args) {
-        return _.filter(fetchFilms, {speciesId: parent.id })
+      resolve(parent) {
+        return fetchFilms(parent);
       }
     }
   })
@@ -187,14 +157,14 @@ const StarshipType = new GraphQLObjectType({
     edited: { type: GraphQLString },
     films: {
       type: new GraphQLList(FilmType),
-      resolve(parent, args) {
-        return _.filter(fetchFilms, {starshipId: parent.id })
+      resolve(parent) {
+        return fetchFilms(parent);
       }
     },
     pilots: {
       type: new GraphQLList(PeopleType),
-      resolve(parent, args) {
-        return _.filter(fetchCharacters, {pilotId: parent.id })
+      resolve(parent) {
+        return fetchCharacters(parent);
       }
     }
   })
@@ -327,101 +297,92 @@ const RootQuery = new GraphQLObjectType({
 });
 
 // Defining functions to fetch lists of fields
-const fetchFilms = async() => {
+const fetchFilms = async(parent) => {
   try {
-    const response = await fetch(`http://swapi.dev/api/films/`);
-    const data = await response.json();
-    return data;
+    const filmPromises = parent.films.map(async (filmUrl) => {
+      const response = await fetch(filmUrl);
+      const filmData = await response.json();
+      return filmData;
+    })
+    const films = await Promise.all(filmPromises);
+    return films;
   } catch (error) {
     console.error(error)
     throw new Error(`Error in fetching films list, Root Query`);
   }
 };
 
-const fetchCharacters = async() => {
+
+const fetchCharacters = async(parent) => {
   try {
-    const response = await fetch(`http://swapi.dev/api/people/`);
-    const data = await response.json();
-    return data;
+    const characterPromises = parent.characters.map(async (characterUrl) => {
+      const response = await fetch(characterUrl);
+      const characterData = await response.json();
+      return characterData;
+    });
+
+    const characters = await Promise.all(characterPromises);
+    return characters;
+
   } catch(error) {
     console.error(error);
     throw new Error(`Unable to fetch characters list from inside RootQuery`);
   }
 };
 
-const fetchPlanets = async() => {
-  try {
-    const response = await fetch(`http://swapi.dev/api/planets/`);
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error(error);
-    throw new Error(`Unable to get list of planets from root query`);
-  }
-};
 
-const fetchSpecies = async() => {
+const fetchSpecies = async(parent) => {
   try {
-    const response = await fetch(`http://swapi.dev/api/species/`);
-    const data = await response.json();
-    return data;
+    const speciesPromises = parent.characters.map(async (speciesUrl) => {
+      const response = await fetch(speciesUrl);
+      const speciesData = await response.json();
+      return speciesData;
+    })
+    
+    const species = await Promise.all(speciesPromises);
+    return species;
+
   } catch (error) {
     console.error(error);
     throw new Error(`Unable to fetch more species list from root query`);
   }
 };
 
-const fetchStarships = async() => {
+
+const fetchStarships = async(parent) => {
   try {
-    const response = await fetch(`http://swapi.dev/api/starships/`);
-    const data = await response.json();
-    return data;
+    const starshipsPromises = parent.starships.map(async (starshipsUrl) => {
+      const response = await fetch(starshipsUrl);
+      const starshipsData = await response.json();
+      return starshipsData;
+    })
+    
+    const starships = await Promise.all(starshipsPromises);
+    return starships;
+
   } catch (error) {
     console.error(error);
     throw new Error(`Unable to fetch starships list from inside root query`);
   }
 };
 
-const fetchVehicles = async() => {
+const fetchVehicles = async(parent) => {
   try {
-    const response = await fetch(`http://swapi.dev/api/vehicles/`);
-    const data = await response.json();
-    return data;
+    const vehiclesPromises = parent.vehicles.map(async (vehiclesUrl) => {
+      const response = await fetch(vehiclesUrl);
+      const vehiclesData = await response.json();
+      return vehiclesData;
+    })
+    
+    const vehicles = await Promise.all(vehiclesPromises);
+    return vehicles;
+
   } catch (error) {
     console.error(error);
     throw new Error(`Error from vehicles root query`);
   }
 };
 
-
-
-console.log()
-
-
 module.exports = new GraphQLSchema({
   query: RootQuery
 });
-
-/*
-  author (id: 3) {
-    name
-    age
-    books {
-      name
-      genre
-      author {
-        id
-        name
-        books{
-          genre
-          name
-          author {
-            name
-            age
-            id
-          }
-        }
-      }
-    }
-  }
-*/
