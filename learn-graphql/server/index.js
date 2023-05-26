@@ -1,9 +1,9 @@
 const express = require('express');
 const { graphqlHTTP } = require('express-graphql');
-// schema for locally created data
-const schema = require('./schema/booksSchema');
+// schema for locally created data (books/authors)
+// const schema = require('./schema/booksSchema');
 // schema for star wars api
-// const schema = require('./schema/starWarsSchema');
+const schema = require('./schema/starWarsSchema');
 
 const app = express();
 
