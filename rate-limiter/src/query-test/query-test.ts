@@ -5,6 +5,7 @@ import { loadSchema } from '@graphql-tools/load';
 import { UrlLoader } from '@graphql-tools/url-loader';
 import { createYoga } from 'graphql-yoga'
 import endpointMonitor from '../middleware/monitoring.js';
+import rateLimiter from '../middleware/rate-limit.js';
 
 const app = express();
 
@@ -18,7 +19,7 @@ const yoga = createYoga({
 
 app.use(express.json());
 
-app.use('/graphql', endpointMonitor, yoga)
+app.use('/graphql', rateLimiter(publicSchema, {testConfig: 'testConfig'}), yoga)
 
 app.listen(4000, () => {
   console.info('Server is running on http://localhost:4000/graphql')
