@@ -26,23 +26,9 @@ const rateLimiter = function (schema: GraphQLSchema, config: any) {
               complexity = complexity + 1 * multiplier;
             }
           }
-        },
-        // [Kind.LIST]: {
-        //   enter(node: any) {
-        //     console.log(node)
-        //   }
-        // },
-        // [Kind.FIELD_DEFINITION]: {
-        //   enter(node: any) {
-        //     console.log(node)
-        //   }
-        // },
-        // [Kind.OBJECT_TYPE_DEFINITION]: {
-        //   enter(node: any) {
-        //     console.log(node)
-        //   }
-        // }        
+        }     
       });
+
       console.log('COMPLEXITY SCORE: ', complexity);
     }
     return next()

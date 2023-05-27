@@ -19,7 +19,7 @@ const yoga = createYoga({
 
 app.use(express.json());
 
-app.use('/graphql', rateLimiter(publicSchema, {testConfig: 'testConfig'}), yoga)
+app.use('/graphql', rateLimiter(publicSchema, {testConfig: 'testConfig'}), endpointMonitor, yoga)
 
 app.listen(4000, () => {
   console.info('Server is running on http://localhost:4000/graphql')
