@@ -1,38 +1,57 @@
 import { Request, Response, NextFunction } from 'express';
-import { parse, visit, FieldNode, ObjectTypeDefinitionNode, Kind, DocumentNode, GraphQLSchema } from 'graphql';
+import { parse, GraphQLList, GraphQLObjectType, GraphQLSchema } from 'graphql';
 
 const rateLimiter = function (schema: GraphQLSchema, config: any) {
   return (req: Request, res: Response, next: NextFunction) => {
     if (req.body.query) {
       const ast = parse(req.body.query);
-      let complexity = 0;
-      let multiplier = 1;
+      let rootType = schema.getQueryType();
+      let fieldScore = 0;
 
-      visit(ast, {
-        Field: {
-          enter(node: any) {
-            if (node.selectionSet) {
-              if (node.arguments !== undefined && node.arguments.length) {
-                for (let i = 0; i < node.arguments.length; i++) {
-                  if (
-                    node.arguments[i].name.value === 'limit' || 
-                    node.arguments[i].name.value === 'first' || 
-                    node.arguments[i].name.value === 'last'
-                    ) {
-                    multiplier = multiplier * node.arguments[i].value.value
-                  }
-                }
+      function findArgs(argName: string, argValue: string): number {
+        const validArgs = ['limit', 'first', 'last']
+        if (validArgs.includes(argName)) {
+          return Number(argValue)
+        }
+        else {
+          return 0
+        }
+      }
+
+      function calculateFieldCost(node: any, parentType: any, multiplier: number = 0) {
+        if (node.selectionSet) {
+          for (let i = 0; i < node.selectionSet.selections.length; i++) {
+            const nodeName = node.selectionSet.selections[i].name.value;
+
+            if (parentType.getFields()[nodeName].type instanceof GraphQLList) {
+              const childType = parentType.getFields()[nodeName].type.ofType
+              multiplier === 0 ? fieldScore += 1 : fieldScore += multiplier
+              console.log(`Type cost after adding GraphQLLIST type ${nodeName}:`, fieldScore)
+
+              if (node.selectionSet.selections[i].arguments.length) {
+                const argName = node.selectionSet.selections[i].arguments[0].name.value
+                const argValue = node.selectionSet.selections[i].arguments[0].value.value
+                const childMultiplier = multiplier + findArgs(argName, argValue);
+                calculateFieldCost(node.selectionSet.selections[i], childType, childMultiplier);
+              } 
+              else {
+                calculateFieldCost(node.selectionSet.selections[i], childType, multiplier)
               }
-              complexity = complexity + 1 * multiplier;
+
+            }
+            else if (parentType.getFields()[nodeName].type instanceof GraphQLObjectType) {
+              const childType = parentType.getFields()[nodeName].type
+              multiplier === 0 ? fieldScore += 1 : fieldScore += multiplier
+              console.log(`Type cost after adding GraphQLObject type ${nodeName}:`, fieldScore)
+              calculateFieldCost(node.selectionSet.selections[i], childType)
             }
           }
-        }     
-      });
-
-      console.log('COMPLEXITY SCORE: ', complexity);
+        }
+      }
+      calculateFieldCost(ast.definitions[0], rootType)
+      console.log('Type cost: ', fieldScore)
+      return next();
     }
-    return next()
-  }
-}
-
-export default rateLimiter
+  };
+};
+export default rateLimiter;
