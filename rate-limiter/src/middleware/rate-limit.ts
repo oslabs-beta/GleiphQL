@@ -18,7 +18,7 @@ const rateLimiter = function (schema: GraphQLSchema, config: any) {
         }
       }
 
-      function calculateFieldCost(node: any, parentType: any, multiplier: number = 0) {
+      function calculateTypeCost(node: any, parentType: any, multiplier: number = 0) {
         if (node.selectionSet) {
           for (let i = 0; i < node.selectionSet.selections.length; i++) {
             const nodeName = node.selectionSet.selections[i].name.value;
@@ -26,32 +26,30 @@ const rateLimiter = function (schema: GraphQLSchema, config: any) {
             if (parentType.getFields()[nodeName].type instanceof GraphQLList) {
               const childType = parentType.getFields()[nodeName].type.ofType
               multiplier === 0 ? typeScore += 1 : typeScore += multiplier
-              console.log(`Type cost after adding GraphQLLIST type ${nodeName}:`, typeScore)
 
               if (node.selectionSet.selections[i].arguments.length) {
                 const argName = node.selectionSet.selections[i].arguments[0].name.value
                 const argValue = node.selectionSet.selections[i].arguments[0].value.value
                 const childMultiplier = multiplier + findArgs(argName, argValue);
-                calculateFieldCost(node.selectionSet.selections[i], childType, childMultiplier);
+                calculateTypeCost(node.selectionSet.selections[i], childType, childMultiplier);
               } 
               else {
-                calculateFieldCost(node.selectionSet.selections[i], childType, multiplier)
+                calculateTypeCost(node.selectionSet.selections[i], childType, multiplier)
               }
 
             }
             else if (parentType.getFields()[nodeName].type instanceof GraphQLObjectType) {
               const childType = parentType.getFields()[nodeName].type
               multiplier === 0 ? typeScore += 1 : typeScore += multiplier
-              console.log(`Type cost after adding GraphQLObject type ${nodeName}:`, typeScore)
-              calculateFieldCost(node.selectionSet.selections[i], childType)
+              calculateTypeCost(node.selectionSet.selections[i], childType)
             }
           }
         }
       }
-      calculateFieldCost(ast.definitions[0], rootType)
-      console.log('Type cost: ', typeScore)
-      return next();
+      calculateTypeCost(ast.definitions[0], rootType)
+      console.log('Total type cost: ', typeScore)
     }
+    return next();
   };
 };
 export default rateLimiter;
