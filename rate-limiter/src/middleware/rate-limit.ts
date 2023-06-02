@@ -22,7 +22,11 @@ const rateLimiter = function (schema: GraphQLSchema, config: any) {
         if (node.selectionSet) {
           for (let i = 0; i < node.selectionSet.selections.length; i++) {
             const nodeName = node.selectionSet.selections[i].name.value;
+
+            // conditional statement to check if query is an "introspection" query
             if (nodeName !== '__schema') {
+
+              // conditional statement to check if the node type is a GraphQLList
               if (parentType.getFields()[nodeName].type instanceof GraphQLList) {
                 const childType = parentType.getFields()[nodeName].type.ofType
                 typeScore += multiplier
@@ -38,6 +42,7 @@ const rateLimiter = function (schema: GraphQLSchema, config: any) {
                 }
   
               }
+              // conditional statement to check if the node type is a GraphQLObject
               else if (parentType.getFields()[nodeName].type instanceof GraphQLObjectType) {
                 const childType = parentType.getFields()[nodeName].type
                 typeScore += multiplier
