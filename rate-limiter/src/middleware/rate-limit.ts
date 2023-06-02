@@ -18,31 +18,40 @@ const rateLimiter = function (schema: GraphQLSchema, config: any) {
         }
       }
 
-      function calculateTypeCost(node: any, parentType: any, multiplier: number = 0) {
+      function calculateTypeCost(node: any, parentType: any, multiplier: number = 1) {
         if (node.selectionSet) {
           for (let i = 0; i < node.selectionSet.selections.length; i++) {
             const nodeName = node.selectionSet.selections[i].name.value;
-
-            if (parentType.getFields()[nodeName].type instanceof GraphQLList) {
-              const childType = parentType.getFields()[nodeName].type.ofType
-              multiplier === 0 ? typeScore += 1 : typeScore += multiplier
-              console.log(`Type cost after adding GraphQLLIST type ${nodeName}:`, typeScore)
-              if (node.selectionSet.selections[i].arguments.length) {
-                const argName = node.selectionSet.selections[i].arguments[0].name.value
-                const argValue = node.selectionSet.selections[i].arguments[0].value.value
-                const childMultiplier = multiplier + findArgs(argName, argValue);
-                calculateTypeCost(node.selectionSet.selections[i], childType, childMultiplier);
-              } 
-              else {
-                calculateTypeCost(node.selectionSet.selections[i], childType, multiplier)
+            if (nodeName !== '__schema') {
+              if (parentType.getFields()[nodeName].type instanceof GraphQLList) {
+                const childType = parentType.getFields()[nodeName].type.ofType
+                typeScore += multiplier
+                console.log(`Type cost after adding GraphQLLIST type ${nodeName}:`, typeScore)
+                if (node.selectionSet.selections[i].arguments.length) {
+                  const argName = node.selectionSet.selections[i].arguments[0].name.value
+                  const argValue = node.selectionSet.selections[i].arguments[0].value.value
+                  const childMultiplier = multiplier * findArgs(argName, argValue);
+                  calculateTypeCost(node.selectionSet.selections[i], childType, childMultiplier);
+                } 
+                else {
+                  calculateTypeCost(node.selectionSet.selections[i], childType, multiplier)
+                }
+  
               }
-
-            }
-            else if (parentType.getFields()[nodeName].type instanceof GraphQLObjectType) {
-              const childType = parentType.getFields()[nodeName].type
-              multiplier === 0 ? typeScore += 1 : typeScore += multiplier
-              console.log(`Type cost after adding GraphQLObject type ${nodeName}:`, typeScore)
-              calculateTypeCost(node.selectionSet.selections[i], childType, multiplier)
+              else if (parentType.getFields()[nodeName].type instanceof GraphQLObjectType) {
+                const childType = parentType.getFields()[nodeName].type
+                typeScore += multiplier
+                console.log(`Type cost after adding GraphQLObject type ${nodeName}:`, typeScore)
+                if (node.selectionSet.selections[i].arguments.length) {
+                  const argName = node.selectionSet.selections[i].arguments[0].name.value;
+                  const argValue = node.selectionSet.selections[i].arguments[0].value.value;
+                  const childMultiplier = multiplier * findArgs(argName, argValue);
+                  calculateTypeCost(node.selectionSet.selections[i], childType, childMultiplier);
+                }
+                else {
+                  calculateTypeCost(node.selectionSet.selections[i], childType, multiplier);
+                }
+              }
             }
           }
         }
