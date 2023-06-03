@@ -14,25 +14,18 @@
   -webkit-text-size-adjust: 100%;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
 
 body {
   margin: 0;
   display: flex;
-  place-items: center;
+  justify-content: center;
+  align-items: center;
   min-width: 320px;
   min-height: 100vh;
 }
 
 h1 {
-  font-size: 3.2em;
+  font-size: 70px;
   line-height: 1.1;
 }
 
@@ -43,9 +36,9 @@ button {
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #1a1a1a;
+  border-color: black;
   cursor: pointer;
-  transition: border-color 0.25s;
+
 }
 button:hover {
   border-color: #646cff;
@@ -55,15 +48,37 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+.AppContainer {
+  place-items: center;
 }
+
+
+/*  ~~ Start of component: Login  ~~  */
+.LoginContainer {
+  width: 300px;
+  height: 500px;
+  background-color: rgb(188, 183, 183);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  /* align-items: center; */
+}
+
+/*    ~~ End of component:  Login   ~~   */
+
+
+/*  ~~ Start of component: Register  ~~   */
+.RegisterContainer{
+  width: 300px;
+  height: 500px;
+  background-color: rgb(188, 183, 183);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+/*    ~~ End of component: Register   ~~   */
+
+
+/*  ~~ Start of component: ----  ~~   */
+
+/*    ~~ End of component: ----   ~~   */
