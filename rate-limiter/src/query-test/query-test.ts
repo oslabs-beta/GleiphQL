@@ -8,6 +8,7 @@ import endpointMonitor from '../middleware/monitoring.js';
 import rateLimiter from '../middleware/rate-limit.js';
 
 const app = express();
+const port = process.env.PORT || 4000
 
 //loadSchema can be any public graphql endpoint
 const spaceXSchema = await loadSchema('https://spacex-production.up.railway.app/', { loaders: [new UrlLoader()] });
@@ -36,6 +37,6 @@ app.use('/spacex', rateLimiter(spaceXSchema, { testConfig: 'testConfig' }), endp
 app.use('/starwars', rateLimiter(swapiSchema, { testConfig: 'testConfig' }), endpointMonitor, swapi);
 app.use('/countries', rateLimiter(countriesSchema, { testConfig: 'testConfig' }), endpointMonitor, countries);
 
-app.listen(4000, () => {
-    console.info('Server is running on http://localhost:4000/spacex http://localhost:4000/starwars http://localhost:4000/countries');
+app.listen(port, () => {
+    console.info(`Server is running on http://localhost:${port}/spacex http://localhost:${port}/starwars http://localhost:${port}/countries`);
 });
