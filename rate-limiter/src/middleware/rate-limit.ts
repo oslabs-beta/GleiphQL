@@ -85,7 +85,7 @@ const rateLimiter = function (complexityLimit: number, listLimit: number, schema
               for (let i = parentTypeStack.length-1; i >= 0; i--) {
                 if(parentTypeStack[i].isList === true) {
                   //assuming the list is currently nested within another list, adjust resolve complexity by number of list calls
-                  //indicated by the multiplier inherented by the previous list
+                  //indicated by the multiplier inherited by the previous list
                   resolveComplexity += parentTypeStack[i].currMult;
                   resolveComplexity--;
                   currMult = currMult * parentTypeStack[i].currMult
@@ -93,7 +93,7 @@ const rateLimiter = function (complexityLimit: number, listLimit: number, schema
                 }
               }
 
-              //base case addition of resolveComplexity, offset in above for-loop
+              //base case addition of resolveComplexity, offset in above for-loop for list cases
               resolveComplexity++;
               typeComplexity += currMult;
 
