@@ -1,6 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
 import { isAbstractType, GraphQLInterfaceType, isNonNullType, GraphQLType, GraphQLField, parse, GraphQLList, GraphQLObjectType, GraphQLSchema, TypeInfo, visit, visitWithTypeInfo, StringValueNode, getNamedType, GraphQLNamedType, getEnterLeaveForKind, GraphQLCompositeType, getNullableType, Kind, isListType, DocumentNode } from 'graphql';
-import { print } from 'graphql/language/printer';
+import graphql from 'graphql';
+
+//to-dos
+//modularize code, certain functions can be offloaded
+//research further into pagination conventions => currently only account for IntValues for first/last/limit
+//compare limits found in arguments against both defaultLimit and limits found within schema => defaultLimit case resolved, limits found in schema not resolved
+//generate casing for mutations/subscriptions
 
 const rateLimiter = function (complexityLimit: number, listLimit: number, schema: GraphQLSchema, schemaTypeInfo: TypeInfo, config: any) {
   return (req: Request, res: Response, next: NextFunction) => {
@@ -14,7 +20,7 @@ const rateLimiter = function (complexityLimit: number, listLimit: number, schema
         let newAst = visit(ast, {
           //@ts-ignore
           Argument(node) {
-            if (node.name.value === 'limit' && node.value.kind === 'IntValue') {
+            if (node.name.value === 'limit' && node.value.kind === 'IntValue' || node.name.value === 'first' && node.value.kind === 'IntValue' || node.name.value === 'last' && node.value.kind === 'IntValue') {
               let argValue = parseInt(node.value.value, 10);
               console.log(`Argvalue = ${argValue}`);
               if (argValue > listLimit) {
@@ -30,7 +36,7 @@ const rateLimiter = function (complexityLimit: number, listLimit: number, schema
             }
           },
         });
-        req.body.query = print(newAst);
+        req.body.query = graphql.print(newAst);
         return newAst;
       }
 
@@ -38,6 +44,8 @@ const rateLimiter = function (complexityLimit: number, listLimit: number, schema
       const throttledAst = throttle(parsedAst, listLimit);
       let parentTypeStack: any[]= [];
       let complexityScore = 0;
+      let typeComplexity = 0;
+      let resolveComplexity = 0;
       let currMult = 0;
 
       visit(throttledAst, visitWithTypeInfo(schemaTypeInfo, {
@@ -65,7 +73,7 @@ const rateLimiter = function (complexityLimit: number, listLimit: number, schema
             //functionality upon encountering listType, in short looks for ancestor lists and limit arguments then adjust currMult accordingly
             if(isList === true) {
               console.log(`${node.name.value} is a list`);
-              const argNode = node.arguments?.find(arg => arg.name.value === 'limit');
+              const argNode = node.arguments?.find(arg => (arg.name.value === 'limit' || arg.name.value === 'first' || arg.name.value === 'last'));
               currMult = listLimit;
               if (argNode && argNode.value.kind === 'IntValue') {
                 const argValue = parseInt(argNode.value.value, 10);
@@ -74,23 +82,36 @@ const rateLimiter = function (complexityLimit: number, listLimit: number, schema
                 // console.log('Mult is now:', currMult);
               }
               console.log('Mult is now:', currMult);
-              for (let i  =0; i < parentTypeStack.length; i++) {
-                if(parentTypeStack[i].isList === true) currMult = currMult * parentTypeStack[i].currMult
+              for (let i = parentTypeStack.length-1; i >= 0; i--) {
+                if(parentTypeStack[i].isList === true) {
+                  //assuming the list is currently nested within another list, adjust resolve complexity by number of list calls
+                  //indicated by the multiplier inherented by the previous list
+                  resolveComplexity += parentTypeStack[i].currMult;
+                  resolveComplexity--;
+                  currMult = currMult * parentTypeStack[i].currMult
+                  break;
+                }
               }
-              complexityScore += currMult;
+
+              //base case addition of resolveComplexity, offset in above for-loop
+              resolveComplexity++;
+              typeComplexity += currMult;
 
               //handling for object types, checks for most recent ancestor list's multiplier then adjust accordingly
             } else if (fieldType instanceof GraphQLObjectType) {
               console.log(`This is the parentStack of the graphQLObject type ${node.name.value}`, parentTypeStack);
               for (let i = parentTypeStack.length-1; i >= 0; i--) {
                 if(parentTypeStack[i].isList === true) {
+                  resolveComplexity += parentTypeStack[i].currMult;
+                  resolveComplexity--;
                   currMult = parentTypeStack[i].currMult
                   break;
                 }
               }
 
               //if the currMult === 0 indicates object not nested in list, simply increment complexity score
-              if(currMult !== 0) complexityScore += currMult; else complexityScore++;
+              if(currMult !== 0) typeComplexity += currMult; else typeComplexity++;
+              resolveComplexity++;
             }
             // console.log('This is the nested list count:', nestedListCount);
 
@@ -108,6 +129,9 @@ const rateLimiter = function (complexityLimit: number, listLimit: number, schema
         }
       }));
 
+      complexityScore = resolveComplexity + typeComplexity;
+      console.log('This is the type complexity', typeComplexity);
+      console.log('This is the resolve complexity', resolveComplexity);
       console.log('This is the complexity score:', complexityScore);
 
       //returns error if complexity heuristic reads complexity score over limit
