@@ -6,12 +6,14 @@ import {
   createBrowserRouter,
   RouterProvider,
 } from "react-router-dom";
+import ErrorPage from './pages/error-page.tsx';
 
 // this placeholder for only router we need in whole application
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <App />
+    element: <App />,
+    errorElement: <ErrorPage />,
   },
 ])
 

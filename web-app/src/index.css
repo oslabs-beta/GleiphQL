@@ -14,14 +14,11 @@
   -webkit-text-size-adjust: 100%;
 }
 
-
 body {
   margin: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
   min-width: 320px;
   min-height: 100vh;
+  width: 100%;
 }
 
 h1 {
@@ -38,7 +35,6 @@ button {
   font-family: inherit;
   border-color: black;
   cursor: pointer;
-
 }
 button:hover {
   border-color: #646cff;
@@ -50,6 +46,10 @@ button:focus-visible {
 
 .AppContainer {
   place-items: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 
 
@@ -58,10 +58,23 @@ button:focus-visible {
   width: 300px;
   height: 500px;
   background-color: rgb(188, 183, 183);
+  border-color: black;
+  border-radius: 5px;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  /* align-items: center; */
+  align-items: center;
+  position: relative;
+  .close-icon {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    box-shadow: 0, 0, 5px, rgba(0, 0, 0, 0.5);
+  }
+  .close-icon:hover {
+    color: black;
+    box-shadow: 0, 0, 5px, rgba(0, 0, 0, 0.5);
+  }
 }
 
 /*    ~~ End of component:  Login   ~~   */
@@ -72,11 +85,35 @@ button:focus-visible {
   width: 300px;
   height: 500px;
   background-color: rgb(188, 183, 183);
+  border-color: black;
+  border-radius: 5px;
   display: flex;
   flex-direction: column;
   justify-content: center;
 }
 /*    ~~ End of component: Register   ~~   */
+
+/*  ~~ Start of component: Navbar  ~~   */
+.navbar-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  border-color: white;
+  border-style: solid;
+  height: 70px;
+}
+
+.login-btn {
+  border-radius: 5px;
+  border-color: black;
+  background-color: rgb(162, 162, 162);
+  height: 30px;
+  margin: 10px;
+}
+/*    ~~ End of component: Navbar   ~~   */
+
+
 
 
 /*  ~~ Start of component: ----  ~~   */

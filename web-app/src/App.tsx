@@ -1,28 +1,38 @@
 import './App.css'
-//import React, { useState, useEffect } from 'react';
-import { Routes, Route, Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Routes, Route } from 'react-router-dom';
+
+import SplashPage from './pages/SplashPage';
+import Navbar from './components/Navbar';
 import Login from './components/Login';
 import Register from './components/Register';
 
 function App() {
-  
+  // create a hook to toggle login component
+  const [showLogin, setShowLogin] = useState<boolean>(false);
 
+  // declare a function to help toggle showLogin
+  const handleLoginToggle = (): void => {
+    setShowLogin(!showLogin);
+  };
+  
   return (
     <>
+      <Navbar handleLoginToggle={handleLoginToggle}/>
       <div className='AppContainer'>
-        <div className='header-container'>
-          <h1>Do we need a header?</h1>
-        </div>
-
-        <h1>Hello World</h1>
-
         <Routes>
-          <Route path='*' element={ <Login />} />
-          <Route path='/login' element={ <Login /> } />
+          <Route path='*' element={ 
+            <SplashPage showLogin={showLogin} handleLoginToggle={handleLoginToggle} />
+          } />
+          <Route path='/' element={ 
+            <SplashPage showLogin={showLogin} handleLoginToggle={handleLoginToggle} />
+          } />
+          <Route path='/login' element={ 
+            <Login  showLogin={showLogin} handleLoginToggle={handleLoginToggle} /> 
+          } />
           <Route path="/register" element={ <Register /> } />
         </Routes>
 
-        
       </div>
     </>
     
