@@ -1,12 +1,12 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import App from './App.tsx'
+import App from './App.js'
 import './index.css'
 import {
   createBrowserRouter,
   RouterProvider,
 } from "react-router-dom";
-import ErrorPage from './pages/error-page.tsx';
+import ErrorPage from './pages/error-page.js';
 
 // this placeholder for only router we need in whole application
 const router = createBrowserRouter([
