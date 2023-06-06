@@ -8,6 +8,9 @@ import graphql from 'graphql';
 //compare limits found in arguments against both defaultLimit and limits found within schema => defaultLimit case resolved, limits found in schema not resolved
 //generate casing for mutations/subscriptions
 
+//combine monitor/rate-limiting
+//set up config
+
 const rateLimiter = function (complexityLimit: number, listLimit: number, schema: GraphQLSchema, schemaTypeInfo: TypeInfo, config: any) {
   return (req: Request, res: Response, next: NextFunction) => {
     if(req.body.query) {
