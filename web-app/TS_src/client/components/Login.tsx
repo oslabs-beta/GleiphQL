@@ -1,54 +1,40 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import Link from '@mui/material/Link';
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
+import useStore from '../store';
 
-interface LoginProps {
-  handleLoginToggle: () => void;
-}
 
-const Login: React.FC<LoginProps> = ({ handleLoginToggle }) => {
+const Login: React.FC<{}> = () => {
+  const { loginToggle } = useStore();
+
   return (
     <>
       <div className="LoginContainer">
-        <div className='close-icon' onClick={handleLoginToggle}>
+        <div className='close-icon' onClick={loginToggle}>
           <CloseRoundedIcon />
         </div>
         
         <p>Inside of Login component</p>
-        <form>
           
-          <Box
-            component="form"
-            sx={{
-              '& > :not(style)': { m: 1, width: '25ch' },
-            }}
-            noValidate
-            autoComplete="off"
-          >
-            <TextField id="outlined-basic" label="Email" variant="outlined" />
-            
-          </Box>
+        <Box
+          component="form"
+          sx={{
+            '& > :not(style)': { m: 1, width: '25ch' },
+          }}
+          noValidate
+          autoComplete="off"
+        >
+          <TextField id="outlined-basic" label="Email" variant="outlined" />
+          <TextField id="outlined-basic" label="Password" variant="outlined" />
+        </Box>
 
-          <Box
-            component="form"
-            sx={{
-              '& > :not(style)': { m: 1, width: '25ch' },
-            }}
-            noValidate
-            autoComplete="off"
-          >
-            <TextField id="outlined-basic" label="Password" variant="outlined" />
-            
-          </Box>
+        <button type='submit'>Sign In</button>
+        <br></br>
 
-          <button type='submit'>Sign In</button>
-          <br></br>
+        <Link href="#" onClick={loginToggle}>Not a member? Sign up here</Link>
 
-          <Link to='/register'>Not a member? Sign up here</Link>
-
-        </form>
       </div>
     </>
   )

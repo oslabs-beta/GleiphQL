@@ -52,6 +52,8 @@ app.use((err: ErrorRequestHandler, req: Request, res: Response, next: NextFuncti
   return res.status(errorObj.status).json(errorObj.message);
 });
 
-app.listen(PORT);
+app.listen(PORT, () => 
+  console.log(`Currently listening on port: ${PORT}`)
+);
 
 module.exports = app;

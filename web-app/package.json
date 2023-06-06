@@ -9,6 +9,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@emotion/react": "^11.11.0",
+    "@emotion/styled": "^11.11.0",
+    "@mui/icons-material": "^5.11.16",
+    "@mui/material": "^5.13.3",
+    "@mui/styled-engine-sc": "^5.12.0",
     "@types/pg": "^8.10.1",
     "bcryptjs": "^2.4.3",
     "concurrently": "^8.1.0",
@@ -20,16 +25,12 @@
     "nodemon": "^2.0.22",
     "path": "^0.12.7",
     "pg": "^8.11.0",
-    "@emotion/react": "^11.11.0",
-    "@emotion/styled": "^11.11.0",
-    "@mui/icons-material": "^5.11.16",
-    "@mui/material": "^5.13.3",
-    "@mui/styled-engine-sc": "^5.12.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "ts-node": "^10.9.1",
     "react-router-dom": "^6.11.2",
-    "styled-components": "^5.3.11"
+    "styled-components": "^5.3.11",
+    "ts-node": "^10.9.1",
+    "zustand": "^4.3.8"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.2",

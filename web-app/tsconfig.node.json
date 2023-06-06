@@ -3,7 +3,8 @@
     "composite": true,
     "module": "ESNext",
     "moduleResolution": "Node",
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "types": ["express"]
   },
-  "include": ["TS_src/client/vite.config.ts"]
+  "include": ["TS_src/client/vite.config.ts", "server/**/*.ts"]
 }

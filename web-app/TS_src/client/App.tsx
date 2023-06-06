@@ -8,27 +8,20 @@ import Login from './components/Login';
 import Register from './components/Register';
 
 function App() {
-  // create a hook to toggle login component
-  const [showLogin, setShowLogin] = useState<boolean>(false);
-
-  // declare a function to help toggle showLogin
-  const handleLoginToggle = (): void => {
-    setShowLogin(!showLogin);
-  };
   
   return (
     <>
-      <Navbar handleLoginToggle={handleLoginToggle}/>
+      <Navbar />
       <div className='AppContainer'>
         <Routes>
           <Route path='*' element={ 
-            <SplashPage showLogin={showLogin} handleLoginToggle={handleLoginToggle} />
+            <SplashPage />
           } />
           <Route path='/' element={ 
-            <SplashPage showLogin={showLogin} handleLoginToggle={handleLoginToggle} />
+            <SplashPage />
           } />
           <Route path='/login' element={ 
-            <Login handleLoginToggle={handleLoginToggle} /> 
+            <Login /> 
           } />
           <Route path="/register" element={ <Register /> } />
         </Routes>
