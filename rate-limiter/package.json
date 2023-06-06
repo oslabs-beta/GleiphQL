@@ -5,6 +5,7 @@
   "main": "./dist/index.js",
   "type": "module",
   "scripts": {
+    "start": "node dist/query-test/query-test",
     "build": "tsc",
     "dev": "node dist/query-test/query-test"
   },
