@@ -25,7 +25,7 @@ const endpointMonitor = function (req: Request, res: Response, next: NextFunctio
     };
     const extractObjectTypes = (query: DocumentNode): string[] => {
       const objectTypes: string[] = [];
-    
+
       visit(query, {
         Field: {
           enter(node: FieldNode) {
@@ -36,13 +36,13 @@ const endpointMonitor = function (req: Request, res: Response, next: NextFunctio
           },
         }
       });
-    
+
       return objectTypes;
-    }; 
-    
+    };
+
     if (query.definitions.length > 0 && query.definitions[0].kind === Kind.OPERATION_DEFINITION) {
       const operation = query.definitions[0];
-      
+
       // Ensure the operation has a selectionSet
       if (operation.selectionSet) {
         const depth = calculateQueryDepth(query.definitions[0].selectionSet.selections);
@@ -52,14 +52,14 @@ const endpointMonitor = function (req: Request, res: Response, next: NextFunctio
     }
     console.log('IP Address: ', req.ip)
     endpointData.ip = req.ip
-    // when working with proxy servers or load balancers, the IP address may be forwarded 
-    // in a different request header such as X-Forwarded-For or X-Real-IP. In such cases, 
+    // when working with proxy servers or load balancers, the IP address may be forwarded
+    // in a different request header such as X-Forwarded-For or X-Real-IP. In such cases,
     // you would need to check those headers to obtain the original client IP address.
     const host = req.get('host');
     const url = `${req.protocol}://${host}${req.originalUrl}`;
     console.log('Endpoint URL: ', url)
     endpointData.url = url
-    console.log('Query Complexity: TBD')
+    console.log(`Query Complexity: ${res.locals.complexityScore}`)
     console.log('Requested Timestamp: ', Date())
     endpointData.timestamp = Date()
     console.log('Object Types: ', extractObjectTypes(query))
@@ -70,6 +70,10 @@ const endpointMonitor = function (req: Request, res: Response, next: NextFunctio
     }
     // const response = await fetch('https://httpbin.org/post', {method: 'POST', body: 'a=1'});
     // const data = await response.json();
+    if(res.locals.complexityScore >= res.locals.complexityLimit) {
+      console.log(`Complexity score of ${res.locals.complexityScore} exceeded ${res.locals.complexityLimit}`);
+      return next(Error);
+    }
   }
   next()
 }

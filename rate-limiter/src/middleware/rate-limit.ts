@@ -8,7 +8,7 @@ import graphql from 'graphql';
 //compare limits found in arguments against both defaultLimit and limits found within schema => defaultLimit case resolved, limits found in schema not resolved
 //generate casing for mutations/subscriptions
 
-const rateLimiter = function (complexityLimit: number, listLimit: number, schema: GraphQLSchema, schemaTypeInfo: TypeInfo, config: any) {
+const rateLimiter = function (config: any) {
   return (req: Request, res: Response, next: NextFunction) => {
     if(req.body.query) {
 
@@ -16,20 +16,20 @@ const rateLimiter = function (complexityLimit: number, listLimit: number, schema
       //unclear how useful this functionality actually is, but interesting to note that it is possible to parse and reconstruct a query AST
       //presumably the endpoint would have configured some sort of list pagination/heuristics on their end
       //unclear whether providing this throttle function would be overly useful in the library itself
-      const throttle = function(ast: DocumentNode, listLimit: number) {
+      const throttle = function(ast: DocumentNode, paginationLimit: number) {
         let newAst = visit(ast, {
           //@ts-ignore
           Argument(node) {
             if (node.name.value === 'limit' && node.value.kind === 'IntValue' || node.name.value === 'first' && node.value.kind === 'IntValue' || node.name.value === 'last' && node.value.kind === 'IntValue') {
               let argValue = parseInt(node.value.value, 10);
               console.log(`Argvalue = ${argValue}`);
-              if (argValue > listLimit) {
+              if (argValue > paginationLimit) {
                 console.log(`ArgValue has exceeded passed in limit, modifying`)
                 return {
                   ...node,
                   value: {
                     ...node.value,
-                    value: listLimit.toString(),
+                    value: paginationLimit.toString(),
                   },
                 };
               }
@@ -41,14 +41,14 @@ const rateLimiter = function (complexityLimit: number, listLimit: number, schema
       }
 
       const parsedAst = parse(req.body.query);
-      const throttledAst = throttle(parsedAst, listLimit);
+      const throttledAst = throttle(parsedAst, config.paginationLimit);
       let parentTypeStack: any[]= [];
       let complexityScore = 0;
       let typeComplexity = 0;
       let resolveComplexity = 0;
       let currMult = 0;
 
-      visit(throttledAst, visitWithTypeInfo(schemaTypeInfo, {
+      visit(throttledAst, visitWithTypeInfo(config.typeInfo, {
         enter(node) {
 
           //upon entering field, updates the parentTypeStack, which is the stack of all field ancestors of current field node
@@ -57,9 +57,9 @@ const rateLimiter = function (complexityLimit: number, listLimit: number, schema
             //resets list multiplier upon encountering an empty stack, indicating that a set of nested fields has been exited
             if(parentTypeStack.length === 0) currMult = 0;
 
-            const parentType = schemaTypeInfo.getParentType();
+            const parentType = config.typeInfo.getParentType();
             if (parentType) {
-            const fieldDef = parentType && isAbstractType(parentType) ? schemaTypeInfo.getFieldDef() : parentType.getFields()[node.name.value];
+            const fieldDef = parentType && isAbstractType(parentType) ? config.typeInfo.getFieldDef() : parentType.getFields()[node.name.value];
 
             if(fieldDef) {
             const fieldDefArgs = fieldDef.args;
@@ -74,11 +74,11 @@ const rateLimiter = function (complexityLimit: number, listLimit: number, schema
             if(isList === true) {
               console.log(`${node.name.value} is a list`);
               const argNode = node.arguments?.find(arg => (arg.name.value === 'limit' || arg.name.value === 'first' || arg.name.value === 'last'));
-              currMult = listLimit;
+              currMult = config.paginationLimit;
               if (argNode && argNode.value.kind === 'IntValue') {
                 const argValue = parseInt(argNode.value.value, 10);
                 console.log(`Found limit argument with value ${argValue}`);
-                if(argValue < listLimit) currMult = argValue;
+                if(argValue < config.paginationLimit) currMult = argValue;
                 // console.log('Mult is now:', currMult);
               }
               console.log('Mult is now:', currMult);
@@ -135,7 +135,12 @@ const rateLimiter = function (complexityLimit: number, listLimit: number, schema
       console.log('This is the complexity score:', complexityScore);
 
       //returns error if complexity heuristic reads complexity score over limit
-      if(complexityScore >= complexityLimit) {
+      if(config.monitor === true) {
+        res.locals.complexityScore = complexityScore;
+        res.locals.complexityLimit = config.complexityLimit;
+        return next();
+      }
+      if(complexityScore >= config.complexityLimit) {
         console.log('Complexity of this query is too high');
         return next(Error);
       }
