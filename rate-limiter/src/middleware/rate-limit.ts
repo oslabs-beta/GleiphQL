@@ -70,7 +70,7 @@ const rateLimiter = function (complexityLimit: number, listLimit: number, schema
             console.log('This is the currentNode:', node.name.value);
             console.log(parentTypeStack);
             // let currMult = 0;
-            //functionality upon encountering listType, in short looks for ancestor lists and limit arguments then adjust currMult accordingly
+            //functionality upon encountering listType, in short looks for ancestor lists and limit arguments then adjusts currMult accordingly
             if(isList === true) {
               console.log(`${node.name.value} is a list`);
               const argNode = node.arguments?.find(arg => (arg.name.value === 'limit' || arg.name.value === 'first' || arg.name.value === 'last'));
