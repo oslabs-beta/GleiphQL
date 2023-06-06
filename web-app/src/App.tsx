@@ -28,7 +28,7 @@ function App() {
             <SplashPage showLogin={showLogin} handleLoginToggle={handleLoginToggle} />
           } />
           <Route path='/login' element={ 
-            <Login  showLogin={showLogin} handleLoginToggle={handleLoginToggle} /> 
+            <Login handleLoginToggle={handleLoginToggle} /> 
           } />
           <Route path="/register" element={ <Register /> } />
         </Routes>
