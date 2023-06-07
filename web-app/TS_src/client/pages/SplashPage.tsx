@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import Login from '../components/Login';
+import Register from '../components/Register';
 import useStore from '../store';
 
 const SplashPage: React.FC<{}> = () => {
-  const { showLogin, showRegister } = useStore();
+  const { showLogin, showRegistration } = useStore();
   
   
   return (
@@ -13,15 +14,15 @@ const SplashPage: React.FC<{}> = () => {
         <em>An innovative and dynamic Rate Limiting and Cost Analysis Tool</em>
       </h2>
       
-      {showLogin && (
+      {showLogin && (!showRegistration) && (
         <div className="login-popup">
           <Login />
         </div>
       )}
 
-      {showRegister && (
-          <div className='register-component'>
-
+      {showRegistration && (!showLogin) && (
+          <div className='register-popup'>
+            <Register />
           </div>
         )}
 

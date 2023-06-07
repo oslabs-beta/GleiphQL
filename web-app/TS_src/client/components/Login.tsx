@@ -1,18 +1,29 @@
 import React from 'react';
-import Link from '@mui/material/Link';
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import useStore from '../store';
+import Button from '@mui/material/Button';
 
 
 const Login: React.FC<{}> = () => {
-  const { loginToggle } = useStore();
+  
+  const { loginToggle, registerToggle } = useStore();
+  // create function to toggle both components
+  const handleClose = () => {
+    loginToggle(false);
+    registerToggle(false);
+  }
+  const toggleRegister = () => {
+    loginToggle(false);
+    registerToggle(true);
+  }
+
 
   return (
     <>
       <div className="LoginContainer">
-        <div className='close-icon' onClick={loginToggle}>
+        <div className='close-icon' onClick={handleClose}>
           <CloseRoundedIcon />
         </div>
         
@@ -30,10 +41,15 @@ const Login: React.FC<{}> = () => {
           <TextField id="outlined-basic" label="Password" variant="outlined" />
         </Box>
 
-        <button type='submit'>Sign In</button>
-        <br></br>
+        <Button type='submit' variant="contained">
+          Sign In
+        </Button>
 
-        <Link href="#" onClick={loginToggle}>Not a member? Sign up here</Link>
+        <br></br>
+        
+        <Button className='register-link' onClick={toggleRegister} variant="contained">
+          Not a member? Sign up here
+        </Button>
 
       </div>
     </>

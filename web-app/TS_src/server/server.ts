@@ -16,7 +16,7 @@ import loginRouter from './routers/loginRouter';
 import registerRouter from './routers/registerRouter';
 
 
-const PORT = 3003;
+const PORT = 3500;
 
 const app: Express = express();
 

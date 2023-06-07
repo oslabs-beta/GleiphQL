@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Button from '@mui/material/Button';
 import useStore from '../store';
 
 // interface NavbarProps {
@@ -11,9 +12,9 @@ const Navbar: React.FC<{}> = () => {
 
   return (
     <div className='navbar-container'>
-      <div className='login-btn' onClick={loginToggle}>
-        Login / Sign Up
-      </div>
+      <Button variant="contained" onClick={()=>loginToggle(true)}>
+        Login
+      </Button>
     </div>
   )
 };
