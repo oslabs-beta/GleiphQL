@@ -45,7 +45,7 @@ interface testConfig {
 }
 
 const spacexConfig: testConfig = {
-  complexityLimit: 200,
+  complexityLimit: 400,
   paginationLimit: 10,
   schema: spaceXSchema,
   typeInfo: spaceXTypeInfo,

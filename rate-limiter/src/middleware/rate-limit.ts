@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { isAbstractType, GraphQLInterfaceType, isNonNullType, GraphQLType, GraphQLField, parse, GraphQLList, GraphQLObjectType, GraphQLSchema, TypeInfo, visit, visitWithTypeInfo, StringValueNode, getNamedType, GraphQLNamedType, getEnterLeaveForKind, GraphQLCompositeType, getNullableType, Kind, isListType, DocumentNode } from 'graphql';
 import graphql from 'graphql';
+import { useSchema } from 'graphql-yoga';
 
 //to-dos
 //modularize code, certain functions can be offloaded
@@ -65,6 +66,11 @@ const rateLimiter = function (config: any) {
             const fieldDefArgs = fieldDef.args;
             console.log('These are the fieldArgs:', fieldDef.args);
             const fieldType = getNullableType(fieldDef.type);
+            const fieldDirectives = fieldDef.astNode.directives;
+            if(fieldDirectives) {
+              //@ts-ignore
+              const cost = fieldDirectives.find(directive => directive.name.value === 'cost');
+            }
             const isList = isListType(fieldType) || (isNonNullType(fieldType) && isListType(fieldType.ofType));
 
             console.log('This is the currentNode:', node.name.value);
@@ -128,6 +134,7 @@ const rateLimiter = function (config: any) {
           console.log('Exiting node')
         }
       }));
+
 
       complexityScore = resolveComplexity + typeComplexity;
       console.log('This is the type complexity', typeComplexity);
