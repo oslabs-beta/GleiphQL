@@ -134,7 +134,14 @@ button:focus-visible {
 }
 /*    ~~ End of component: Navbar   ~~   */
 
-
+/*  ~~ Start of component: ----  ~~   */
+.splashpage-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+/*    ~~ End of component: ----   ~~   */
 
 
 /*  ~~ Start of component: ----  ~~   */

@@ -31,7 +31,7 @@ const Login: React.FC<{}> = () => {
     }
 
     try {
-      const response = await axios.post('/api/login', userLogin);
+      const response = await axios.post('/api/account/login', userLogin);
 
       if (response.status === 200) {
         setIsLoggedIn(true);
@@ -73,6 +73,7 @@ const Login: React.FC<{}> = () => {
               id="outlined-basic" 
               label="Password" 
               variant="outlined"
+              type='password'
               name="password"
               value={userPassword}
               onChange={(e) => setUserPassword(e.target.value)} 

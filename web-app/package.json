@@ -17,6 +17,7 @@
     "@types/pg": "^8.10.1",
     "axios": "^1.4.0",
     "bcryptjs": "^2.4.3",
+    "chart.js": "^4.3.0",
     "concurrently": "^8.1.0",
     "cookie-parser": "^1.4.6",
     "cookie-session": "^2.0.0",

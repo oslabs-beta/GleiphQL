@@ -36,7 +36,7 @@ const Register: React.FC = () => {
     }
 
     try {
-      const response = await axios.post('/api/register', registerUser)
+      const response = await axios.post('/api/account/register', registerUser)
 
       if (response.status === 200) {
         setIsLoggedIn(true);
@@ -76,6 +76,7 @@ const Register: React.FC = () => {
             id="outlined-basic" 
             label="Password" 
             variant="outlined"
+            type='password'
             value={userPassword}
             onChange={(e) => setUserPassword(e.target.value)} 
           />
@@ -83,6 +84,7 @@ const Register: React.FC = () => {
             id="outlined-basic" 
             label="Confirm Password" 
             variant="outlined"
+            type='password'
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)} 
           />
