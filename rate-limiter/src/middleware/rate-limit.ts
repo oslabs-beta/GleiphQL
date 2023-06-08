@@ -148,6 +148,7 @@ const rateLimiter = function (config: any) {
         return next();
       }
       if(complexityScore >= config.complexityLimit) {
+
         console.log('Complexity of this query is too high');
         return next(Error);
       }
