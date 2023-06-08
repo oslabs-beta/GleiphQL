@@ -90,7 +90,28 @@ button:focus-visible {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  align-items: center;
+  position: relative;
+
+  .close-icon {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    box-shadow: 0, 0, 5px, rgba(0, 0, 0, 0.5);
+  }
+
+  .close-icon:hover {
+    color: black;
+    box-shadow: 0, 0, 5px, rgba(0, 0, 0, 0.5);
+  }
+
 }
+
+.RegisterContainer button {
+  width: 150px;
+}
+
+
 /*    ~~ End of component: Register   ~~   */
 
 /*  ~~ Start of component: Navbar  ~~   */
@@ -113,7 +134,14 @@ button:focus-visible {
 }
 /*    ~~ End of component: Navbar   ~~   */
 
-
+/*  ~~ Start of component: ----  ~~   */
+.splashpage-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+/*    ~~ End of component: ----   ~~   */
 
 
 /*  ~~ Start of component: ----  ~~   */

@@ -1,15 +1,20 @@
 import React, { useState, useEffect } from 'react';
+import Button from '@mui/material/Button';
+import useStore from '../store';
 
-interface NavbarProps {
-  handleLoginToggle: () => void;
-}
+// interface NavbarProps {
+//   handleLoginToggle: () => void;
+// }
 
-const Navbar: React.FC<NavbarProps> = ({ handleLoginToggle }) => {
+const Navbar: React.FC<{}> = () => {
+  const { loginToggle } = useStore();
+  
+
   return (
     <div className='navbar-container'>
-      <div className='login-btn' onClick={handleLoginToggle}>
-        Login / Sign Up
-      </div>
+      <Button variant="contained" onClick={()=>loginToggle(true)}>
+        Login
+      </Button>
     </div>
   )
 };
