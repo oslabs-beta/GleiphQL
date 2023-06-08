@@ -9,11 +9,13 @@ import express, {
   ErrorRequestHandler,
 } from "express";
 
-import cookieParser from 'cookie-parser';
-import ExpressSession from 'express-session';
+// import cookieParser from 'cookie-parser';
+// import ExpressSession from 'express-session';
 
-import loginRouter from './routers/loginRouter';
-import registerRouter from './routers/registerRouter';
+import accountRouter from  './routers/accountRouter';
+import dataRouter from './routers/dataRouter';
+import endpointRouter from './routers/endpointRouter';
+
 
 
 const PORT = 3500;
@@ -23,18 +25,27 @@ const app: Express = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-const oneDay: number = 1000 * 60 * 60 * 24;
-app.use(ExpressSession({
-  secret: process.env.SESSION_SECRET || '',
-  saveUninitialized: true,
-  cookie: { maxAge: oneDay },
-  resave: false
-}));
+// declare module "express-session" {
+//   interface Session {
+//     isAuth: boolean,
+//     userId: number,
+//     userEmail: string
+//   }
+// }
 
-app.use(cookieParser());
+// const oneDay: number = 1000 * 60 * 60 * 24;
+// app.use(ExpressSession({
+//   secret: process.env.SESSION_SECRET || '',
+//   saveUninitialized: false,
+//   cookie: { maxAge: oneDay },
+//   resave: false
+// }));
 
-app.use('/api/register', registerRouter);
-app.use('/api/login', loginRouter);
+// app.use(cookieParser());
+
+app.use('/api/account', accountRouter);
+app.use('/api/data', dataRouter);
+app.use('/api/endpoint', endpointRouter);
 
 
 app.use((req: Request, res: Response) =>
