@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import useStore from '../store';
 import Navbar from '../components/Navbar';
+import RequestTable from '../components/RequestTable';
 
 const Dashboard: React.FC<{}> = () => {
   const { showLogin, showRegistration } = useStore();
@@ -12,6 +13,7 @@ const Dashboard: React.FC<{}> = () => {
       <div>
         <h1>Dashboard!</h1>
       </div>
+      <RequestTable endpointId={1} />
     </>
     
   );
