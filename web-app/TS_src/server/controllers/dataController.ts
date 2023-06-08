@@ -34,7 +34,7 @@ const dataController = {
     VALUES ($1, $2, $3, $4, $5, $6, $7)
     RETURNING *;
     `;
-    const values = [ endpointId, ip, timestamp, objectTypes, queryString, complexityScore, depth ];
+    const values = [ endpointId, ip, timestamp, {objectTypes: objectTypes}, queryString, complexityScore, depth ];
     try {
       const result: any = await db.query(sqlCommand, values);
       res.locals.addedRequest = result.rows[0];

@@ -36,7 +36,7 @@ const countries = createYoga({
   graphqlEndpoint: '/countries',
 });
 
-const limit = 200;
+const limit = 1000;
 
 const listLimit = 10;
 
