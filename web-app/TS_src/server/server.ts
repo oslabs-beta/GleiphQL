@@ -66,13 +66,3 @@ app.use((req: Request, res: Response) =>
 app.listen(PORT, () => 
   console.log(`Currently listening on port: ${PORT}`)
 );
-
-import { createServer } from 'http';
-import { Server } from "socket.io";
-
-const httpServer = createServer();
-const io = new Server(httpServer);
-
-httpServer.listen(8000, () => {
-  console.log(`server running at port 8000`);
-});
