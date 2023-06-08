@@ -11,6 +11,7 @@ import ErrorPage from './pages/error-page.js';
 import Dashboard from './pages/dashboard.js';
 
 // this placeholder for only router we need in whole application
+{/* Ask Yeong Jiecheng readability on react router setups */}
 const router = createBrowserRouter([
   {
     path: '/',
