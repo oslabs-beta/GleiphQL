@@ -4,11 +4,13 @@ import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import useStore from '../store';
+import { Navigate } from 'react-router-dom';
+import axios from 'axios';
 
 
 const Register: React.FC = () => {
 
-  const { loginToggle, registerToggle, showLogin, showRegistration } = useStore();
+  const { loginToggle, registerToggle, userEmail, setUserEmail, setUserPassword, userPassword, confirmPassword, setConfirmPassword, passMatch, setPassMatch, isLoggedIn, setIsLoggedIn } = useStore();
   
   const handleClose = () => {
     registerToggle(false)
@@ -19,33 +21,85 @@ const Register: React.FC = () => {
     loginToggle(true)
   }
 
+  const handleSubmit = async(e: React.FormEvent) => {
+    e.preventDefault();
+
+    const registerUser = {
+      email: userEmail,
+      password: userPassword,
+    }
+
+    //conditional to check passwords match
+    if (userPassword !== confirmPassword) {
+      console.error('Passwords don\'t match. Please try again.')
+      return;
+    }
+
+    try {
+      const response = await axios.post('/api/register', registerUser)
+
+      if (response.status === 200) {
+        setIsLoggedIn(true);
+      }
+    } catch(error) {
+      console.error(error);
+
+      const typedError = error as Error;
+      throw new Error(`Error in register component: ${typedError.message}`);
+    }
+
+  }
+
   return (
     <div className="RegisterContainer">
-
+      {isLoggedIn && <Navigate to="/dashboard" replace={true} />}
         <div className='close-icon' onClick={handleClose}>
           <CloseRoundedIcon />
         </div>
 
       <p>Inside of Register component</p>
+      
+      <form onSubmit={handleSubmit}>
+        <Box
+          sx={{
+            '& > :not(style)': { m: 1, width: '25ch' },
+          }}
+        >
+          <TextField 
+            id="outlined-basic" 
+            label="Email" 
+            variant="outlined" 
+            value={userEmail}
+            onChange={(e) => setUserEmail(e.target.value)}
+          />
+          <TextField 
+            id="outlined-basic" 
+            label="Password" 
+            variant="outlined"
+            value={userPassword}
+            onChange={(e) => setUserPassword(e.target.value)} 
+          />
+          <TextField 
+            id="outlined-basic" 
+            label="Confirm Password" 
+            variant="outlined"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)} 
+          />
+        </Box>
+
+        <Button type='submit' variant="contained">Register</Button>
         
-      <Box
-        component="form"
-        sx={{
-          '& > :not(style)': { m: 1, width: '25ch' },
-        }}
-        noValidate
-        autoComplete="off"
-      >
-        <TextField id="outlined-basic" label="Email" variant="outlined" />
-        <TextField id="outlined-basic" label="Password" variant="outlined" />
-        <TextField id="outlined-basic" label="Confirm Password" variant="outlined" />
-        
-        <Button variant="contained">Register</Button>
-        
-        <Button className='login-link' onClick={toggleLogin}  variant="contained">
-          Already a member? Login!
-        </Button>
-      </Box>
+      </form>
+      
+
+      
+      
+      <br></br>
+
+      <Button className='login-link' onClick={toggleLogin}  variant="contained">
+        Already a member? Login!
+      </Button>
   
     </div>
   )

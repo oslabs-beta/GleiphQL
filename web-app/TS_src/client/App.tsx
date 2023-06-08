@@ -15,6 +15,8 @@ function App() {
       <div className='AppContainer'>
         <Routes>
           <Route path='/' element={ <SplashPage /> } />
+          {/* Ask Yeong Jiecheng readability on react router setups */}
+          {/* <Route path='/dashboard' element={ <Dashboard /> } /> */}
         </Routes>
       </div>
     </>
