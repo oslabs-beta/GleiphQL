@@ -7,6 +7,12 @@ import Button from '@mui/material/Button';
 import { Navigate } from 'react-router-dom';
 import axios from'axios';
 
+interface LoginResponse {
+  userExists: boolean;
+  signedIn: boolean;
+  userId?: number;
+  userEmail?: string;
+}
 
 const Login: React.FC<{}> = () => {
   
@@ -31,10 +37,10 @@ const Login: React.FC<{}> = () => {
     }
 
     try {
-      const response = await axios.post('/api/account/login', userLogin);
+      const response = await axios.post<LoginResponse>('/api/account/login', userLogin);
 
       if (response.data.userExists && response.data.signedIn) {
-        setCurrUserId(response.data.userId);
+        setCurrUserId(response.data.userId||0);
         setIsLoggedIn(true);
       } else {
         alert('Unsuccesful Login Attempt');
