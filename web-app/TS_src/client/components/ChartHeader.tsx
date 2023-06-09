@@ -19,7 +19,7 @@ const ChartHeader: React.FC<{}> = () => {
   } = useStore();
 
   const averageComplexity = () => {
-    let sumOfScores = 0
+    let sumOfScores = 1
     for (let i = 0; i < endpointRequests.length; i++) {
       sumOfScores += endpointRequests[i].complexity_score
     }
