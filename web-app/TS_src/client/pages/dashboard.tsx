@@ -6,7 +6,8 @@ import Sidebar from '../components/Sidebar'
 
 const Dashboard: React.FC<{}> = () => {
   const { showLogin, showRegistration } = useStore();
-
+  const { currEndPoint } = useStore();
+  console.log(currEndPoint);
 
   return (
     <>
@@ -15,7 +16,7 @@ const Dashboard: React.FC<{}> = () => {
       <div>
         <h1>Dashboard!</h1>
       </div>
-      <RequestTable endpointId={1} />
+      { currEndPoint.id && <RequestTable /> }
     </>
 
   );

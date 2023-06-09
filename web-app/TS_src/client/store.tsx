@@ -22,11 +22,16 @@ interface StoreState {
   passMatch: Boolean;
   setPassMatch: (status: boolean) => void;
 
-  currEndPoint: String;
-  setCurrEndPoint: (endpoint: string) => void;
+  currEndPoint: Endpoint;
+  setCurrEndPoint: (id: number, url:string) => void;
 
-  endPointArr: string[];
-  setEndPointArr: (endPointArr: string[]) => void;
+  endPointArr: Endpoint[];
+  setEndPointArr: (endPointArr: Endpoint[]) => void;
+}
+
+interface Endpoint {
+  id: number;
+  url: string;
 }
 
 const useStore = create<StoreState>((set) => ({
@@ -59,13 +64,19 @@ const useStore = create<StoreState>((set) => ({
     passMatch: status
   })),
 
-  currEndPoint: '',
-  setCurrEndPoint: (endpoint: string) => set((state) => ({
-    currEndPoint: endpoint
+  currEndPoint: {
+    id: 0,
+    url: ''
+  },
+  setCurrEndPoint: (id: number, url: string) => set((state) => ({
+    currEndPoint: {
+      id,
+      url
+    }
   })),
 
   endPointArr: [],
-  setEndPointArr: (endPointArr: string[]) => set((state) => ({
+  setEndPointArr: (endPointArr: Endpoint[]) => set((state) => ({
     endPointArr: endPointArr
   })),
 

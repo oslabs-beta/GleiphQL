@@ -23,9 +23,9 @@ const Sidebar: React.FC<{}> = () => {
     const fetchData = async () => {
       //fix any
       const queryArr: any[] = await queryEndPoints(ownerId);
-      const endPoints = queryArr.map((ele) => <SidebarButton key={uuidv4()} endPointUrl={ele.url}></SidebarButton>)
+      const endPoints = queryArr.map((ele) => <SidebarButton key={uuidv4()} endPointUrl={ele.url} endPointId={ele.endpoint_id}></SidebarButton>)
       setEndpointArray(endPoints);
-      setCurrEndPoint(queryArr[0].url);
+      setCurrEndPoint(queryArr[0].endpoint_id, queryArr[0].url);
     }
     fetchData()
   }, [])
@@ -37,7 +37,7 @@ const Sidebar: React.FC<{}> = () => {
       <Box sx={{
               '& > :not(style)': { m: 1, width: '25ch' },
        }}>
-      {currEndPoint}
+      {currEndPoint.url}
       {endpointArray}
       </Box>
     </div>
