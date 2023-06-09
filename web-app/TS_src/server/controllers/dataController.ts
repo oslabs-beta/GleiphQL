@@ -77,7 +77,7 @@ const dataController = {
       return next({
         log: 'Error in dataController.deleteData: could not delete the data for given endpoint from the database',
         status: 400,
-        message: { error: err.message } 
+        message: { error: err.message }
       });
     }
     return next();

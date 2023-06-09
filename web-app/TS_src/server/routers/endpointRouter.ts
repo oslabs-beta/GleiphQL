@@ -8,7 +8,7 @@ endpointRouter.post('/:userId', endpointController.addEndpoint, (req: Request, r
   res.status(200).json(res.locals.addedEndpoint);
 });
 
-endpointRouter.get('/:userId', endpointController.retriveEndpoints, (req: Request, res: Response) => {
+endpointRouter.get('/:userId', endpointController.retrieveEndpoints, (req: Request, res: Response) => {
   res.status(200).json(res.locals.endpoints);
 });
 
