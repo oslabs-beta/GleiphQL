@@ -10,7 +10,7 @@ import axios from'axios';
 
 const Login: React.FC<{}> = () => {
   
-  const { loginToggle, registerToggle, userEmail, setUserEmail, userPassword, setUserPassword, isLoggedIn, setIsLoggedIn } = useStore();
+  const { loginToggle, registerToggle, userEmail, setUserEmail, userPassword, setUserPassword, isLoggedIn, setIsLoggedIn, setCurrUserId } = useStore();
   // create function to toggle both components
   const handleClose = () => {
     loginToggle(false);
@@ -33,8 +33,13 @@ const Login: React.FC<{}> = () => {
     try {
       const response = await axios.post('/api/account/login', userLogin);
 
-      if (response.status === 200) {
+      if (response.data.userExists && response.data.signedIn) {
+        setCurrUserId(response.data.userId);
         setIsLoggedIn(true);
+      } else {
+        alert('Unsuccesful Login Attempt');
+        setUserEmail('');
+        setUserPassword('');
       }
 
     } catch(error) {

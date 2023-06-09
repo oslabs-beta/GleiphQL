@@ -7,10 +7,7 @@ import LineChart from '../components/LineChart';
 import ChartHeader from '../components/ChartHeader';
 
 const Dashboard: React.FC<{}> = () => {
-  const { showLogin, showRegistration } = useStore();
   const { currEndPoint } = useStore();
-  console.log(currEndPoint);
-
   return (
     <>
       <Navbar />
@@ -18,9 +15,13 @@ const Dashboard: React.FC<{}> = () => {
       <div>
         <h1>Dashboard!</h1>
       </div>
-      <ChartHeader />
-      <LineChart />
-      { currEndPoint.id && <RequestTable /> }
+      { currEndPoint.id? 
+      <div>
+        <ChartHeader />
+        <LineChart />
+        <RequestTable />
+      </div> : null
+       }
     </>
 
   );

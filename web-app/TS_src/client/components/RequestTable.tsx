@@ -37,7 +37,7 @@ function RequestTable () {
         <TableHead>
           <TableRow>
             <TableCell>IP Address</TableCell>
-            <TableCell align="right">Object Types</TableCell>
+            <TableCell align="right">Number of Object Types</TableCell>
             <TableCell align="right">Query String</TableCell>
             <TableCell align="right">Complexity Score</TableCell>
             <TableCell align="right">Query Depth</TableCell>
@@ -51,7 +51,7 @@ function RequestTable () {
               sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
               >
                 <TableCell component="th" scope="row">{row.ip_address}</TableCell>
-                <TableCell align="right">{JSON.stringify(row.object_types)}</TableCell>
+                <TableCell align="right">{row.object_types.objectTypes.length}</TableCell>
                 <TableCell align="right">{row.query_string}</TableCell>
                 <TableCell align="right">{row.complexity_score}</TableCell>
                 <TableCell align="right">{row.query_depth}</TableCell>

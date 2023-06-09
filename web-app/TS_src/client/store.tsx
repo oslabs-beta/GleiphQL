@@ -36,7 +36,11 @@ interface StoreState {
 
   endPointArr: Endpoint[];
   setEndPointArr: (endPointArr: Endpoint[]) => void;
+
+  currUserId: number;
+  setCurrUserId: (userId: number) => void;
 }
+
 
 interface Endpoint {
   id: number;
@@ -102,6 +106,11 @@ const useStore = create<StoreState>((set) => ({
   chartTimeInterval: "Last 7 Days",
   setChartTime: (chartTime: string) => set((state) => ({
     chartTimeInterval: chartTime
+  })),
+
+  currUserId: 0,
+  setCurrUserId: (userId: number) => set((state) => ({
+    currUserId: userId
   }))
 }));
 
