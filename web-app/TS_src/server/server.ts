@@ -1,5 +1,6 @@
 import * as dotenv from "dotenv";
 dotenv.config({ path: '../../.env' });
+import cors from 'cors';
 
 import express, {
   Express,
@@ -23,6 +24,7 @@ const PORT = 3500;
 const app: Express = express();
 
 app.use(express.json());
+app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 
 // declare module "express-session" {
@@ -63,7 +65,7 @@ app.use((req: Request, res: Response) =>
 //   return res.status(errorObj.status).json(errorObj.message);
 // });
 
-app.listen(PORT, () => 
+app.listen(PORT, () =>
   console.log(`Currently listening on port: ${PORT}`)
 );
 
