@@ -50,7 +50,7 @@ const dataController = {
   receiveData: async (req: Request, res: Response, next: NextFunction) => {
     const endpointId: number = Number(req.params.endpointId);
     const sqlCommand: string = `
-    SELECT * FROM requests WHERE endpoint_id = $1;
+    SELECT * FROM requests WHERE endpoint_id = $1 ORDER BY to_timestamp(timestamp, 'Dy Mon DD YYYY HH24:MI:SS') DESC;
     `;
     const values: number[] = [ endpointId ];
     try {

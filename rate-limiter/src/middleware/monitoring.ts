@@ -51,6 +51,9 @@ const endpointMonitor = async function (req: Request, res: Response, next: NextF
       }
     }
     endpointData.ip = req.ip
+    if (endpointData.ip.includes('::ffff:')) {
+      endpointData.ip = endpointData.ip.replace('::ffff:', '');
+    }
     // when working with proxy servers or load balancers, the IP address may be forwarded 
     // in a different request header such as X-Forwarded-For or X-Real-IP. In such cases, 
     // you would need to check those headers to obtain the original client IP address.
@@ -64,14 +67,20 @@ const endpointMonitor = async function (req: Request, res: Response, next: NextF
       endpointData.queryString = query.loc.source.body
     }
     console.log('Monitor data: ', endpointData);
-    const response = await fetch('http://localhost:3000/api/data', {
-      method: 'POST',
-      headers: {
-        "Content-Type": "application/json",
-      }, 
-      body: JSON.stringify(endpointData)
-    });
-    const data = await response.json();
+    try {
+      const response = await fetch('http://127.0.0.1:3000/api/data', {
+        method: 'POST',
+        headers: {
+          "Content-Type": "application/json",
+        }, 
+        body: JSON.stringify(endpointData)
+      });
+      const data = await response.json();
+    }
+    catch {
+      console.log("Unable to save to database")
+    }
+
   }
   next()
 }
