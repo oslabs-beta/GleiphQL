@@ -23,11 +23,12 @@ const LineChart: React.FC<{}> = () => {
     chartTimeInterval, 
     setChartTime, 
     chartDataType, 
-    setChartDataType 
+    setChartDataType,
+    currEndPoint
   } = useStore();
 
   useEffect(() => {
-    const endpointRequests = fetch('/api/data/1')
+    const endpointRequests = fetch(`/api/data/${currEndPoint.id}`)
     .then((res)=>res.json())
     .then((data)=>{
       console.log("endpoint requests: ", data)

@@ -10,7 +10,7 @@ import axios from 'axios';
 
 const Register: React.FC = () => {
 
-  const { loginToggle, registerToggle, userEmail, setUserEmail, setUserPassword, userPassword, confirmPassword, setConfirmPassword, passMatch, setPassMatch, isLoggedIn, setIsLoggedIn } = useStore();
+  const { loginToggle, registerToggle, userEmail, setUserEmail, setUserPassword, userPassword, confirmPassword, setConfirmPassword, passMatch, setPassMatch, isLoggedIn, setIsLoggedIn, setCurrUserId } = useStore();
   
   const handleClose = () => {
     registerToggle(false)
@@ -36,10 +36,15 @@ const Register: React.FC = () => {
     }
 
     try {
-      const response = await axios.post('/api/account/register', registerUser)
+      const response = await axios.post('/api/account/register', registerUser);
 
-      if (response.status === 200) {
+      if (response.data.userCreated) {
+        setCurrUserId(response.data.userId);
         setIsLoggedIn(true);
+      } else {
+        alert('Could not create account. Try again');
+        setUserEmail('');
+        setUserPassword('');
       }
     } catch(error) {
       console.error(error);

@@ -1,20 +1,27 @@
 import React, { useState } from 'react';
 import useStore from '../store';
 import Navbar from '../components/Navbar';
+import RequestTable from '../components/RequestTable';
 import Sidebar from '../components/Sidebar'
 import LineChart from '../components/LineChart';
 import ChartHeader from '../components/ChartHeader';
 
 const Dashboard: React.FC<{}> = () => {
-  const { showLogin, showRegistration } = useStore();
-
-
+  const { currEndPoint } = useStore();
   return (
     <>
       <Navbar />
       <Sidebar />
-      <ChartHeader />
-      <LineChart />
+      <div>
+        <h1>Dashboard!</h1>
+      </div>
+      { currEndPoint.id? 
+      <div>
+        <ChartHeader />
+        <LineChart />
+        <RequestTable />
+      </div> : null
+       }
     </>
 
   );

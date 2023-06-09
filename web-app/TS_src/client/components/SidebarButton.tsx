@@ -3,13 +3,14 @@ import React from 'react';
 import useStore from '../store';
 
 interface SidebarButtonProps {
-  endPointUrl: string
+  endPointUrl: string;
+  endPointId: number;
 }
 
 const SidebarButton: React.FC<SidebarButtonProps> = (props) => {
   const { setCurrEndPoint } = useStore();
   const toggleEndPoint = () => {
-    setCurrEndPoint(props.endPointUrl);
+    setCurrEndPoint(props.endPointId, props.endPointUrl);
   }
 
   return (
