@@ -7,6 +7,11 @@ import Button from '@mui/material/Button';
 import { Navigate } from 'react-router-dom';
 import axios from'axios';
 
+interface LoginResponse {
+  userExists: boolean;
+  signedIn: boolean;
+}
+
 
 const Login: React.FC<{}> = () => {
   
@@ -31,10 +36,12 @@ const Login: React.FC<{}> = () => {
     }
 
     try {
-      const response = await axios.post('/api/account/login', userLogin);
+      const response = await axios.post<LoginResponse>('/api/account/login', userLogin);
 
-      if (response.status === 200) {
+      if (response.data.userExists && response.data.signedIn) {
         setIsLoggedIn(true);
+      } else {
+        alert('Please input the correct password')
       }
 
     } catch(error) {
