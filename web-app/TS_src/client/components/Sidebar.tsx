@@ -6,28 +6,33 @@ import { v4 as uuidv4 } from 'uuid';
 import Box from '@mui/material/Box';
 
 //fix any
-const queryEndPoints = async (ownerId: number): Promise<any> => {
-  const response = await axios.get(`http://localhost:3500/api/endpoint/${ownerId}`);
-  console.log(response.data);
+
+const queryEndPoints = async (userId: number): Promise<any> => {
+  const response = await axios.get(`/api/endpoint/${userId}`);
   //@ts-ignore
   return response.data;
 }
 
 const Sidebar: React.FC<{}> = () => {
-  const ownerId = 8;
-  const [endpointArray, setEndpointArray] = useState<any[]>([]);
-  const { currEndPoint, setCurrEndPoint } = useStore();
+  const [ endpointArray, setEndpointArray ] = useState<any[]>([]);
+  const { currEndPoint, setCurrEndPoint, currUserId } = useStore();
 
   //useEffect that queries for current endPoints and generates endPointArray
   useEffect(() => {
     const fetchData = async () => {
-      //fix any
-      const queryArr: any[] = await queryEndPoints(ownerId);
-      const endPoints = queryArr.map((ele) => <SidebarButton key={uuidv4()} endPointUrl={ele.url}></SidebarButton>)
-      setEndpointArray(endPoints);
-      setCurrEndPoint(queryArr[0].url);
-    }
-    fetchData()
+      // fix any
+      try {
+        const queryArr: any[] = await queryEndPoints(currUserId);
+        if(queryArr.length) {
+          const endPoints = queryArr.map((ele) => <SidebarButton key={uuidv4()} endPointUrl={ele.url} endPointId={ele.endpoint_id}></SidebarButton>)
+          setEndpointArray(endPoints);
+          setCurrEndPoint(queryArr[0].endpoint_id, queryArr[0].url);
+        }
+      } catch (err: any) {
+        console.log(err.message);
+      }
+    };
+    fetchData();
   }, [])
 
   //wrap endpoint array in things
@@ -37,7 +42,7 @@ const Sidebar: React.FC<{}> = () => {
       <Box sx={{
               '& > :not(style)': { m: 1, width: '25ch' },
        }}>
-      {currEndPoint}
+      {currEndPoint.url}
       {endpointArray}
       </Box>
     </div>

@@ -68,5 +68,3 @@ app.use((req: Request, res: Response) =>
 app.listen(PORT, () =>
   console.log(`Currently listening on port: ${PORT}`)
 );
-
-module.exports = app;
