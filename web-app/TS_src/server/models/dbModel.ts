@@ -4,10 +4,10 @@ const PG_URI = process.env.PG_URI;
 
 const pool: pg.Pool = new pg.Pool({
     connectionString: PG_URI,
-}); 
+});
 
 const db = {
-  query: (text: string, params: any[]) => {
+  query: (text: string, params?: any[]) => {
     return pool.query(text, params);
   }
 };

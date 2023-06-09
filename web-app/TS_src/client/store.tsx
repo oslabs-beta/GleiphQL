@@ -21,6 +21,12 @@ interface StoreState {
   // boolean to check matched passwords
   passMatch: Boolean;
   setPassMatch: (status: boolean) => void;
+
+  currEndPoint: String;
+  setCurrEndPoint: (endpoint: string) => void;
+
+  endPointArr: string[];
+  setEndPointArr: (endPointArr: string[]) => void;
 }
 
 const useStore = create<StoreState>((set) => ({
@@ -50,7 +56,17 @@ const useStore = create<StoreState>((set) => ({
 
   passMatch: false,
   setPassMatch: (status: boolean) => set((state) => ({
-    passMatch: status 
+    passMatch: status
+  })),
+
+  currEndPoint: '',
+  setCurrEndPoint: (endpoint: string) => set((state) => ({
+    currEndPoint: endpoint
+  })),
+
+  endPointArr: [],
+  setEndPointArr: (endPointArr: string[]) => set((state) => ({
+    endPointArr: endPointArr
   })),
 
 }));

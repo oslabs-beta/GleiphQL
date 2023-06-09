@@ -8,7 +8,7 @@ import Register from './components/Register';
 import Dashboard from './pages/dashboard';
 
 function App() {
-  
+
   return (
     <>
       <Navbar />
@@ -20,7 +20,7 @@ function App() {
         </Routes>
       </div>
     </>
-    
+
   )
 }
 
