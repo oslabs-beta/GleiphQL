@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import useStore from '../store';
 import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar'
+import LineChart from '../components/LineChart';
+import ChartHeader from '../components/ChartHeader';
 
 const Dashboard: React.FC<{}> = () => {
   const { showLogin, showRegistration } = useStore();
@@ -11,9 +13,8 @@ const Dashboard: React.FC<{}> = () => {
     <>
       <Navbar />
       <Sidebar />
-      <div>
-        <h1>Dashboard!</h1>
-      </div>
+      <ChartHeader />
+      <LineChart />
     </>
 
   );
