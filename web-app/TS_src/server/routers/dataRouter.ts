@@ -10,5 +10,4 @@ dataRouter.get('/:endpointId', dataController.receiveData, (req: Request, res: R
   res.status(200).json(res.locals.requests);
 });
 
-
 export default dataRouter;

@@ -1,47 +1,18 @@
-import React, { useEffect } from 'react';
+// import React, { useEffect } from 'react';
+// import  useStore  from '../store';
 
-const SSEComponent: React.FC<{}> = () => {
-  useEffect(() => {
-    const eventSource = new EventSource('http://localhost:3500/api/sse')
-    
-    eventSource.addEventListener('open', () => {
-      console.log('SSE opened!');
-    });
+// const SSEComponent: React.FC<{}> = () => {
+//   const {currEndPoint, eventSource, setEventSource } = useStore();
 
-    eventSource.addEventListener('message', (event) => {
-      const data = JSON.parse(event.data);
-      console.log(`this is data: ${data}`);
-    });
+  
 
-    eventSource.addEventListener('error', (event) => {
-      console.log('Error', event);
-    });
-    // eventSource.onmessage = (event) => {
-    //   const eventData = JSON.parse(event.data);
-    //   console.log('Receive SSE Event:', eventData);
-    //   // handle the received SSE event data here
+//   return (
+//     <>
+//       <div className='sse-component'>
+//         <h1>Event Source:</h1>
+//       </div>
+//     </>
+//   )
+// }
 
-    // };
-
-    // eventSource.onerror = (error) => {
-    //   console.error('Error connecting to SSE endpoint: ', error)
-    //   // handle the error here
-
-    // };
-
-    return () => {
-      // clean up the even source when the component unmounts
-      eventSource.close();
-    };
-  }, []);
-
-  return (
-    <>
-      <div className='sse-component'>
-        <h1>Event Source:</h1>
-      </div>
-    </>
-  )
-}
-
-export default SSEComponent;
+// export default SSEComponent;

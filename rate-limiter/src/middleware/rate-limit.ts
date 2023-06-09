@@ -68,7 +68,7 @@ const rateLimiter = function (complexityLimit: number, listLimit: number, schema
             const isList = isListType(fieldType) || (isNonNullType(fieldType) && isListType(fieldType.ofType));
 
             console.log('This is the currentNode:', node.name.value);
-            console.log(parentTypeStack);
+            //console.log(parentTypeStack);
             // let currMult = 0;
             //functionality upon encountering listType, in short looks for ancestor lists and limit arguments then adjusts currMult accordingly
             if(isList === true) {
@@ -130,6 +130,7 @@ const rateLimiter = function (complexityLimit: number, listLimit: number, schema
       }));
 
       complexityScore = resolveComplexity + typeComplexity;
+      res.locals.complexityScore = complexityScore
       console.log('This is the type complexity', typeComplexity);
       console.log('This is the resolve complexity', resolveComplexity);
       console.log('This is the complexity score:', complexityScore);
@@ -139,7 +140,7 @@ const rateLimiter = function (complexityLimit: number, listLimit: number, schema
         console.log('Complexity of this query is too high');
         return next(Error);
       }
-};
+    };
 return next();
   }
 }

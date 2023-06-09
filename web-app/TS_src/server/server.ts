@@ -1,5 +1,7 @@
 import * as dotenv from "dotenv";
 dotenv.config({ path: '../../.env' });
+import cors from 'cors';
+import db from './models/dbModel';
 
 import express, {
   Express,
@@ -10,7 +12,6 @@ import express, {
 } from "express";
 import { createServer } from 'http';
 import { SSEEvent } from "./sseInterfaces";
-import cors from 'cors';
 
 // import cookieParser from 'cookie-parser';
 // import ExpressSession from 'express-session';
@@ -19,16 +20,14 @@ import accountRouter from  './routers/accountRouter';
 import dataRouter from './routers/dataRouter';
 import endpointRouter from './routers/endpointRouter';
 
-
-
 const PORT = 3500;
 
 const app: Express = express();
 const server = createServer(app);
 
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 app.use(cors());
+app.use(express.urlencoded({ extended: true }));
 
 // declare module "express-session" {
 //   interface Session {
@@ -52,11 +51,6 @@ app.use('/api/account', accountRouter);
 app.use('/api/data', dataRouter);
 app.use('/api/endpoint', endpointRouter);
 
-// Error page
-app.use((req: Request, res: Response) =>
-  res.status(404).send("This is not the page you're looking for...")
-);
-
 // Start of Server sent events logic
 // app.get('/api/sse', (req: Request, res: Response) => {
 //   res.setHeader('Content-Type', 'text/event-stream');
@@ -73,7 +67,7 @@ app.use((req: Request, res: Response) =>
 //   }, 1000)
 // })
 
-app.get('/api/sse', (req, res) => {
+app.get('/api/sse/:endpointId', (req, res) => {
   console.log('accept/content type is event-stream');
   res.writeHead(200, {
     'Content-Type': 'text/event-stream',
@@ -82,10 +76,28 @@ app.get('/api/sse', (req, res) => {
     // 'Access-Control-Allow-Origin': '*',
   });
   setInterval(async () => {
-    const rows = "We will insert data info here!"
-    res.write(`data: ${JSON.stringify(rows)}\n\n`);
-  }, 1000);
+    try {
+      const endpointId: number = Number(req.params.endpointId);
+      console.log('req.params.endpointId:', req.params.endpointId)
+      const sqlCommand: string = `
+      SELECT * FROM requests WHERE endpoint_id = $1 ORDER BY to_timestamp(timestamp, 'Dy Mon DD YYYY HH24:MI:SS') DESC;
+      `;
+      const values: number[] = [ endpointId ];
+      const result: any = await db.query(sqlCommand, values);
+      res.write(`data: ${JSON.stringify(result.rows)}\n\n`);
+    } catch(error) {
+      console.error(error);
+      throw new Error(`Error in SSE get request in server.ts: `);
+    }
+    
+  }, 1500);
 });
+
+// Error page
+app.use((req: Request, res: Response) =>
+  res.status(404).send("This is not the page you're looking for...")
+);
+
 
 app.use((err: ErrorRequestHandler, req: Request, res: Response, next: NextFunction) => {
   const defaultErr = {
@@ -98,8 +110,6 @@ app.use((err: ErrorRequestHandler, req: Request, res: Response, next: NextFuncti
   return res.status(errorObj.status).json(errorObj.message);
 });
 
-app.listen(PORT, () => 
+app.listen(PORT, () =>
   console.log(`Currently listening on port: ${PORT}`)
 );
-
-module.exports = app;
