@@ -14,6 +14,15 @@ interface StoreState {
   setUserPassword: (userPassword: string) => void;
   confirmPassword: String;
   setConfirmPassword: (confirmPassword: string) => void;
+  // array of requestdata for a current graphql endpoint
+  endpointRequests: any;
+  setEndpointRequests: (requests: any) => void;
+  // string that shows what datatype to display on dashboard chart
+  chartDataType: string;
+  setChartDataType: (dataType: string) => void;
+  // string that shows what datatype to display on dashboard chart
+  chartTimeInterval: string;
+  setChartTime: (chartTime: string) => void;
 
   // boolean to confirm user is logged in
   isLoggedIn: Boolean;
@@ -80,6 +89,20 @@ const useStore = create<StoreState>((set) => ({
     endPointArr: endPointArr
   })),
 
+  endpointRequests : [],
+  setEndpointRequests: (requests: any) => set((state) => ({
+    endpointRequests: requests
+  })),
+
+  chartDataType: "Requests",
+  setChartDataType: (dataType: string) => set((state) => ({
+    chartDataType: dataType
+  })),
+
+  chartTimeInterval: "Last 7 Days",
+  setChartTime: (chartTime: string) => set((state) => ({
+    chartTimeInterval: chartTime
+  }))
 }));
 
 export default useStore;
