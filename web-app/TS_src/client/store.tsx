@@ -37,14 +37,22 @@ interface StoreState {
   endPointArr: Endpoint[];
   setEndPointArr: (endPointArr: Endpoint[]) => void;
 
-  currUserId: number;
-  setCurrUserId: (userId: number) => void;
+  currUser: UserInfo;
+  setCurrUser: (userId: number, email: string) => void;
+
+  anchorEl: any;
+  setAnchorEl: (anchorEl: any) => void;
 }
 
 
 interface Endpoint {
   id: number;
   url: string;
+}
+
+interface UserInfo {
+  userId: number;
+  email: string;
 }
 
 const useStore = create<StoreState>((set) => ({
@@ -108,10 +116,21 @@ const useStore = create<StoreState>((set) => ({
     chartTimeInterval: chartTime
   })),
 
-  currUserId: 0,
-  setCurrUserId: (userId: number) => set((state) => ({
-    currUserId: userId
-  }))
+  currUser: {
+    userId: 0,
+    email: '',
+  },
+  setCurrUser: (userId: number, email: string) => set((state) => ({
+    currUser: {
+      userId,
+      email
+    }
+  })),
+
+  anchorEl: null,
+  setAnchorEl: (anchorEl: any) => set((state) => ({
+    anchorEl,
+  })),
 }));
 
 export default useStore;

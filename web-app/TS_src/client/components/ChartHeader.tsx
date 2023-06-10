@@ -19,6 +19,7 @@ const ChartHeader: React.FC<{}> = () => {
   } = useStore();
 
   const averageComplexity = () => {
+    if (endpointRequests.length === 0) return 0
     let sumOfScores = 1
     for (let i = 0; i < endpointRequests.length; i++) {
       sumOfScores += endpointRequests[i].complexity_score
@@ -29,7 +30,7 @@ const ChartHeader: React.FC<{}> = () => {
 
  return (
     <TableContainer sx={{margin: "50px"}} component={Paper}>
-      <Table  aria-label="simple table">
+      <Table stickyHeader={true} aria-label="simple table">
         <TableHead>
           <TableRow>
             <TableCell align="center">Total API Requests</TableCell>

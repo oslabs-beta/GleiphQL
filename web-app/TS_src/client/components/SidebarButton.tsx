@@ -15,7 +15,7 @@ const SidebarButton: React.FC<SidebarButtonProps> = (props) => {
 
   return (
     <div>
-      <Button variant = 'contained' onClick = {toggleEndPoint}>{props.endPointUrl}</Button>
+      <Button sx={{fontSize: "12px", width: "90%"}} variant='contained' onClick={toggleEndPoint}>{props.endPointUrl}</Button>
     </div>
   )
 }

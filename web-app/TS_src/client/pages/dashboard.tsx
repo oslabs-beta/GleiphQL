@@ -5,25 +5,24 @@ import RequestTable from '../components/RequestTable';
 import Sidebar from '../components/Sidebar'
 import LineChart from '../components/LineChart';
 import ChartHeader from '../components/ChartHeader';
+import '../stylesheets/Dashboard.css'
 
 const Dashboard: React.FC<{}> = () => {
   const { currEndPoint } = useStore();
   return (
     <>
       <Navbar />
-      <Sidebar />
-      <div>
-        <h1>Dashboard!</h1>
+      <div className="dashboard-page">
+        <Sidebar />
+        { currEndPoint.id? 
+        <main className='main-section'>
+          <ChartHeader />
+          <LineChart />
+          <RequestTable />
+        </main> : null
+        }
       </div>
-      { currEndPoint.id? 
-      <div>
-        <ChartHeader />
-        <LineChart />
-        <RequestTable />
-      </div> : null
-       }
     </>
-
   );
 }
 

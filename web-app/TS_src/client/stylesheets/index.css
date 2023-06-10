@@ -1,18 +1,24 @@
 
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: Poppins, sans-serif;
+  /* font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif; */
   line-height: 1.5;
   font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  
+  /* color-scheme: light dark; */
+  color: #003366;
+  /* background-color: #242424; */
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
+
+  max-width: 1280px;
+  margin: 0 auto;
+  /* padding: 2rem; */
+  text-align: center;
 }
 
 body {
@@ -56,36 +62,37 @@ button:focus-visible {
 
 /*  ~~ Start of component: Login  ~~  */
 .LoginContainer {
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1), 0 6px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
   width: 300px;
   height: 500px;
-  background-color: rgb(188, 183, 183);
+  /* background-color: rgb(188, 183, 183); */
   border-color: black;
-  border-radius: 5px;
+  /* border-radius: 5px; */
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   position: relative;
-  .close-icon {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    box-shadow: 0, 0, 5px, rgba(0, 0, 0, 0.5);
-  }
-  .close-icon:hover {
-    color: black;
-    box-shadow: 0, 0, 5px, rgba(0, 0, 0, 0.5);
-  }
 }
-
+.close-icon {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  box-shadow: 0, 0, 5px, rgba(0, 0, 0, 0.5);
+}
+.close-icon:hover {
+  color: black;
+  box-shadow: 0, 0, 5px, rgba(0, 0, 0, 0.5);
+}
 /*    ~~ End of component:  Login   ~~   */
 
 
 /*  ~~ Start of component: Register  ~~   */
 .RegisterContainer{
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1), 0 6px 6px rgba(0, 0, 0, 0.1);
   width: 300px;
   height: 500px;
-  background-color: rgb(188, 183, 183);
   border-color: black;
   border-radius: 5px;
   display: flex;
@@ -93,47 +100,12 @@ button:focus-visible {
   justify-content: center;
   align-items: center;
   position: relative;
-
-  .close-icon {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    box-shadow: 0, 0, 5px, rgba(0, 0, 0, 0.5);
-  }
-
-  .close-icon:hover {
-    color: black;
-    box-shadow: 0, 0, 5px, rgba(0, 0, 0, 0.5);
-  }
-
 }
 
-.RegisterContainer button {
+/* .RegisterContainer button {
   width: 150px;
-}
-
-
+} */
 /*    ~~ End of component: Register   ~~   */
-
-/*  ~~ Start of component: Navbar  ~~   */
-.navbar-container {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: flex-end;
-  border-color: white;
-  border-style: solid;
-  height: 70px;
-}
-
-.login-btn {
-  border-radius: 5px;
-  border-color: black;
-  background-color: rgb(162, 162, 162);
-  height: 30px;
-  margin: 10px;
-}
-/*    ~~ End of component: Navbar   ~~   */
 
 /*  ~~ Start of component: ----  ~~   */
 .splashpage-container {
@@ -142,9 +114,4 @@ button:focus-visible {
   justify-content: center;
   align-items: center;
 }
-/*    ~~ End of component: ----   ~~   */
-
-
-/*  ~~ Start of component: ----  ~~   */
-
 /*    ~~ End of component: ----   ~~   */

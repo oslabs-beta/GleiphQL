@@ -21,10 +21,10 @@ const SplashPage: React.FC<{}> = () => {
       )}
 
       {showRegistration && (!showLogin) && (
-          <div className='register-popup'>
-            <Register />
-          </div>
-        )}
+        <div className='register-popup'>
+          <Register />
+        </div>
+      )}
 
     </div>
   );
