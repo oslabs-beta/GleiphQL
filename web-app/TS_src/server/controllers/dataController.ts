@@ -1,11 +1,16 @@
 import db from '../models/dbModel';
 import { Request, Response, NextFunction } from 'express';
 
-const findEndpointId = async (url: string) => {
+const findEndpointId = async (url: string, userID: string, password: string) => {
   const sqlCommand: string = `
-  SELECT endpoint_id FROM endpoints WHERE url = $1
+  SELECT *
+  FROM endpoints
+  JOIN users ON endpoints.owner_id = users.user_id
+  WHERE endpoints.url = $1
+    AND users.user_id = $2
+    AND users.password = $3;
   `;
-  const values: string[] = [ url ];
+  const values: string[] = [ url, userID, password ];
   try {
     const result: any = await db.query(sqlCommand, values);
     return result.rows[0].endpoint_id;
@@ -16,13 +21,27 @@ const findEndpointId = async (url: string) => {
 
 const dataController = {
   addData: async (req: Request, res: Response, next: NextFunction) => {
-    const { depth, ip, url, timestamp, objectTypes, queryString, complexityScore } = req.body;
-    if(depth === undefined || ip === undefined || url === undefined || timestamp === undefined || objectTypes === undefined || queryString === undefined || complexityScore === undefined) return next({
+    const { depth, ip, url, timestamp, objectTypes, queryString, complexityScore, email, password } = req.body;
+    if(depth === undefined || 
+      ip === '' || 
+      url === '' || 
+      timestamp === '' || 
+      objectTypes === undefined || 
+      queryString === undefined || 
+      complexityScore === undefined
+    ) return next({
       log: 'Error in dataController.addData: not given all necessary inputs',
       status: 400,
       message: { error: 'Did not receive necessary inputs to add data for the endpoint' }
     });
-    const endpointId: string = await findEndpointId(url);
+    if (res.locals.signIn === false) {
+      return next({
+        log: 'Error in dataController.addData: Could not validate user credentials',
+        status: 400,
+        message: { error: 'Could not validate user credentials' }
+      });
+    }
+    const endpointId: string = await findEndpointId(url, res.locals.userId, res.locals.userPW);
     if(!endpointId) return next({
       log: 'Error in dataController.addData: could not find the endpoint in the database',
       status: 400,

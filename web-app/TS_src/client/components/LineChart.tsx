@@ -28,6 +28,7 @@ const LineChart: React.FC<{}> = () => {
   } = useStore();
 
   useEffect(() => {
+    console.log('Current endpoint: ', currEndPoint)
     const endpointRequests = fetch(`/api/data/${currEndPoint.id}`)
     .then((res)=>res.json())
     .then((data)=>{
