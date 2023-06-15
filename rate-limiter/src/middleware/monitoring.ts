@@ -67,7 +67,7 @@ const endpointMonitor = function (config: any) {
       endpointData.timestamp = Date()
       endpointData.objectTypes = extractObjectTypes(query)
       endpointData.email = config.gliephqlUsername
-      endpointData.password = config.gleiphPassword
+      endpointData.password = config.gleiphqlPassword
       if (query.loc) {
         endpointData.queryString = query.loc.source.body
       }
