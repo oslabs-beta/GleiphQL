@@ -1,6 +1,9 @@
 // Schema to explor the star wars api
 const graphql = require('graphql');
 const _ = require('lodash');
+// const fetch = require('node-fetch').default;
+const client = require('../db');
+
 
 const {
   GraphQLObjectType,
@@ -20,11 +23,15 @@ const FilmType = new GraphQLObjectType({
     episode_id: { type: GraphQLInt },
     opening_crawl: { type: GraphQLString },
     director: { type: GraphQLString },
+    producer: { type: GraphQLString },
     release_date: { type: GraphQLString },
+    url: { type: GraphQLString },
+    created: { type: GraphQLString },
+    edited: { type: GraphQLString },
     characters: { 
       type: new GraphQLList(PeopleType),
       resolve(parent) {
-        return fetchCharacters(parent);
+        return fetchCharactersForFilm(parent);
       } 
     }
   })
@@ -39,8 +46,6 @@ const PeopleType = new GraphQLObjectType({
     eye_color: { type: GraphQLString },
     gender: { type: GraphQLString },
     hair_color: { type: GraphQLString },
-    height: { type: GraphQLString },
-    mass: { type: GraphQLString },
     skin_color: { type: GraphQLString },
     homeworld: { type: GraphQLString },
     url: { type: GraphQLString },
@@ -49,25 +54,25 @@ const PeopleType = new GraphQLObjectType({
     films: { 
       type: new GraphQLList(FilmType),
       resolve(parent) {
-        return fetchFilms(parent);
+        return fetchFilmsForPerson(parent); 
       } 
     },
     species: {
       type: new GraphQLList(SpeciesType),
       resolve(parent) {
-        return fetchSpecies(parent);
+        return fetchSpeciesForPerson(parent);
       }
     },
     starships: {
       type: new GraphQLList(StarshipType),
       resolve(parent) {
-        return fetchStarships(parent);
+        return fetchStarshipsForPerson(parent);  // working on this 
       }
     },
     vehicles: {
       type: new GraphQLList(VehicleType),
       resolve(parent) {
-        return fetchVehicles(parent);
+        return fetchVehiclesForPerson(parent);
       }
     }
   })
@@ -92,13 +97,13 @@ const PlanetType = new GraphQLObjectType({
     residents: {
       type: new GraphQLList(PeopleType),
       resolve(parent) {
-        return fetchCharacters(parent);
+        return fetchPeopleForPlanets(parent);
       }
     },
     films: { 
       type: new GraphQLList(FilmType),
       resolve(parent) {
-        return fetchFilms(parent);
+        return fetchFilmsForPlanets(parent);
       } 
     }
   })
@@ -123,13 +128,13 @@ const SpeciesType = new GraphQLObjectType({
     people: {
       type: new GraphQLList(PeopleType),
       resolve(parent) {
-        return fetchFilms(parent);
+        return fetchPeopleForSpecies(parent);
       }
     },
     films: {
       type: new GraphQLList(FilmType),
       resolve(parent) {
-        return fetchFilms(parent);
+        return fetchFilmsForSpecies(parent);
       }
     }
   })
@@ -137,12 +142,11 @@ const SpeciesType = new GraphQLObjectType({
 
 
 const StarshipType = new GraphQLObjectType({
-  name: 'Startship',
+  name: 'Starship',
   fields: () => ({
     name: { type: GraphQLString },
     model: { type: GraphQLString },
     starship_class: { type: GraphQLString },
-    manufacturer: { type: GraphQLString },
     cost_in_credits: { type: GraphQLString },
     length: { type: GraphQLString },
     crew: { type: GraphQLString },
@@ -158,13 +162,13 @@ const StarshipType = new GraphQLObjectType({
     films: {
       type: new GraphQLList(FilmType),
       resolve(parent) {
-        return fetchFilms(parent);
+        return fetchFilmsForStarships(parent);
       }
     },
     pilots: {
       type: new GraphQLList(PeopleType),
       resolve(parent) {
-        return fetchCharacters(parent);
+        return fetchPilotsForStarships(parent);
       }
     }
   })
@@ -182,7 +186,6 @@ const VehicleType = new GraphQLObjectType({
     cost_in_credits: { type: GraphQLString },
     crew: { type: GraphQLString },
     passengers: { type: GraphQLString },
-    max_atmosphering_speed: { type: GraphQLString },
     cargo_capacity: { type: GraphQLString },
     consumables: { type: GraphQLString },
     url: { type: GraphQLString },
@@ -190,8 +193,8 @@ const VehicleType = new GraphQLObjectType({
     edited: { type: GraphQLString },
     films: {
       type: new GraphQLList(FilmType),
-      resolve(parent, args) {
-        return _.filter(fetchFilms, {vehicleId: parent.id })
+      resolve(parent) {
+        return fetchFilmsForVehicles(parent);
       }
     }
   })
@@ -209,9 +212,10 @@ const RootQuery = new GraphQLObjectType({
       },
       resolve: async (_, args) => {
         try {
-          const response = await fetch(`http://swapi.dev/api/films/${args.id}/`);
-          const data = await response.json();
-          return data;
+          const query = 'SELECT * FROM films WHERE id = $1';
+          const values = [args.id];
+          const response = await client.query(query, values);
+          return response.rows[0];
         } catch (error) {
           console.error(error);
           throw new Error(`Error from RootQuery, failed to fetch film`);
@@ -221,72 +225,76 @@ const RootQuery = new GraphQLObjectType({
     // people (single)
     people: {
       type: PeopleType,
-      args: { id: { type: GraphQLID } },
+      args: { id: { type: GraphQLInt } },
       resolve: async (_, args) => {
         try {
-          const response = await fetch(`http://swapi.dev/api/people/${args.id}/`);
-          const data = await response.json();
-          return data;
+          const query = 'SELECT * FROM people WHERE id = $1';
+          const values = [args.id];
+          const response = await client.query(query, values);
+          return response.rows[0];
         } catch (error) {
           console.error(error);
           throw new Error(`Error from RootQuery, failed to fetch person`);
         }
       } 
     },
-    // planets
+    
     planet: {
       type: PlanetType,
-      args: { id: { type: GraphQLString } },
+      args: { id: { type: GraphQLInt } },
       resolve: async (_, args) => {
         try {
-          const response = await fetch(`http://swapi.dev/api/planets/${args.id}/`);
-          const data = await response.json();
-          return data;
+          const query = 'SELECT * FROM planets WHERE id = $1';
+          const values = [args.id];
+          const response = await client.query(query, values);
+          return response.rows[0];
         } catch(error) {
           console.error(error);
           throw new Error(`Error from RootQuery, failed to fetch planets`);
         }
       }
     },
-    // species
+    
     species: {
       type: SpeciesType,
-      args: { id: { type: GraphQLString } },
+      args: { id: { type: GraphQLInt } },
       resolve: async (_, args) => {
         try {
-          const response = await fetch(`http://swapi.dev/api/species/${args.id}/`);
-          const data = await response.json();
-          return data;
+          const query = 'SELECT * FROM species WHERE id = $1';
+          const values = [args.id];
+          const response = await client.query(query, values);
+          return response.rows[0];
         } catch (error) {
           console.error(error);
           throw new Error(`Error from RootQuery, failed to fetch species`);
         }
       }
     },
-    // starships
+    
     starship: {
       type: StarshipType, 
-      args: { id: { type: GraphQLString } },
+      args: { id: { type: GraphQLInt } },
       resolve: async (_, args) => {
         try {
-          const response = await fetch(`http://swapi.dev/api/starships/${args.id}/`);
-          const data = await response.json();
-          return data;
+          const query = 'SELECT * FROM starships WHERE id = $1';
+          const values = [args.id];
+          const response = await client.query(query, values);
+          return response.rows[0];
         } catch(error) {
           console.error(error);
-          throw new Error(`Error from RootQuery, failed to fetch startship`);
+          throw new Error(`Error from RootQuery, failed to fetch starship`);
         }
       }
     },
-    // vehicles
+
     vehicle: {
       type: VehicleType,
-      args: { id: { type: GraphQLString } },
+      args: { id: { type: GraphQLInt } },
       resolve: async (_, args) => {
         try {
-          const response = await fetch(`http://swapi.dev/api/vehicles/${args.id}/`);
-          const data = await response.json();
-          return data;
+          const query = 'SELECT * FROM vehicles WHERE id = $1';
+          const response = await client.query(query, values);
+          return response.rows[0];
         } catch(error) {
           console.error(error);
           throw new Error(`Error from RootQuery, failed to fetch vehicle`);
@@ -297,15 +305,20 @@ const RootQuery = new GraphQLObjectType({
 });
 
 // Defining functions to fetch lists of fields
-const fetchFilms = async(parent) => {
+
+const fetchFilmsForPerson = async(parent) => {
   try {
-    const filmPromises = parent.films.map(async (filmUrl) => {
-      const response = await fetch(filmUrl);
-      const filmData = await response.json();
-      return filmData;
-    })
-    const films = await Promise.all(filmPromises);
-    return films;
+    const personId = parent.id;
+    const query = `
+      SELECT films.*
+      FROM films_people
+      JOIN films ON films_people.film_id = films.id
+      WHERE films_people.person_id = $1;
+    `;
+    const values = [personId];
+
+    const response = await client.query(query, values);
+    return response.rows;
   } catch (error) {
     console.error(error)
     throw new Error(`Error in fetching films list, Root Query`);
@@ -313,16 +326,19 @@ const fetchFilms = async(parent) => {
 };
 
 
-const fetchCharacters = async(parent) => {
+const fetchCharactersForFilm = async(parent) => {
   try {
-    const characterPromises = parent.characters.map(async (characterUrl) => {
-      const response = await fetch(characterUrl);
-      const characterData = await response.json();
-      return characterData;
-    });
+    const filmId = parent.id;
+    const query = `
+      SELECT people.*
+      FROM films_people
+      JOIN people ON films_people.person_id = people.id
+      WHERE films_people.film_id = $1
+      `;
+    const values = [filmId];
 
-    const characters = await Promise.all(characterPromises);
-    return characters;
+    const response = await client.query(query, values);
+    return response.rows;
 
   } catch(error) {
     console.error(error);
@@ -331,16 +347,19 @@ const fetchCharacters = async(parent) => {
 };
 
 
-const fetchSpecies = async(parent) => {
+const fetchSpeciesForPerson = async(parent) => {
   try {
-    const speciesPromises = parent.characters.map(async (speciesUrl) => {
-      const response = await fetch(speciesUrl);
-      const speciesData = await response.json();
-      return speciesData;
-    })
+    const personId = parent.id;
+    const query = `
+      SELECT species.*
+      FROM species_people
+      JOIN species ON species_people.species_id = species.id
+      WHERE species_people.person_id = $1
+    `;
+    const values = [personId];
     
-    const species = await Promise.all(speciesPromises);
-    return species;
+    const response = await client.query(query, values);
+    return response.rows;
 
   } catch (error) {
     console.error(error);
@@ -349,16 +368,19 @@ const fetchSpecies = async(parent) => {
 };
 
 
-const fetchStarships = async(parent) => {
+const fetchStarshipsForPerson = async(parent) => {
   try {
-    const starshipsPromises = parent.starships.map(async (starshipsUrl) => {
-      const response = await fetch(starshipsUrl);
-      const starshipsData = await response.json();
-      return starshipsData;
-    })
-    
-    const starships = await Promise.all(starshipsPromises);
-    return starships;
+    const starshipId = parent.id;
+    const query = `
+      SELECT starships.*
+      FROM starships_people
+      JOIN starships ON starships_people.starship_id = starship_id
+      WHERE starships_people.pilot_id = $1
+    `;
+    const values = [starshipId];
+
+    const response = await client.query(query, values);
+    return response.rows;
 
   } catch (error) {
     console.error(error);
@@ -366,22 +388,169 @@ const fetchStarships = async(parent) => {
   }
 };
 
-const fetchVehicles = async(parent) => {
+const fetchVehiclesForPerson = async(parent) => {
   try {
-    const vehiclesPromises = parent.vehicles.map(async (vehiclesUrl) => {
-      const response = await fetch(vehiclesUrl);
-      const vehiclesData = await response.json();
-      return vehiclesData;
-    })
+    const vehicleId = parent.id;
+    const query = `
+      SELECT vehicles.*
+      FROM vehicles_people
+      JOIN vehicles ON vehicles_people.vehicles_id = vehicles_id
+      WHERE vehicles_people.pilot_id = $1
+    `;
+    const values = [vehicleId];
     
-    const vehicles = await Promise.all(vehiclesPromises);
-    return vehicles;
+    const response = await client.query(query, values);
+    return response.rows;
 
   } catch (error) {
     console.error(error);
     throw new Error(`Error from vehicles root query`);
   }
 };
+
+const fetchPeopleForPlanets = async(parent) => {
+  try {
+    const peopleId = parent.id;
+    const query = `
+      SELECT people.*
+      FROM planets_people
+      JOIN people ON planets_people.resident_id = people_id
+      WHERE planets_people.planet_id = $1
+    `;
+    const values = [peopleId];
+
+    const response = await client.query(query, values);
+    return response.rows;
+
+  } catch (error) {
+    console.error(error);
+    throw new Error(`Error from fetching people for planets`)
+  }
+};
+
+const fetchFilmsForPlanets = async(parent) => {
+  try {
+    const filmId = parent.id;
+    const query = `
+      SELECT films.*
+      FROM films_planets
+      JOIN films ON films_planets.film_id = film_id
+      WHERE films_planets.planet_id = $1
+    `;
+    const values = [filmId];
+
+    const response = await client.query(query, values);
+    return response.rows;
+
+  } catch(error) {
+    console.error(error);
+    throw new Error(`Error with fetching films for planets`)
+  }
+};
+
+
+const fetchPeopleForSpecies = async(parent) => {
+  try {
+    const personId = parent.id;
+    const query = `
+      SELECT people.*
+      FROM species_people
+      JOIN people ON species_people.person_id = person_id
+      WHERE species_people.species_id = $1
+    `;
+    const values = [personId];
+    
+    const response = await client.query(query, values);
+    return response.rows;
+  } catch(error) {
+    console.error(error);
+    throw new Error(`Error with fetching people for species`)
+  }
+};
+
+const fetchFilmsForSpecies = async(parent) => {
+  try {
+    const filmId = parent.id;
+    const query = `
+      SELECT films.*
+      FROM films_species
+      JOIN films ON films_species.film_id = film_id
+      WHERE films_species.species_id = $1
+    `;
+    const values = [filmId];
+
+    const response = await client.query(query, values);
+    return response.rows;
+
+  } catch(error) {
+    console.error(error);
+    throw new Error('Error with fetching films for species')
+  }
+};
+
+const fetchFilmsForStarships = async(parent) => {
+  try {
+    const filmId = parent.id;
+    const query = `
+      SELECT films.*
+      FROM films
+      JOIN films_starships ON films.id = films_starships.film_id
+      WHERE films_starships.starship_id = 1;
+    
+    `;
+    const values = [filmId];
+
+    const response = await client.query(query, values);
+    return response.rows;
+
+  } catch(error) {
+    console.error(error);
+    throw new Error('Error with fetching films for starships');
+  }
+};
+
+
+const fetchPilotsForStarships = async(parent) => {
+  try {
+    const pilotId = parent.id;
+    const query = `
+      SELECT people.*
+      FROM starships_people
+      JOIN people ON starships_people.person_id = person_id
+      WHERE starships_people.starship_id = $1
+    `;
+    const values = [pilotId];
+
+    const response = await client.query(query, values);
+    return response.rows;
+
+  } catch(error) {
+    console.error(error);
+    throw new Error('Error with fetching pilots for starships')
+  }
+};
+
+
+const fetchFilmsForVehicles = async(parent) => {
+  try {
+    const filmId = parent.id;
+    const query = `
+      SELECT films.*
+      FROM films
+      JOIN films_vehicles ON films.id = films_vehicles.film_id
+      WHERE films_vehicles.vehicle_id = $1;
+    `;
+    const values = [filmId];
+    
+    const response = await client.query(query, values);
+    return response.rows;
+
+  } catch(error) {
+    console.error(error);
+    throw new Error('Error with fetching films for vehicles');
+  }
+};
+
 
 module.exports = new GraphQLSchema({
   query: RootQuery
