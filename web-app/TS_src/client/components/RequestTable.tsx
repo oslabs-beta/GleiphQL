@@ -5,6 +5,7 @@ import TableCell from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
+import Collapse from '@mui/material/Collapse';
 import Paper from '@mui/material/Paper';
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
@@ -18,6 +19,7 @@ interface Data {
   object_types: any;
   query_string: string;
   complexity_score: number;
+  timestamp: string;
   query_depth: number;
 }
 
@@ -32,15 +34,15 @@ function RequestTable () {
     .catch((err: any) => console.log(err.message));   
   }, [currEndPoint]);
   return (
-    <TableContainer component={Paper}>
+    <TableContainer component={Paper} sx={{ marginTop: "50px" }}>
       <Table stickyHeader={true} sx={{ tableLayout: 'fixed' }}>
         <TableHead>
           <TableRow>
             <TableCell>IP Address</TableCell>
-            <TableCell align="right">Number of Object Types</TableCell>
-            <TableCell align="right">Query String</TableCell>
-            <TableCell align="right">Complexity Score</TableCell>
-            <TableCell align="right">Query Depth</TableCell>
+            <TableCell align="left">Complexity Score</TableCell>
+            <TableCell align="left">Number of Object Types</TableCell>
+            <TableCell align="left">Query Depth</TableCell>
+            <TableCell align="left">Timestamp</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -51,10 +53,10 @@ function RequestTable () {
               sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
               >
                 <TableCell component="th" scope="row">{row.ip_address}</TableCell>
-                <TableCell align="right">{row.object_types.objectTypes.length}</TableCell>
-                <TableCell align="right">{row.query_string}</TableCell>
-                <TableCell align="right">{row.complexity_score}</TableCell>
-                <TableCell align="right">{row.query_depth}</TableCell>
+                <TableCell align="left">{row.complexity_score}</TableCell>
+                <TableCell align="left">{row.object_types.objectTypes.length}</TableCell>
+                <TableCell align="left">{row.query_depth}</TableCell>
+                <TableCell align="left">{row.timestamp}</TableCell>
               </TableRow>
             );
           })}

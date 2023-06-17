@@ -4,8 +4,8 @@ import axios from 'axios';
 import SidebarButton from './SidebarButton';
 import { v4 as uuidv4 } from 'uuid';
 import Box from '@mui/material/Box';
-
-//fix any
+import List from '@mui/material/List';
+import Typography from "@mui/material/Typography";
 
 const queryEndPoints = async (userId: number): Promise<any> => {
   const response = await axios.get(`/api/endpoint/${userId}`);
@@ -15,14 +15,14 @@ const queryEndPoints = async (userId: number): Promise<any> => {
 
 const Sidebar: React.FC<{}> = () => {
   const [ endpointArray, setEndpointArray ] = useState<any[]>([]);
-  const { currEndPoint, setCurrEndPoint, currUserId } = useStore();
+  const { currEndPoint, setCurrEndPoint, currUser } = useStore();
 
   //useEffect that queries for current endPoints and generates endPointArray
   useEffect(() => {
     const fetchData = async () => {
       // fix any
       try {
-        const queryArr: any[] = await queryEndPoints(currUserId);
+        const queryArr: any[] = await queryEndPoints(currUser.userId);
         if(queryArr.length) {
           const endPoints = queryArr.map((ele) => <SidebarButton key={uuidv4()} endPointUrl={ele.url} endPointId={ele.endpoint_id}></SidebarButton>)
           setEndpointArray(endPoints);
@@ -38,11 +38,13 @@ const Sidebar: React.FC<{}> = () => {
   //wrap endpoint array in things
   //just use button that when you click sets currEndPoint
   return (
-    <div>
+    <div className='sidebar'>
+      <Typography variant="h5">
+        My Endpoints
+      </Typography>
       <Box sx={{
               '& > :not(style)': { m: 1, width: '25ch' },
        }}>
-      {currEndPoint.url}
       {endpointArray}
       </Box>
     </div>
