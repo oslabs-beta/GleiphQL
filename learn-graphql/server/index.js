@@ -1,5 +1,4 @@
 const express = require('express');
-const graphql = require('graphql');
 const { graphqlHTTP } = require('express-graphql');
 // schema for locally created data (books/authors)
 // const schema = require('./schema/booksSchema');
