@@ -82,24 +82,25 @@ const Mutation = new GraphQLObjectType({
       },
       resolve: async (_, args) => {
         try {
-          const query = `
-          UPDATE films 
-          SET title = $2, episode_id = $3, opening_crawl = $4, director = $5, producer = $6, release_date = $7, created = $8, edited = $9 
-          WHERE id = $1
-          RETURNING *
+          const query = `UPDATE films
+          SET ${args.title?  'title = $2' : ''}
+          ${args.episode_id? ', episode_id = $3' : ''} 
+          ${args.opening_crawl? ', opening_crawl = $4' : ''}
+          ${args.director? ', director = $5' : ''}
+          ${args.producer? ', producer = $6' : ''}
+          ${args.release_date? ', release_date = $7' : ''}
+          ${args.created? ', created = $8' : ''}
+          ${args.edited? ', edited = $9' : ''}
+          WHERE id = $1 RETURNING *;
           `;
+          
+          console.log(query);
+          
+          const values = [];
 
-          const values = [
-            args.id,
-            args.title,
-            args.episode_id,
-            args.opening_crawl,
-            args.director,
-            args.producer,
-            args.release_date,
-            args.created,
-            args.edited
-          ];
+          for(const key in args) {
+            if(args !== undefined) values.push(args[key]);
+          }
 
           const result = await client.query(query, values);
           return result.rows[0];
@@ -198,24 +199,25 @@ const Mutation = new GraphQLObjectType({
         try {
           const query = `
             UPDATE people
-            SET name = $2, birth_year = $3, eye_color = $4, gender = $5, hair_color = $6, skin_color = $7, homeworld = $8, url = $9, created = $10, edited = $11
+            SET ${args.name? 'name = $2' : ''}
+            ${args.birth_year? ', birth_year = $3' : ''}
+            ${args.eye_color? ', eye_color = $4' : ''}
+            ${args.gender? ', gender = $5' : ''}
+            ${args.hair_color? ', hair_color = $6' : ''}
+            ${args.skin_color? ', skin_color = $7' : ''}
+            ${args.homeworld? ', homeworld = $8' : ''}
+            ${args.url? ', url = $9' : ''}
+            ${args.created? ', created = $10' : ''}
+            ${args.edited? ', edited = $11' : ''}
             WHERE id = $1
             RETURNING *
           `;
 
-          const values = [
-            args.id,
-            args.name,
-            args.birth_year,
-            args.eye_color,
-            args.gender,
-            args.hair_color,
-            args.skin_color,
-            args.homeworld,
-            args.url,
-            args.created,
-            args.edited
-          ];
+          const values = [];
+
+          for(const key in args) {
+            if(args !== undefined) values.push(args[key]);
+          }
 
           const result = await client.query(query, values);
           return result.rows[0];
@@ -319,26 +321,27 @@ const Mutation = new GraphQLObjectType({
         try {
           const query = `
             UPDATE planets
-            SET name = $2, diameter = $3, rotation_period = $4, orbital_period = $5, gravity = $6, population = $7, climate = $8, terrain = $9, surface_water = $10, url = $11, created = $12, edited = $13
+            SET ${args.name? 'name = $2' : ''}
+            ${args.diameter? ', diameter = $3' : ''}
+            ${args.rotation_period? ', rotation_period = $4' : ''}
+            ${args.orbital_period? ', orbital_period = $5' : ''}
+            ${args.gravity? ', gravity = $6' : ''}
+            ${args.population? ', population = $7' : ''}
+            ${args.climate? ', climate = $8' : ''}
+            ${args.terrain? ', terrain = $9' : ''}
+            ${args.surface_water? ', surface_water = $10' : ''}
+            ${args.url? ', url = $11' : ''} 
+            ${args.created? ', created = $12' : ''}
+            ${args.edited? ', edited = $13' : ''}
             WHERE id = $1
             RETURNING *
           `;
 
-          const values = [
-            args.id, 
-            args.name,
-            args.diameter,
-            args.rotation_period,
-            args.orbital_period,
-            args.gravity,
-            args.population,
-            args.climate,
-            args.terrain,
-            args.surface_water,
-            args.url,
-            args.created,
-            args.edited
-          ];
+          const values = [];
+
+          for(const key in args) {
+            if(args !== undefined) values.push(args[key]);
+          }
 
           const result = await client.query(query, values);
           return result.rows[0];
@@ -443,26 +446,27 @@ const Mutation = new GraphQLObjectType({
         try {
           const query = `
             UPDATE species
-            SET name = $2, classification = $3, designation = $4, average_height = $5, eye_colors = $6, hair_colors = $7, skin_colors = $8, language = $9, homeworld = $10, url = $11, created = $12, edited = $13
+            SET ${args.name? 'name = $2' : ''}
+            ${args.classification? ', classification = $3' : ''}
+            ${args.designation? ', designation = $4' : ''}
+            ${args.average_height? ', average_height = $5' : ''}
+            ${args.eye_colors? ', eye_colors = $6' : ''}
+            ${args.hair_colors? ', hair_colors = $7' : ''}
+            ${args.skin_colors? ', skin_colors = $8' : ''}
+            ${args.language? ', language = $9' : ''}
+            ${args.homeworld? ', homeworld = $10' : ''}
+            ${args.url? ', url = $11' : ''}
+            ${args.created? ', created = $12' : ''}
+            ${args.edited? ', edited = $13' : ''}
             WHERE id = $1
             RETURNING *
           `;
 
-          const values = [
-            args.id,
-            args.name,
-            args.classification,
-            args.designation,
-            args.average_height,
-            args.eye_colors,
-            args.hair_colors,
-            args.skin_colors,
-            args.language,
-            args.homeworld,
-            args.url,
-            args.created,
-            args.edited
-          ];
+          const values = [];
+
+          for(const key in args) {
+            if(args !== undefined) values.push(args[key]);
+          }
 
           const result = await client.query(query, values);
           return result.rows[0];
@@ -575,29 +579,30 @@ const Mutation = new GraphQLObjectType({
         try {
           const query = `
             UPDATE starships
-            SET name = $2, model = $3, starship_class = $4, cost_in_credits = $5, length = $6, crew = $7, crew = $8, passengers = $9, max_atmosphering_speed = $10, hyperdrive_rating = $11, MGLT = $12, cargo_capacity = $13, consumables = $14, url = $16, created = $17, edited = $18
+            SET ${args.name? 'name = $2' : ''}
+            ${args.model? ', model = $3' : ''}
+            ${args.starship_class? ', starship_class = $4' : ''}
+            ${args.cost_in_credits? ', cost_in_credits = $5' : ''}
+            ${args.length? ', length = $6' : ''}
+            ${args.crew? ', crew = $7' : ''}
+            ${args.passengers? ', passengers = $8' : ''}
+            ${args.max_atmosphering_speed? ', max_atmosphering_speed = $9' : ''}
+            ${args.hyperdrive_rating? ', hyperdrive_rating = $10' : ''}
+            ${args.MGLT? ', MGLT = $11' : ''}
+            ${args.cargo_capacity? ', cargo_capacity = $12' : ''}
+            ${args.consumables? ', consumables = $13' : ''}
+            ${args.url? ', url = $14' : ''}
+            ${args.created? ', created = $15' : ''}
+            ${args.edited? ', edited = $16' : ''}
             WHERE id = $1
             RETURNING *
           `;
 
-          const values = [
-            args.id,
-            args.name,
-            args.model,
-            args.starship_class,
-            args.cost_in_credits,
-            args.length,
-            args.crew,
-            args.passengers,
-            args.max_atmosphering_speed,
-            args.hyperdrive_rating,
-            args.MGLT,
-            args.cargo_capacity,
-            args.consumables,
-            args.url,
-            args.created,
-            args.edited
-          ];
+          const values = [];
+
+          for(const key in args) {
+            if(args !== undefined) values.push(args[key]);
+          }
 
           const result = await client.query(query, values);
           return result.rows[0];
@@ -705,27 +710,28 @@ const Mutation = new GraphQLObjectType({
         try {
           const query = `
             UPDATE vehicles
-            SET name = $2, model = $3, vehicle_class = $4, manufacturer = $5, length = $6, cost_in_credits = $7, crew = $8, passengers = $9, cargo_capacity = $10, consumables = $11, url = $12, created = $13, edited = $14
+            SET ${args.name? 'name = $2' : ''}
+            ${args.model? ', model = $3' : ''}
+            ${args.vehicle_class? ', vehicle_class = $4' : ''}
+            ${args.manufacturer? ', manufacturer = $5' : ''} 
+            ${args.length? ', length = $6' : ''}
+            ${args.cost_in_credits? ', cost_in_credits = $7' : ''}
+            ${args.crew? ', crew = $8' : ''}
+            ${args.passengers? ', passengers = $9' : ''}
+            ${args.cargo_capacity? ', cargo_capacity = $10' : ''}
+            ${args.consumables? ', consumables = $11' : ''}
+            ${args.url? ', url = $12' : ''}
+            ${args.created? ', created = $13' : ''}
+            ${args.edited? ', edited = $14' : ''}
             WHERE id = $1
             RETURNING *
           `;
 
-          const values = [
-            args.id,
-            args.name,
-            args.model,
-            args.vehicle_class,
-            args.manufacturer,
-            args.length,
-            args.cost_in_credits,
-            args.crew,
-            args.passengers,
-            args.cargo_capacity,
-            args.consumables,
-            args.url,
-            args.created,
-            args.edited,
-          ];
+          const values = [];
+
+          for(const key in args) {
+            if(args !== undefined) values.push(args[key]);
+          }
 
           const result = await client.query(query, values);
           return result.rows[0];
