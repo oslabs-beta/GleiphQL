@@ -7,6 +7,7 @@ import { GraphQLSchemaWithContext, createYoga } from 'graphql-yoga';
 import endpointMonitor from '../middleware/monitoring.js';
 import rateLimiter from '../middleware/rate-limit.js';
 import { TypeInfo, GraphQLSchema } from 'graphql'
+// import { queryGen } from '../query-gen/gql-query-gen.js';
 
 const app = express();
 const port = process.env.PORT || 4000
@@ -67,6 +68,8 @@ const countriesConfig: testConfig = {
   typeInfo: countriesTypeInfo,
   monitor: true,
 }
+
+// queryGen(spaceXSchema);
 
 app.use(express.json());
 
