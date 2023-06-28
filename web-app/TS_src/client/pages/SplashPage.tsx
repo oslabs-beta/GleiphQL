@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Login from '../components/Login';
 import Register from '../components/Register';
+import Footer from '../components/Footer';
 import useStore from '../store';
 
 const SplashPage: React.FC<{}> = () => {
@@ -25,6 +26,8 @@ const SplashPage: React.FC<{}> = () => {
           <Register />
         </div>
       )}
+
+      <Footer />
 
     </div>
   );
