@@ -19,6 +19,11 @@ const rateLimiter = function (config: any) {
       let typeComplexity = 0;
       let resolveComplexity = 0;
       let currMult = 0;
+      const ipAddresses: any = {};
+      let reqIP = req.ip
+      if (reqIP.includes('::ffff:')) {
+        reqIP = reqIP.replace('::ffff:', '');
+      }
 
       visit(parsedAst, visitWithTypeInfo(config.typeInfo, {
         enter(node) {
@@ -102,6 +107,9 @@ const rateLimiter = function (config: any) {
 
 
       complexityScore = resolveComplexity + typeComplexity;
+      if (!ipAddresses[reqIP]) {
+        ipAddresses[reqIP] = complexityScore;
+      }
       console.log('This is the type complexity', typeComplexity);
       console.log('This is the resolve complexity', resolveComplexity);
       console.log('This is the complexity score:', complexityScore);
