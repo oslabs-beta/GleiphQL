@@ -14,14 +14,6 @@ interface StoreState {
   setUserPassword: (userPassword: string) => void;
   confirmPassword: String;
   setConfirmPassword: (confirmPassword: string) => void;
-
-  // boolean to confirm user is logged in
-  isLoggedIn: Boolean;
-  setIsLoggedIn: (status: boolean) => void;
-  // boolean to check matched passwords
-  passMatch: Boolean;
-  setPassMatch: (status: boolean) => void;
-
   // array of requestdata for a current graphql endpoint
   endpointRequests: any;
   setEndpointRequests: (requests: any) => void;
@@ -32,11 +24,35 @@ interface StoreState {
   chartTimeInterval: string;
   setChartTime: (chartTime: string) => void;
 
-  currEndPoint: String;
-  setCurrEndPoint: (endpoint: string) => void;
+  // boolean to confirm user is logged in
+  isLoggedIn: Boolean;
+  setIsLoggedIn: (status: boolean) => void;
+  // boolean to check matched passwords
+  passMatch: Boolean;
+  setPassMatch: (status: boolean) => void;
 
-  endPointArr: string[];
-  setEndPointArr: (endPointArr: string[]) => void;
+  currEndPoint: Endpoint;
+  setCurrEndPoint: (id: number, url:string) => void;
+
+  endPointArr: Endpoint[];
+  setEndPointArr: (endPointArr: Endpoint[]) => void;
+
+  currUser: UserInfo;
+  setCurrUser: (userId: number, email: string) => void;
+
+  anchorEl: any;
+  setAnchorEl: (anchorEl: any) => void;
+}
+
+
+interface Endpoint {
+  id: number;
+  url: string;
+}
+
+interface UserInfo {
+  userId: number;
+  email: string;
 }
 
 const useStore = create<StoreState>((set) => ({
@@ -69,13 +85,19 @@ const useStore = create<StoreState>((set) => ({
     passMatch: status
   })),
 
-  currEndPoint: '',
-  setCurrEndPoint: (endpoint: string) => set((state) => ({
-    currEndPoint: endpoint
+  currEndPoint: {
+    id: 0,
+    url: ''
+  },
+  setCurrEndPoint: (id: number, url: string) => set((state) => ({
+    currEndPoint: {
+      id,
+      url
+    }
   })),
 
   endPointArr: [],
-  setEndPointArr: (endPointArr: string[]) => set((state) => ({
+  setEndPointArr: (endPointArr: Endpoint[]) => set((state) => ({
     endPointArr: endPointArr
   })),
 
@@ -92,7 +114,23 @@ const useStore = create<StoreState>((set) => ({
   chartTimeInterval: "Last 7 Days",
   setChartTime: (chartTime: string) => set((state) => ({
     chartTimeInterval: chartTime
-  }))
+  })),
+
+  currUser: {
+    userId: 0,
+    email: '',
+  },
+  setCurrUser: (userId: number, email: string) => set((state) => ({
+    currUser: {
+      userId,
+      email
+    }
+  })),
+
+  anchorEl: null,
+  setAnchorEl: (anchorEl: any) => set((state) => ({
+    anchorEl,
+  })),
 }));
 
 export default useStore;

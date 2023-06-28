@@ -6,11 +6,18 @@ import useStore from '../store';
 import Button from '@mui/material/Button';
 import { Navigate } from 'react-router-dom';
 import axios from'axios';
+import { ContentPasteSearchOutlined } from '@mui/icons-material';
 
+interface LoginResponse {
+  userExists: boolean;
+  signedIn: boolean;
+  userId?: number;
+  userEmail?: string;
+}
 
 const Login: React.FC<{}> = () => {
   
-  const { loginToggle, registerToggle, userEmail, setUserEmail, userPassword, setUserPassword, isLoggedIn, setIsLoggedIn } = useStore();
+  const { loginToggle, registerToggle, userEmail, setUserEmail, userPassword, setUserPassword, isLoggedIn, setIsLoggedIn, setCurrUser } = useStore();
   // create function to toggle both components
   const handleClose = () => {
     loginToggle(false);
@@ -31,10 +38,15 @@ const Login: React.FC<{}> = () => {
     }
 
     try {
-      const response = await axios.post('/api/account/login', userLogin);
+      const response = await axios.post<LoginResponse>('/api/account/login', userLogin);
 
-      if (response.status === 200) {
+      if (response.data.userExists && response.data.signedIn) {
+        setCurrUser(response.data.userId||0, response.data.userEmail||'');
         setIsLoggedIn(true);
+      } else {
+        alert('Unsuccesful Login Attempt');
+        setUserEmail('');
+        setUserPassword('');
       }
 
     } catch(error) {
@@ -53,7 +65,7 @@ const Login: React.FC<{}> = () => {
           <CloseRoundedIcon />
         </div>
         
-        <p>Inside of Login component</p>
+        <h2>Login</h2>
 
         <form onSubmit={handleSubmit}>
           <Box
@@ -80,14 +92,14 @@ const Login: React.FC<{}> = () => {
             />
           </Box>
 
-          <Button type='submit' variant="contained">
+          <Button sx={{margin: '10px'}} type='submit' variant="contained">
             Sign In
           </Button>
         </form>  
         
-        <br></br>
+        {/* <br></br> */}
         
-        <Button className='register-link' onClick={toggleRegister} variant="contained">
+        <Button sx={{margin: '10px'}} onClick={toggleRegister} variant="contained">
           Not a member? Sign up here
         </Button>
 

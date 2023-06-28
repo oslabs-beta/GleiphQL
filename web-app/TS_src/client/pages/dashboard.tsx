@@ -1,22 +1,28 @@
 import React, { useState } from 'react';
 import useStore from '../store';
 import Navbar from '../components/Navbar';
+import RequestTable from '../components/RequestTable';
 import Sidebar from '../components/Sidebar'
 import LineChart from '../components/LineChart';
 import ChartHeader from '../components/ChartHeader';
+import '../stylesheets/Dashboard.css'
 
 const Dashboard: React.FC<{}> = () => {
-  const { showLogin, showRegistration } = useStore();
-
-
+  const { currEndPoint } = useStore();
   return (
     <>
       <Navbar />
-      <Sidebar />
-      <ChartHeader />
-      <LineChart />
+      <div className="dashboard-page">
+        <Sidebar />
+        { currEndPoint.id? 
+        <main className='main-section'>
+          <ChartHeader />
+          <LineChart />
+          <RequestTable />
+        </main> : null
+        }
+      </div>
     </>
-
   );
 }
 

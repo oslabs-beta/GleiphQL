@@ -10,7 +10,7 @@ import axios from 'axios';
 
 const Register: React.FC = () => {
 
-  const { loginToggle, registerToggle, userEmail, setUserEmail, setUserPassword, userPassword, confirmPassword, setConfirmPassword, passMatch, setPassMatch, isLoggedIn, setIsLoggedIn } = useStore();
+  const { loginToggle, registerToggle, userEmail, setUserEmail, setUserPassword, userPassword, confirmPassword, setConfirmPassword, passMatch, setPassMatch, isLoggedIn, setIsLoggedIn, setCurrUser } = useStore();
   
   const handleClose = () => {
     registerToggle(false)
@@ -36,10 +36,15 @@ const Register: React.FC = () => {
     }
 
     try {
-      const response = await axios.post('/api/account/register', registerUser)
+      const response = await axios.post('/api/account/register', registerUser);
 
-      if (response.status === 200) {
+      if (response.data.userCreated) {
+        setCurrUser(response.data.userId, response.data.userEmail);
         setIsLoggedIn(true);
+      } else {
+        alert('Could not create account. Try again');
+        setUserEmail('');
+        setUserPassword('');
       }
     } catch(error) {
       console.error(error);
@@ -57,7 +62,7 @@ const Register: React.FC = () => {
           <CloseRoundedIcon />
         </div>
 
-      <p>Inside of Register component</p>
+        <h2>Register</h2>
       
       <form onSubmit={handleSubmit}>
         <Box
@@ -90,16 +95,13 @@ const Register: React.FC = () => {
           />
         </Box>
 
-        <Button type='submit' variant="contained">Register</Button>
+        <Button sx={{margin: '10px'}} type='submit' variant="contained">Register</Button>
         
       </form>
       
+      {/* <br></br> */}
 
-      
-      
-      <br></br>
-
-      <Button className='login-link' onClick={toggleLogin}  variant="contained">
+      <Button sx={{margin: '10px'}} className='login-link' onClick={toggleLogin}  variant="contained">
         Already a member? Login!
       </Button>
   

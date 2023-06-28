@@ -1,8 +1,10 @@
 import { Router, Request, Response } from 'express';
 import dataController from '../controllers/dataController';
+import userController from '../controllers/userController';
+
 const dataRouter: Router = Router();
 
-dataRouter.post('/', dataController.addData, (req: Request, res: Response) => {
+dataRouter.post('/', userController.checkUserExists, userController.login, dataController.addData, (req: Request, res: Response) => {
   res.status(200).json(res.locals.addedRequest);
 });
 
