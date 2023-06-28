@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import Login from '../components/Login';
 import Register from '../components/Register';
 import useStore from '../store';
+import IntroSection from '../components/IntroSection';
+import InstructionSection from '../components/InstructionSection';
 
 const SplashPage: React.FC<{}> = () => {
   const { showLogin, showRegistration } = useStore();
@@ -12,8 +14,7 @@ const SplashPage: React.FC<{}> = () => {
       <h1>GleiphQL</h1>
       <h2>
         <em>An innovative and dynamic Rate Limiting and Cost Analysis Tool</em>
-      </h2>
-      
+      </h2>      
       {showLogin && (!showRegistration) && (
         <div className="login-popup">
           <Login />
@@ -25,7 +26,8 @@ const SplashPage: React.FC<{}> = () => {
             <Register />
           </div>
         )}
-
+      <IntroSection />
+      <InstructionSection />
     </div>
   );
 }
