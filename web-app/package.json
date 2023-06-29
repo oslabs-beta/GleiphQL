@@ -29,11 +29,13 @@
     "nodemon": "^2.0.22",
     "path": "^0.12.7",
     "pg": "^8.11.0",
+    "postcss": "^8.4.24",
     "react": "^18.2.0",
     "react-chartjs-2": "^5.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.11.2",
     "styled-components": "^5.3.11",
+    "tailwindcss": "^3.3.2",
     "ts-node": "^10.9.1",
     "uuid": "^9.0.0",
     "zustand": "^4.3.8"
@@ -54,7 +56,6 @@
     "eslint": "^8.38.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.3.4",
-    "tailwindcss": "^3.3.2",
     "typescript": "^5.0.2",
     "vite": "^4.3.2"
   }

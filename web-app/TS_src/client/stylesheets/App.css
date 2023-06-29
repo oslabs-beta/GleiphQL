@@ -10,3 +10,178 @@
 .read-the-docs {
   color: #888;
 }
+
+.dashboard-page {
+  display: flex;
+  flex-direction: row;
+}
+
+.main-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 75%;
+  margin-right: 10px;
+  /* max-width: 600px; */
+  /* max-width: 90rem; */
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  width: 25%;
+  margin-top: 300px;
+}
+
+:root {
+  font-family: Poppins, sans-serif;
+  /* font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif; */
+  line-height: 1.5;
+  font-weight: 400;
+  
+  /* color-scheme: light dark; */
+  color: #003366;
+  /* background-color: #242424; */
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+
+  max-width: 1280px;
+  margin: 0 auto;
+  /* padding: 2rem; */
+  text-align: center;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  width: 100%;
+}
+
+h1 {
+  font-size: 70px;
+  line-height: 1.1;
+}
+
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  border-color: black;
+  cursor: pointer;
+}
+button:hover {
+  border-color: #646cff;
+}
+button:focus,
+button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
+
+.AppContainer {
+  place-items: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+
+/*  ~~ Start of component: Login  ~~  */
+.LoginContainer {
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1), 0 6px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
+  width: 300px;
+  height: 500px;
+  /* background-color: rgb(188, 183, 183); */
+  border-color: black;
+  /* border-radius: 5px; */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+.close-icon {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  box-shadow: 0, 0, 5px, rgba(0, 0, 0, 0.5);
+}
+.close-icon:hover {
+  color: black;
+  box-shadow: 0, 0, 5px, rgba(0, 0, 0, 0.5);
+}
+/*    ~~ End of component:  Login   ~~   */
+
+
+/*  ~~ Start of component: Register  ~~   */
+.RegisterContainer{
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1), 0 6px 6px rgba(0, 0, 0, 0.1);
+  width: 300px;
+  height: 500px;
+  border-color: black;
+  border-radius: 5px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+/* .RegisterContainer button {
+  width: 150px;
+} */
+/*    ~~ End of component: Register   ~~   */
+
+/*  ~~ Start of component: ----  ~~   */
+.splashpage-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.sect {
+  display: flex;
+  flex-direction: row;
+  padding: 25px;
+  border-bottom: 2px #003366 solid;
+  width: 95%
+}
+
+.part {
+  width: 50%;
+}
+
+#moreInfo {
+  background-color: #003366;
+  color: white
+}
+
+.copyButton {
+  background-color: white;
+  width: 300px;
+}
+
+.copyButton:hover {
+  border-color: #003366;
+}
+
+.copyButton:focus {
+  outline: none;
+}
+
+.material-symbols-outlined {
+  float: right;
+}
+
+/*    ~~ End of component: ----   ~~   */
+

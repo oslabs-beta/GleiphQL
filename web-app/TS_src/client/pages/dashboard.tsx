@@ -5,7 +5,6 @@ import RequestTable from '../components/RequestTable';
 import Sidebar from '../components/Sidebar'
 import LineChart from '../components/LineChart';
 import ChartHeader from '../components/ChartHeader';
-import '../stylesheets/Dashboard.css'
 
 const Dashboard: React.FC<{}> = () => {
   const { currEndPoint } = useStore();
