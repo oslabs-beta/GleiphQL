@@ -75,6 +75,8 @@ class ComplexityAnalysis {
 const parseArgumentDirectives = function(fieldDef: any) {
   if(fieldDef.astNode.arguments) {
     console.log('In parseArgumentDirectives');
+    //since the directive costs within directives placed in arguments are deeply nested, we have to use flatMap to efficiently extract them
+    //flatMap's under the hood implementation is very similar to the flattenArray things we've done before, it just integrates mapping with that process
     const argumentDirectives = fieldDef.astNode.arguments.flatMap((arg: any) => {
       const argName = arg.name.value;
       return arg.directives?.map((directive: any) => ({
@@ -108,11 +110,14 @@ const parseDirectives = function(fieldDef: any, baseVal: number) {
           value: arg.value
         }))
         // console.log('This is the map', map)
+
+        //.find terminates on first match so I just ran it twice, probably some way to make this dry
         costPaginationDirectives.find((costDirective: any) => {
           if(costDirective.name === 'cost' && costDirective.value){
             baseVal = costDirective.value.value;
           }
         })
+        
         costPaginationDirectives.find((paginationLimit: any) => {
           if(paginationLimit.name === 'paginationLimit' && paginationLimit.value){
             listLimit = paginationLimit.value
