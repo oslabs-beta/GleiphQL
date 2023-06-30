@@ -1,25 +1,14 @@
 import { Request, Response, NextFunction } from 'express';
-import { buildSchema, isAbstractType, GraphQLInterfaceType, isNonNullType, GraphQLType, GraphQLField, parse, GraphQLList, GraphQLObjectType, GraphQLSchema, TypeInfo, visit, visitWithTypeInfo, StringValueNode, getNamedType, GraphQLNamedType, getEnterLeaveForKind, GraphQLCompositeType, getNullableType, Kind, isListType, DocumentNode } from 'graphql';
+import { buildSchema, isAbstractType, GraphQLInterfaceType, isNonNullType, GraphQLType, GraphQLField, parse, GraphQLList, GraphQLObjectType, GraphQLSchema, TypeInfo, visit, visitWithTypeInfo, StringValueNode, getNamedType, GraphQLNamedType, getEnterLeaveForKind, GraphQLCompositeType, getNullableType, Kind, isListType, DocumentNode, DirectiveLocation } from 'graphql';
 import graphql from 'graphql';
-import { useSchema } from 'graphql-yoga';
+import { map, useSchema } from 'graphql-yoga';
 import { buildResolveInfo } from 'graphql/execution/execute';
 
-//to-dos
-//modularize code, certain functions can be offloaded
-//research further into pagination conventions => currently only account for IntValues for first/last/limit
-//compare limits found in arguments against both defaultLimit and limits found within schema => defaultLimit case resolved, limits found in schema not resolved
-//generate casing for mutations/subscriptions
+//sample schema to test directive work
+const testSDL = `
 
-const rateLimiter = function (config: any) {
-  return (req: Request, res: Response, next: NextFunction) => {
-    if(req.body.query) {
-
-      // const schemaType = new TypeInfo(config.schema);
-      // const parsedAst = parse(req.body.query);
-
-      const testSDL = `
-
-directive @cost(value: Int) on FIELD_DEFINITION
+directive @cost(value: Int) on FIELD_DEFINITION | ARGUMENT_DEFINITION
+directive @paginationLimit(value: Int) on FIELD_DEFINITION
 
 type Author {
   id: ID! @cost(value: 1)
@@ -35,20 +24,13 @@ type Book {
 
 type Query {
   authors: [Author] @cost(value: 2)
-  books: [Book] @cost(value: 2)
+  books(limit: Int @cost(value:10)): [Book] @cost(value: 2) @paginationLimit(value: 5)
 }
       `
 
       const testQuery = `
       query {
-        authors {
-          id
-          name
-          books {
-            title
-          }
-        }
-        books {
+        books(limit: 10) {
           id
           title
           author {
@@ -58,9 +40,98 @@ type Query {
       }
       `
 
-      const builtSchema = buildSchema(testSDL)
-      const schemaType = new TypeInfo(builtSchema);
-      const parsedAst = parse(testQuery);
+//       const builtSchema = buildSchema(testSDL)
+//       const schemaType = new TypeInfo(builtSchema);
+//       const parsedAst = parse(testQuery);
+
+//to-dos
+//modularize code, certain functions can be offloaded
+//generate casing for mutations/subscriptions
+//implement support for resolvers => check if resolvers are saved in schema => should be in okay state => need to figure out if resolver cost can be separated
+//fix typescript typing issues, define interfaces for complex object types passed to helper functions
+//attempt to refactor the class, to handle modularization of interdependent data structures using class state
+
+//unimplemented class shell
+
+class ComplexityAnalysis {
+
+  private parentTypeStack: any[] = [];
+  private currMult: number = 0;
+  private complexityScore = 0;
+  private typeComplexity = 0;
+  private resolveComplexity = 0;
+
+  constructor(private config: any) { }
+
+  complexityAnalysis(req: Request, res: Response, next: NextFunction) {
+    if (req.body.query) {
+      const schemaType = new TypeInfo(this.config.schema);
+      const parsedAst = parse(req.body.query)
+    }
+  }
+
+}
+
+const parseArgumentDirectives = function(fieldDef: any) {
+  if(fieldDef.astNode.arguments) {
+    console.log('In parseArgumentDirectives');
+    const argumentDirectives = fieldDef.astNode.arguments.flatMap((arg: any) => {
+      const argName = arg.name.value;
+      return arg.directives?.map((directive: any) => ({
+        argName,
+        directiveName: directive.name.value,
+        //@ts-ignore
+        directiveValue: directive.arguments?.find(arg => arg.name.value === 'value')?.value.value,
+      }));
+    });
+    console.log('argumentDirectives', argumentDirectives);
+    const argumentCosts = argumentDirectives.filter((directive: any) => directive.directiveName === 'cost');
+    // console.log('arg costs', argumentCosts);
+    return argumentCosts;
+  }
+}
+
+const parseDirectives = function(fieldDef: any, baseVal: number) {
+  let listLimit = 0;
+  if(fieldDef.astNode.directives) {
+    // console.log('This is the current value of baseVal', baseVal)
+    const directives: any[] = [];
+    for (let i = 0; i < fieldDef.astNode.directives.length; i++) {
+      // console.log('These are the directives', fieldDef.astNode.directives[i]);
+      directives.push({name: fieldDef.astNode.directives[i].name, arguments: fieldDef.astNode.directives[i].arguments})
+      // console.log('These are the pushed directives', directives[i]);
+    }
+    if(directives.length){
+      for (let i = 0; i < directives.length; i++) {
+        const costPaginationDirectives = directives[i].arguments?.map((arg: any) => ({
+          name: directives[i].name.value,
+          value: arg.value
+        }))
+        // console.log('This is the map', map)
+        costPaginationDirectives.find((costDirective: any) => {
+          if(costDirective.name === 'cost' && costDirective.value){
+            baseVal = costDirective.value.value;
+          }
+        })
+        costPaginationDirectives.find((paginationLimit: any) => {
+          if(paginationLimit.name === 'paginationLimit' && paginationLimit.value){
+            listLimit = paginationLimit.value
+          }
+        })
+      }
+    }
+  }
+    console.log('This is the value of baseVal after accounting for directives', baseVal)
+    return {costDirective: baseVal, paginationLimit: listLimit}
+}
+
+const rateLimiter = function (config: any) {
+  return (req: Request, res: Response, next: NextFunction) => {
+    if(req.body.query) {
+
+      const schemaType = new TypeInfo(config.schema);
+      const parsedAst = parse(req.body.query);
+
       let parentTypeStack: any[]= [];
       let complexityScore = 0;
       let typeComplexity = 0;
@@ -74,6 +145,7 @@ type Query {
           if (node.kind === Kind.FIELD) {
 
             let baseVal = 1;
+            let paginationLimit = 0;
             //resets list multiplier upon encountering an empty stack, indicating that a set of nested fields has been exited
             if(parentTypeStack.length === 0) currMult = 0;
 
@@ -83,56 +155,41 @@ type Query {
 
             if(fieldDef) {
             console.log('this is currNode', node.name.value);
-            console.log('directives?', fieldDef.astNode?.directives);
+            // console.log('directives?', fieldDef.astNode?.directives);
+            // console.log('arguments?', fieldDef.astNode?.arguments);
             const fieldDefArgs = fieldDef.args;
-            console.log('These are the fieldArgs:', fieldDef.args);
+            // console.log('These are the fieldArgs:', fieldDef.args);
+
             if(fieldDef.astNode) {
-              if(fieldDef.astNode.directives) {
-                console.log('This is the current value of baseVal', baseVal)
-                const directives: any[] = [];
-                for (let i = 0; i < fieldDef.astNode.directives.length; i++) {
-                  console.log('These are the directives', fieldDef.astNode.directives[i]);
-                  directives.push({name: fieldDef.astNode.directives[i].name, arguments: fieldDef.astNode.directives[i].arguments})
-                  console.log('These are the pushed directives', directives[i]);
-                }
-                if(directives.length){
-                  for (let i = 0; i < directives.length; i++) {
-                    const map = directives[i].arguments?.map((arg: any) => ({
-                      name: directives[i].name.value,
-                      value: arg.value
-                    }))
-
-                    console.log('This is the map', map)
-
-                    const cost = map.find((ele: any) => {
-                      if(ele.name === 'cost' && ele.value){
-                        baseVal = ele.value.value;
-                      }
-                    })
-                  }
-                }
-                console.log('This is the value of baseVal after accounting for directives', baseVal)
+              const directiveCost = parseArgumentDirectives(fieldDef);
+              // console.log('This is directive cost', directiveCost)
+              if(directiveCost) {
+                directiveCost.forEach((directive: any) => {
+                  console.log('initial complexity score:', complexityScore);
+                  complexityScore += Number(directive.directiveValue);
+                  console.log('complexity score post addition', complexityScore);
+                })
               }
+              const directiveAdjustedBaseVal = parseDirectives(fieldDef, baseVal)
+              baseVal = directiveAdjustedBaseVal.costDirective;
             }
 
-
             const fieldType = getNullableType(fieldDef.type);
-            // const fieldDirectives = fieldDef.astNode.directives;
-            // if(fieldDirectives) {
-            //   //@ts-ignore
-            //   const cost = fieldDirectives.find(directive => directive.name.value === 'cost');
-            // }
+
             const isList = isListType(fieldType) || (isNonNullType(fieldType) && isListType(fieldType.ofType));
 
             console.log('This is the currentNode:', node.name.value);
             //functionality upon encountering listType, in short looks for ancestor lists and limit arguments then adjusts currMult accordingly
             if(isList === true) {
               console.log(`${node.name.value} is a list`);
-              const argNode = node.arguments?.find(arg => (arg.name.value === 'limit' || arg.name.value === 'first' || arg.name.value === 'last'));
+              const argNode = node.arguments?.find(arg => (arg.name.value === 'limit' || arg.name.value === 'first' || arg.name.value === 'last' || arg.name.value === 'before' || arg.name.value === 'after'));
               currMult = config.paginationLimit;
+              if(paginationLimit) currMult = paginationLimit;
               if (argNode && argNode.value.kind === 'IntValue') {
                 const argValue = parseInt(argNode.value.value, 10);
                 console.log(`Found limit argument with value ${argValue}`);
+                //unclear how we want to handle this base behavior, may be best to create a default case that is editable by user
+                if(argValue > paginationLimit) console.log('The passed in argument exceeds paginationLimit, define default behavior for this case')
                 currMult = argValue;
               }
               console.log('Mult is now:', currMult);
