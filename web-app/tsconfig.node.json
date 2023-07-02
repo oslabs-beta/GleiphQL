@@ -6,5 +6,5 @@
     "allowSyntheticDefaultImports": true,
     "types": ["express"]
   },
-  "include": ["TS_src/client/vite.config.ts", "server/**/*.ts"]
+  "include": ["server/**/*.ts"]
 }

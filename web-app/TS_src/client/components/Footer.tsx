@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
-import ProfileCard from './ProfileCard';
+import React, { HTMLAttributes } from 'react';
+import { FaGithub, FaLinkedin } from 'react-icons/fa';
+import gitHubAlt from '../public/images/alt-github-icon.svg';
+import linkedInAlt from '../public/images/alt-linkedin-icon.jpg';
 
 
 const Footer: React.FC<{}> = () => {
@@ -7,36 +9,32 @@ const Footer: React.FC<{}> = () => {
 
   return (
     <>
-      <h1>Meet the Team</h1>
+      {/* This underling style is not showing up. Need to defined a custom class and apply the styling in the css file or inline style: text-decoration: underline;
+      text-decoration-offset: 0.8em; */}
+      <div>
+        <h3 className='underline-offset-8'>Want to Contribute? </h3>
+      </div>
 
-      <ProfileCard
-        imageSrc='/images/JDong.png'
-        memberName='Jiecheng Dong'
-        githubLink='https://github.com/jiedong111'
-        linkedinLink='https://www.linkedin.com/in/jiecheng-dong-1522b8248/'
-      />
+      <p>Join us and help developers secure and monitor their GraphQL endpoints.</p>
 
-      <ProfileCard
-        imageSrc='/images/ALarkin.jpg'
-        memberName='Andrew Larkin'
-        githubLink='https://github.com/larkinaj'
-        linkedinLink='https://www.linkedin.com/in/andrew-larkin-71395940/'
-      />
+      <p>Star us on Github!</p>
+      <br />
 
-      <ProfileCard
-        imageSrc='/images/KPhan.jpg'
-        memberName='Kevin Phan'
-        githubLink='https://github.com/KP824'
-        linkedinLink='https://www.linkedin.com/in/kevinphan760/'
-      />
+      <div className='flex flex-row justify-center desktop:p-10 desktop:m-10 pb-5 mb-5'>
+        <a href='https://github.com/oslabs-beta/graphql-rate-limiter' target='_blank' rel='noopener noreferrer' className='mr-4'>
+          <FaGithub size={64} />
+        </a>
+        <a href='https://www.youtube.com/watch?v=dQw4w9WgXcQ' target='_blank' rel='noopener referrer'>
+          <FaLinkedin size={64} />
+        </a>
+      </div>
 
-      <ProfileCard
-        imageSrc='/images/YYoon.jpg'
-        memberName='Yeong Sil Yoon'
-        githubLink='https://github.com/wendyys96'
-        linkedinLink=''
-      />
-
+      <footer className='flex justify-center align-baseline pb-2 px-5 border-t-2 border-slate-300'>
+        <div className='text-s align-baseline pt-2'>
+          <p>Copyright © 2023 GleiphQL + OSLabs. Distributed under the MIT License - All right reserved</p>
+        </div>
+      </footer>
+      
     </>
   );
 };

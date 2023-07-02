@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Login from '../components/Login';
 import Register from '../components/Register';
+import MeetTheTeam from '../components/MeetTheTeam';
 import Footer from '../components/Footer';
 import useStore from '../store';
 
@@ -10,10 +11,10 @@ const SplashPage: React.FC<{}> = () => {
   
   return (
     <div className='splashpage-container'>
-      <h1>GleiphQL</h1>
-      <h2>
-        <em>An innovative and dynamic Rate Limiting and Cost Analysis Tool</em>
-      </h2>
+      <h1 className='text-center flex flex-col items-center justify-center h-full'>
+        GleiphQL
+        <em className='text-3xl'>An innovative and dynamic Rate Limiting and Cost Analysis Tool</em>
+      </h1>
       
       {showLogin && (!showRegistration) && (
         <div className="login-popup">
@@ -26,7 +27,9 @@ const SplashPage: React.FC<{}> = () => {
           <Register />
         </div>
       )}
-
+      <br />
+      <MeetTheTeam />
+      <br />
       <Footer />
 
     </div>

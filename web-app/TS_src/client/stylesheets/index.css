@@ -2,26 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
-
 :root {
-  font-family: Poppins, sans-serif;
-  /* font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif; */
-  line-height: 1.5;
-  font-weight: 400;
-  
-  /* color-scheme: light dark; */
   color: #003366;
-  /* background-color: #242424; */
-
   font-synthesis: none;
+  /*optimizeLegibility instructs browser to update text rendering for improve legibility, resulting in clearer and more readable text */
   text-rendering: optimizeLegibility;
+  /* antialiased enhances text rendering on browsers that support to WebKit rendering rengine (such as Safari and some versions of Chrome) */
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-text-size-adjust: 100%;
-
-  max-width: 1280px;
-  margin: 0 auto;
-  /* padding: 2rem; */
   text-align: center;
 }
 
@@ -34,7 +21,17 @@ body {
 
 h1 {
   font-size: 70px;
-  line-height: 1.1;
+  line-height: 1.5;
+}
+
+h2 {
+  font-size: 55px;
+  line-height: 1.5;
+}
+
+h3 {
+  font-size: 45px;
+  line-height: 1.5;
 }
 
 button {
@@ -47,21 +44,35 @@ button {
   border-color: black;
   cursor: pointer;
 }
+
 button:hover {
   border-color: #646cff;
 }
+
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
+
+/*  ~~ Start of component: ----  ~~   */
 .AppContainer {
-  place-items: center;
+  /* place-items: center; */
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
 }
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
+/*    ~~ End of component: ----   ~~   */
+
 
 
 /*  ~~ Start of component: Login  ~~  */
@@ -106,16 +117,53 @@ button:focus-visible {
   position: relative;
 }
 
-/* .RegisterContainer button {
-  width: 150px;
-} */
-/*    ~~ End of component: Register   ~~   */
-
-/*  ~~ Start of component: ----  ~~   */
+/*  ~~ Start of component: Splash Page  ~~   */
 .splashpage-container {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
 }
+/*    ~~ End of component: Splash Page   ~~   */
+
+/*  ~~ Start of component: Dashboard  ~~   */
+.dashboard-page {
+  display: flex;
+  flex-direction: row;
+}
+
+.main-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 75%;
+  margin-right: 10px;
+  /* max-width: 600px; */
+  /* max-width: 90rem; */
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  width: 25%;
+  margin-top: 300px;
+}
+/*    ~~ End of component: Dashboard   ~~   */
+
+/*  ~~ Start of component: Profile Card  ~~   */
+
+@media (max-width: 768px) {
+  .profile-card {
+    min-width: 200px; 
+  }
+}
+
+/*    ~~ End of component: Profile Card   ~~   */
+
+
+
+
+
+/*  ~~ Start of component: ----  ~~   */
+
 /*    ~~ End of component: ----   ~~   */
