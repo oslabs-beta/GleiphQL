@@ -149,7 +149,7 @@ button:focus-visible {
   align-items: center;
 }
 
-.sect {
+/* .sect {
   display: flex;
   flex-direction: row;
   padding: 25px;
@@ -177,7 +177,7 @@ button:focus-visible {
 
 .copyButton:focus {
   outline: none;
-}
+} */
 
 .material-symbols-outlined {
   float: right;

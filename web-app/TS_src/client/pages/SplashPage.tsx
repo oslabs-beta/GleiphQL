@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import Login from '../components/Login';
 import Register from '../components/Register';
 import useStore from '../store';
@@ -22,9 +22,11 @@ const SplashPage: React.FC<{}> = () => {
           <div className='register-popup'>
             <Register />
           </div>
-        )}
-      <IntroSection />
-      <InstructionSection />
+      )}
+      <article className='divide-y divide-solid divide-indigo-950 divide-y-2'>
+        <IntroSection />
+        <InstructionSection />
+      </article>
     </div>
   );
 }
