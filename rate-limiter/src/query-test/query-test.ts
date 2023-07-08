@@ -36,25 +36,28 @@ const countries = createYoga({
   graphqlEndpoint: '/countries',
 });
 
-interface testConfig {
+interface RateLimitConfig {
   complexityLimit: number,
   paginationLimit: number,
   schema: GraphQLSchema,
   typeInfo: TypeInfo,
-  monitor: boolean,
+  monitor?: boolean,
+  refillTime: number,
+  refillAmount: number,
+  redis?: boolean
 }
 
-interface monitorConfig {
+interface MonitorConfig {
   gliephqlUsername: string,
   gleiphqlPassword: string,
 }
 
-const monitorConfig: monitorConfig = {
-  gliephqlUsername: "andrew@gmail.com",
-  gleiphqlPassword: "password",
+const monitorConfig: MonitorConfig = {
+  gliephqlUsername: "andrew@gmail.com", // these are not in a dotenv file for example purposes only
+  gleiphqlPassword: "password", // these are not in a dotenv file for example purposes only
 }
 
-// const spacexConfig: testConfig = {
+// const spacexConfig: rateLimitConfig = {
 //   complexityLimit: 3000,
 //   paginationLimit: 10,
 //   schema: spaceXSchema,
@@ -62,20 +65,26 @@ const monitorConfig: monitorConfig = {
 //   monitor: true,
 // }
 
-const swapiConfig: testConfig = {
+const swapiConfig: RateLimitConfig = {
   complexityLimit: 3000,
   paginationLimit: 10,
   schema: swapiSchema,
   typeInfo: swapiTypeInfo,
   monitor: true,
+  refillTime: 300000,   // 5 minutes
+  refillAmount: 1000,
+  redis: true
 }
 
-const countriesConfig: testConfig = {
+const countriesConfig: RateLimitConfig = {
   complexityLimit: 3000,
   paginationLimit: 10,
   schema: countriesSchema,
   typeInfo: countriesTypeInfo,
   monitor: true,
+  refillTime: 86400000,   // 24 hours
+  refillAmount: 3000,
+  redis: true
 }
 
 app.use(express.json());

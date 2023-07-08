@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { isAbstractType, GraphQLInterfaceType, isNonNullType, GraphQLType, GraphQLField, parse, GraphQLList, GraphQLObjectType, GraphQLSchema, TypeInfo, visit, visitWithTypeInfo, StringValueNode, getNamedType, GraphQLNamedType, getEnterLeaveForKind, GraphQLCompositeType, getNullableType, Kind, isListType, DocumentNode } from 'graphql';
 import graphql from 'graphql';
 import { useSchema } from 'graphql-yoga';
+import { createClient } from 'redis';
 
 //to-dos
 //modularize code, certain functions can be offloaded
@@ -10,7 +11,14 @@ import { useSchema } from 'graphql-yoga';
 //generate casing for mutations/subscriptions
 
 const rateLimiter = function (config: any) {
-  return (req: Request, res: Response, next: NextFunction) => {
+  interface TokenBucket {
+    [key: string]: {
+      tokens: number;
+      lastRefillTime: number;
+    };
+  }
+  const tokenBucket: TokenBucket = {};
+  return async (req: Request, res: Response, next: NextFunction) => {
     if(req.body.query) {
 
       const parsedAst = parse(req.body.query);
@@ -19,11 +27,62 @@ const rateLimiter = function (config: any) {
       let typeComplexity = 0;
       let resolveComplexity = 0;
       let currMult = 0;
-      const ipAddresses: any = {};
-      let reqIP = req.ip
-      if (reqIP.includes('::ffff:')) {
-        reqIP = reqIP.replace('::ffff:', '');
+      const now = Date.now();
+      const refillRate = config.refillAmount / config.refillTime
+      let requestIP = req.ip
+
+      // fixes format of ip addresses
+      if (requestIP.includes('::ffff:')) {
+        requestIP = requestIP.replace('::ffff:', '');
       }
+
+      // if (!ipAddresses[requestIP]) {
+      //   ipAddresses[requestIP] = {
+      //     tokens: config.complexityLimit,
+      //     lastRefillTime: now,
+      //   }
+      // }
+      // const timeElapsed = now - ipAddresses[requestIP].lastRefillTime;
+      // const tokensToAdd = timeElapsed * refillRate; // decimals
+      // // const tokensToAdd = Math.floor(timeElapsed * refillRate); // no decimals
+      // console.log('tokensToAdd:', tokensToAdd)
+      // ipAddresses[requestIP].tokens = Math.min(
+      //   ipAddresses[requestIP].tokens + tokensToAdd,
+      //   config.complexityLimit
+      // );
+      // console.log('ipAddresses[reqIP].tokens:', ipAddresses[requestIP].tokens)
+      // ipAddresses[requestIP].lastRefillTime = now;
+
+      // if (config.redis === true) {
+      //   const client = createClient();
+      //   await client.connect();
+      //   let currRequest = await client.get(requestIP)
+  
+      //   if (currRequest === null) {
+      //     await client.set(requestIP, JSON.stringify({
+      //       tokens: config.complexityLimit,
+      //       lastRefillTime: now,
+      //     }))
+      //     currRequest = await client.get(requestIP)
+      //   }
+      //   // const value = await client.get(requestIP);
+      //   if (currRequest === null) {
+      //     return next(Error);
+      //   }
+      //   const parsedVal = JSON.parse(currRequest)
+      //   const timeElapsed2 = now - parsedVal.lastRefillTime;
+      //   const tokensToAdd2 = timeElapsed2 * refillRate; // decimals
+      //   // const tokensToAdd = Math.floor(timeElapsed2 * refillRate); // no decimals
+      //   console.log("tokensToAdd2: ", tokensToAdd2)
+      //   parsedVal.tokens = Math.min(
+      //     parsedVal.tokens + tokensToAdd2,
+      //     config.complexityLimit
+      //   );
+      //   console.log('redis tokens:', parsedVal.tokens)
+      //   parsedVal.lastRefillTime = now;
+      //   await client.set(requestIP, JSON.stringify(parsedVal))
+      //   console.log('REDIS tokens before subtraction: ', parsedVal.tokens)
+      // }
 
       visit(parsedAst, visitWithTypeInfo(config.typeInfo, {
         enter(node) {
@@ -40,7 +99,6 @@ const rateLimiter = function (config: any) {
 
             if(fieldDef) {
             const fieldDefArgs = fieldDef.args;
-            console.log('These are the fieldArgs:', fieldDef.args);
             const fieldType = getNullableType(fieldDef.type);
             // const fieldDirectives = fieldDef.astNode.directives;
             // if(fieldDirectives) {
@@ -78,7 +136,6 @@ const rateLimiter = function (config: any) {
 
               //handling for object types, checks for most recent ancestor list's multiplier then adjust accordingly
             } else if (fieldType instanceof GraphQLObjectType) {
-              console.log(`This is the parentStack of the graphQLObject type ${node.name.value}`, parentTypeStack);
               for (let i = parentTypeStack.length-1; i >= 0; i--) {
                 if(parentTypeStack[i].isList === true) {
                   resolveComplexity += parentTypeStack[i].currMult;
@@ -101,31 +158,111 @@ const rateLimiter = function (config: any) {
           if (node.kind === Kind.FIELD) {
             parentTypeStack.pop();
           }
-          console.log('Exiting node')
         }
       }));
 
 
       complexityScore = resolveComplexity + typeComplexity;
-      if (!ipAddresses[reqIP]) {
-        ipAddresses[reqIP] = complexityScore;
-      }
       console.log('This is the type complexity', typeComplexity);
       console.log('This is the resolve complexity', resolveComplexity);
       console.log('This is the complexity score:', complexityScore);
 
       //returns error if complexity heuristic reads complexity score over limit
-      if(config.monitor === true) {
+      //if(config.monitor === true) {
         res.locals.complexityScore = complexityScore;
         res.locals.complexityLimit = config.complexityLimit;
-        return next();
+      //   return next();
+      // }
+
+      // if the user wants to use redis, a redis instance will be spun up and used as a cache
+      if (config.redis === true) {
+        const client = createClient();
+        await client.connect();
+        let currRequest = await client.get(requestIP)
+  
+        if (currRequest === null) {
+          await client.set(requestIP, JSON.stringify({
+            tokens: config.complexityLimit,
+            lastRefillTime: now,
+          }))
+          currRequest = await client.get(requestIP)
+        }
+        // const value = await client.get(requestIP);
+        if (currRequest === null) {
+          await client.disconnect();
+          return next(Error);
+        }
+        let parsedVal = JSON.parse(currRequest)
+        const timeElapsed2 = now - parsedVal.lastRefillTime;
+        const tokensToAdd2 = timeElapsed2 * refillRate; // decimals
+        // const tokensToAdd = Math.floor(timeElapsed2 * refillRate); // no decimals
+        console.log("tokensToAdd2: ", tokensToAdd2)
+        parsedVal.tokens = Math.min(
+          parsedVal.tokens + tokensToAdd2,
+          config.complexityLimit
+        );
+        console.log('redis tokens:', parsedVal.tokens)
+        parsedVal.lastRefillTime = now;
+        await client.set(requestIP, JSON.stringify(parsedVal))
+        console.log('REDIS tokens before subtraction: ', parsedVal.tokens)
+
+        /////////////////////////////////////////////////////
+
+        currRequest = await client.get(requestIP)
+        if (currRequest === null) {
+          await client.disconnect();
+          return next(Error);
+        }
+        parsedVal = JSON.parse(currRequest)
+        if (complexityScore >= parsedVal.tokens) {
+          console.log('Complexity of this query is too high');
+          await client.disconnect();
+          return next(Error);
+        }
+        parsedVal.tokens -= complexityScore;
+        console.log('REDIS tokens after subtraction: ', parsedVal.tokens)
+        await client.set(requestIP, JSON.stringify(parsedVal))
+        
+        // disconnect from the redis client
+        await client.disconnect();
       }
-      if(complexityScore >= config.complexityLimit) {
-        console.log('Complexity of this query is too high');
-        return next(Error);
+
+      // if the user does not want to use redis, the cache will be saved in the "tokenBucket" object
+      else if (config.redis !== true) {
+        if (!tokenBucket[requestIP]) {
+          tokenBucket[requestIP] = {
+            tokens: config.complexityLimit,
+            lastRefillTime: now,
+          }
+        }
+        const timeElapsed = now - tokenBucket[requestIP].lastRefillTime;
+        console.log('time elapsed', timeElapsed)
+        const tokensToAdd = timeElapsed * refillRate; // decimals
+        // const tokensToAdd = Math.floor(timeElapsed * refillRate); // no decimals
+        console.log('tokensToAdd:', tokensToAdd)
+        tokenBucket[requestIP].tokens = Math.min(
+          tokenBucket[requestIP].tokens + tokensToAdd,
+          config.complexityLimit
+        );
+        console.log('tokenBucket[requestIP].tokens:', tokenBucket[requestIP].tokens)
+        tokenBucket[requestIP].lastRefillTime = now;
+        ///////////////////////////////////////////////////////////////////
+        if (complexityScore >= tokenBucket[requestIP].tokens) {
+          console.log('Complexity of this query is too high');
+          return next(Error);
+        }
+        console.log('tokens before subtraction: ', tokenBucket[requestIP].tokens)
+        tokenBucket[requestIP].tokens -= complexityScore;
+        console.log('tokens after subtraction: ', tokenBucket[requestIP].tokens)
+        console.log('tokens : ', tokenBucket)
+        // if(complexityScore >= config.complexityLimit) {
+        //   console.log('Complexity of this query is too high');
+        //   return next(Error);
+        // }
       }
+      
     };
-return next();
+  return next();
   }
 }
 export default rateLimiter;
