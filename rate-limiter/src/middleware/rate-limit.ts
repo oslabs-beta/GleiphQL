@@ -28,8 +28,6 @@ const rateLimiter = function (config: any) {
       let typeComplexity = 0;
       let resolveComplexity = 0;
       let currMult = 0;
-      const now = Date.now();
-      const refillRate = config.refillAmount / config.refillTime
       let requestIP = req.ip
 
       // fixes format of ip addresses

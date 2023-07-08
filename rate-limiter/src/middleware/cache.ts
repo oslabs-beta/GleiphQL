@@ -12,6 +12,11 @@ const redis = async function (config: any, complexityScore: number, req: Request
   const now = Date.now();
   const refillRate = config.refillAmount / config.refillTime
   let requestIP = req.ip
+  // fixes format of ip addresses
+  if (requestIP.includes('::ffff:')) {
+    requestIP = requestIP.replace('::ffff:', '');
+  }
+
   const client = createClient();
   await client.connect();
   let currRequest = await client.get(requestIP)
@@ -68,6 +73,10 @@ const nonRedis = function (config: any, complexityScore: number, tokenBucket: To
   const now = Date.now();
   const refillRate = config.refillAmount / config.refillTime
   let requestIP = req.ip
+  // fixes format of ip addresses
+  if (requestIP.includes('::ffff:')) {
+    requestIP = requestIP.replace('::ffff:', '');
+  }
 
   // if the info for the current request is not found in the cache, then an entry will be created for it
   if (!tokenBucket[requestIP]) {
