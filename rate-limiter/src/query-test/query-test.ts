@@ -73,7 +73,7 @@ const swapiConfig: RateLimitConfig = {
   monitor: true,
   refillTime: 300000,   // 5 minutes
   refillAmount: 1000,
-  redis: true
+  redis: false
 }
 
 const countriesConfig: RateLimitConfig = {
@@ -84,7 +84,7 @@ const countriesConfig: RateLimitConfig = {
   monitor: true,
   refillTime: 86400000,   // 24 hours
   refillAmount: 3000,
-  redis: true
+  redis: false
 }
 
 app.use(express.json());
