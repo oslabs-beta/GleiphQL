@@ -2,6 +2,8 @@ import { Request, Response, NextFunction } from 'express';
 import { isAbstractType, GraphQLInterfaceType, isNonNullType, GraphQLType, GraphQLField, parse, GraphQLList, GraphQLObjectType, GraphQLSchema, TypeInfo, visit, visitWithTypeInfo, StringValueNode, getNamedType, GraphQLNamedType, getEnterLeaveForKind, GraphQLCompositeType, getNullableType, Kind, isListType, DocumentNode } from 'graphql';
 import graphql from 'graphql';
 import { useSchema } from 'graphql-yoga';
+import { createClient } from 'redis';
+import cache from './cache.js';
 
 //to-dos
 //modularize code, certain functions can be offloaded
@@ -10,7 +12,14 @@ import { useSchema } from 'graphql-yoga';
 //generate casing for mutations/subscriptions
 
 const rateLimiter = function (config: any) {
-  return (req: Request, res: Response, next: NextFunction) => {
+  interface TokenBucket {
+    [key: string]: {
+      tokens: number;
+      lastRefillTime: number;
+    };
+  }
+  let tokenBucket: TokenBucket = {};
+  return async (req: Request, res: Response, next: NextFunction) => {
     if(req.body.query) {
 
       const parsedAst = parse(req.body.query);
@@ -19,6 +28,12 @@ const rateLimiter = function (config: any) {
       let typeComplexity = 0;
       let resolveComplexity = 0;
       let currMult = 0;
+      let requestIP = req.ip
+
+      // fixes format of ip addresses
+      if (requestIP.includes('::ffff:')) {
+        requestIP = requestIP.replace('::ffff:', '');
+      }
 
       visit(parsedAst, visitWithTypeInfo(config.typeInfo, {
         enter(node) {
@@ -35,7 +50,6 @@ const rateLimiter = function (config: any) {
 
             if(fieldDef) {
             const fieldDefArgs = fieldDef.args;
-            console.log('These are the fieldArgs:', fieldDef.args);
             const fieldType = getNullableType(fieldDef.type);
             // const fieldDirectives = fieldDef.astNode.directives;
             // if(fieldDirectives) {
@@ -73,7 +87,6 @@ const rateLimiter = function (config: any) {
 
               //handling for object types, checks for most recent ancestor list's multiplier then adjust accordingly
             } else if (fieldType instanceof GraphQLObjectType) {
-              console.log(`This is the parentStack of the graphQLObject type ${node.name.value}`, parentTypeStack);
               for (let i = parentTypeStack.length-1; i >= 0; i--) {
                 if(parentTypeStack[i].isList === true) {
                   resolveComplexity += parentTypeStack[i].currMult;
@@ -96,7 +109,6 @@ const rateLimiter = function (config: any) {
           if (node.kind === Kind.FIELD) {
             parentTypeStack.pop();
           }
-          console.log('Exiting node')
         }
       }));
 
@@ -107,17 +119,31 @@ const rateLimiter = function (config: any) {
       console.log('This is the complexity score:', complexityScore);
 
       //returns error if complexity heuristic reads complexity score over limit
-      if(config.monitor === true) {
+      //if(config.monitor === true) {
         res.locals.complexityScore = complexityScore;
         res.locals.complexityLimit = config.complexityLimit;
-        return next();
+      //   return next();
+      // }
+
+      // if the user wants to use redis, a redis client will be created and used as a cache
+      if (config.redis === true) {
+        await cache.redis(config, complexityScore, req, res, next)
       }
-      if(complexityScore >= config.complexityLimit) {
-        console.log('Complexity of this query is too high');
-        return next(Error);
+      // if the user does not want to use redis, the cache will be saved in the "tokenBucket" object
+      else if (config.redis !== true) {
+        tokenBucket = cache.nonRedis(config, complexityScore, tokenBucket, req)
+
+        if (complexityScore >= tokenBucket[requestIP].tokens) {
+          console.log('Complexity of this query is too high');
+          return next(Error);
+        }
+        console.log('Tokens before subtraction: ', tokenBucket[requestIP].tokens)
+        tokenBucket[requestIP].tokens -= complexityScore;
+        console.log('Tokens after subtraction: ', tokenBucket[requestIP].tokens)
       }
+      
     };
-return next();
+  return next();
   }
 }
 export default rateLimiter;
