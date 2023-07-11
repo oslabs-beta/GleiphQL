@@ -1,48 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
 import { buildSchema, isAbstractType, GraphQLInterfaceType, isNonNullType, GraphQLType, GraphQLField, parse, GraphQLList, GraphQLObjectType, GraphQLSchema, TypeInfo, visit, visitWithTypeInfo, StringValueNode, getNamedType, GraphQLNamedType, getEnterLeaveForKind, GraphQLCompositeType, getNullableType, Kind, isListType, DocumentNode, DirectiveLocation } from 'graphql';
 import graphql from 'graphql';
-import { map, useSchema } from 'graphql-yoga';
-import { buildResolveInfo } from 'graphql/execution/execute';
+import { useSchema } from 'graphql-yoga';
+import { createClient } from 'redis';
+import cache from './cache.js';
 
-//sample schema to test directive work
-const testSDL = `
-
-directive @cost(value: Int) on FIELD_DEFINITION | ARGUMENT_DEFINITION
-directive @paginationLimit(value: Int) on FIELD_DEFINITION
-
-type Author {
-  id: ID! @cost(value: 1)
-  name: String @cost(value: 2)
-  books: [Book] @cost(value: 3)
-}
-
-type Book {
-  id: ID! @cost(value: 1)
-  title: String @cost(value: 2)
-  author: Author @cost(value: 3)
-}
-
-type Query {
-  authors: [Author] @cost(value: 2)
-  books(limit: Int @cost(value:10)): [Book] @cost(value: 2) @paginationLimit(value: 5)
-}
-      `
-
-      const testQuery = `
-      query {
-        books(limit: 10) {
-          id
-          title
-          author {
-            name
-          }
-        }
-      }
-      `
-
-//       const builtSchema = buildSchema(testSDL)
-//       const schemaType = new TypeInfo(builtSchema);
-//       const parsedAst = parse(testQuery);
 
 //to-dos
 //modularize code, certain functions can be offloaded
@@ -72,8 +34,8 @@ class ComplexityAnalysis {
 
 }
 
-const parseArgumentDirectives = function(fieldDef: any) {
-  if(fieldDef.astNode.arguments) {
+const parseArgumentDirectives = function(fieldDef: GraphQLField<unknown, unknown, any>) {
+  if(fieldDef.astNode?.arguments) {
     console.log('In parseArgumentDirectives');
     //since the directive costs within directives placed in arguments are deeply nested, we have to use flatMap to efficiently extract them
     //flatMap's under the hood implementation is very similar to the flattenArray things we've done before, it just integrates mapping with that process
@@ -93,32 +55,42 @@ const parseArgumentDirectives = function(fieldDef: any) {
   }
 }
 
-const parseDirectives = function(fieldDef: any, baseVal: number) {
+interface DirectivesInfo {
+  name: graphql.NameNode,
+  arguments: readonly graphql.ConstArgumentNode[],
+}
+
+interface PaginationDirectives {
+  name: string,
+  value: any,
+}
+
+const parseDirectives = function(fieldDef: GraphQLField<unknown, unknown, any>, baseVal: number) {
   let listLimit = 0;
-  if(fieldDef.astNode.directives) {
+  if(fieldDef.astNode?.directives) {
     // console.log('This is the current value of baseVal', baseVal)
-    const directives: any[] = [];
+    const directives: DirectivesInfo[] = [];
     for (let i = 0; i < fieldDef.astNode.directives.length; i++) {
       // console.log('These are the directives', fieldDef.astNode.directives[i]);
-      directives.push({name: fieldDef.astNode.directives[i].name, arguments: fieldDef.astNode.directives[i].arguments})
+      directives.push({name: fieldDef.astNode.directives[i].name, arguments: fieldDef.astNode.directives[i].arguments as readonly graphql.ConstArgumentNode[]})
       // console.log('These are the pushed directives', directives[i]);
     }
     if(directives.length){
       for (let i = 0; i < directives.length; i++) {
-        const costPaginationDirectives = directives[i].arguments?.map((arg: any) => ({
+        const costPaginationDirectives: PaginationDirectives[] = directives[i].arguments?.map((arg: any) => ({
           name: directives[i].name.value,
           value: arg.value
         }))
         // console.log('This is the map', map)
 
         //.find terminates on first match so I just ran it twice, probably some way to make this dry
-        costPaginationDirectives.find((costDirective: any) => {
+        costPaginationDirectives.find((costDirective: PaginationDirectives) => {
           if(costDirective.name === 'cost' && costDirective.value){
             baseVal = costDirective.value.value;
           }
         })
-        
-        costPaginationDirectives.find((paginationLimit: any) => {
+
+        costPaginationDirectives.find((paginationLimit: PaginationDirectives) => {
           if(paginationLimit.name === 'paginationLimit' && paginationLimit.value){
             listLimit = paginationLimit.value
           }
@@ -130,18 +102,38 @@ const parseDirectives = function(fieldDef: any, baseVal: number) {
     return {costDirective: baseVal, paginationLimit: listLimit}
 }
 
+interface ParentType {
+  fieldDef: GraphQLField<unknown, unknown, any>,
+  isList: boolean,
+  fieldDefArgs: readonly graphql.GraphQLArgument[],
+  currMult: number,
+}
+
 const rateLimiter = function (config: any) {
-  return (req: Request, res: Response, next: NextFunction) => {
+  interface TokenBucket {
+    [key: string]: {
+      tokens: number;
+      lastRefillTime: number;
+    };
+  }
+  let tokenBucket: TokenBucket = {};
+  return async (req: Request, res: Response, next: NextFunction) => {
     if(req.body.query) {
 
       const schemaType = new TypeInfo(config.schema);
       const parsedAst = parse(req.body.query);
 
-      let parentTypeStack: any[]= [];
+      let parentTypeStack: ParentType[]= [];
       let complexityScore = 0;
       let typeComplexity = 0;
       let resolveComplexity = 0;
       let currMult = 0;
+      let requestIP = req.ip
+
+      // fixes format of ip addresses
+      if (requestIP.includes('::ffff:')) {
+        requestIP = requestIP.replace('::ffff:', '');
+      }
 
       visit(parsedAst, visitWithTypeInfo(schemaType, {
         enter(node) {
@@ -163,7 +155,8 @@ const rateLimiter = function (config: any) {
             // console.log('directives?', fieldDef.astNode?.directives);
             // console.log('arguments?', fieldDef.astNode?.arguments);
             const fieldDefArgs = fieldDef.args;
-            // console.log('These are the fieldArgs:', fieldDef.args);
+            console.log('These are the fieldArgs:', fieldDef.args);
+            const fieldType = getNullableType(fieldDef.type);
 
             if(fieldDef.astNode) {
               const directiveCost = parseArgumentDirectives(fieldDef);
@@ -178,8 +171,6 @@ const rateLimiter = function (config: any) {
               const directiveAdjustedBaseVal = parseDirectives(fieldDef, baseVal)
               baseVal = directiveAdjustedBaseVal.costDirective;
             }
-
-            const fieldType = getNullableType(fieldDef.type);
 
             const isList = isListType(fieldType) || (isNonNullType(fieldType) && isListType(fieldType.ofType));
 
@@ -238,7 +229,6 @@ const rateLimiter = function (config: any) {
           if (node.kind === Kind.FIELD) {
             parentTypeStack.pop();
           }
-          console.log('Exiting node')
         }
       }));
 
@@ -249,17 +239,31 @@ const rateLimiter = function (config: any) {
       console.log('This is the complexity score:', complexityScore);
 
       //returns error if complexity heuristic reads complexity score over limit
-      if(config.monitor === true) {
+      //if(config.monitor === true) {
         res.locals.complexityScore = complexityScore;
         res.locals.complexityLimit = config.complexityLimit;
-        return next();
+      //   return next();
+      // }
+
+      // if the user wants to use redis, a redis client will be created and used as a cache
+      if (config.redis === true) {
+        await cache.redis(config, complexityScore, req, res, next)
       }
-      if(complexityScore >= config.complexityLimit) {
-        console.log('Complexity of this query is too high');
-        return next(Error);
+      // if the user does not want to use redis, the cache will be saved in the "tokenBucket" object
+      else if (config.redis !== true) {
+        tokenBucket = cache.nonRedis(config, complexityScore, tokenBucket, req)
+
+        if (complexityScore >= tokenBucket[requestIP].tokens) {
+          console.log('Complexity of this query is too high');
+          return next(Error);
+        }
+        console.log('Tokens before subtraction: ', tokenBucket[requestIP].tokens)
+        tokenBucket[requestIP].tokens -= complexityScore;
+        console.log('Tokens after subtraction: ', tokenBucket[requestIP].tokens)
       }
+
     };
-return next();
+  return next();
   }
 }
 export default rateLimiter;
