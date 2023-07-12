@@ -1,34 +1,20 @@
-import passport from 'passport';
-import Auth0Strategy from 'passport-auth0';
-import passportJWT from 'passport-jwt';
-const JwtStrategy = passportJWT.Strategy;
+import { Strategy } from 'passport-local';
+import { verifyUser } from './controllers/userController';
 
-//@ts-ignore
-const auth0Strategy = new Auth0Strategy(
-  {
-    domain: process.env.AUTH0_DOMAIN,
-    clientID: process.env.AUTH0_CLIENT_ID,
-    clientSecret: process.env.AUTH0_SECRET,
-    callbackURL: process.env.AUTH0_CALLBACK_URL,
-  },
-  //@ts-ignore
-  (accessToken, refreshToken, extraParams, profile, done) => {
-    return done(null, profile);
+
+const authUser = async (email: string, password: string, done: Function) => {
+  try {
+    const result = await verifyUser(email, password);
+    const authenticatedUser = result.signedIn? { signedIn: result.signedIn, userId: result.userId, userEmail: email } : false;
+    return done(null, authenticatedUser);
+  } catch(err) {
+    done(err);
   }
-);
+};
 
-const jwtStrategy = new JwtStrategy(
-  {
-    //@ts-ignore
-    jwtFromRequest: (req) => req.session.jwt,
-    secretOrKey: process.env.JWT_SECRET_KEY,
-  },
-  (payload, done) => {
-    return done(null, payload);
-  }
-);
+export default function (passport : any) {
+  passport.use('local', new Strategy({
+    usernameField: 'email'
+  }, authUser));
+}
 
-passport.use(auth0Strategy);
-passport.use(jwtStrategy);
-
-export default passport;
