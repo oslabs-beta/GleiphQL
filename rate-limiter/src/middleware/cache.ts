@@ -56,8 +56,27 @@ const redis = async function (config: any, complexityScore: number, req: Request
   }
   parsedRequest = JSON.parse(currRequest)
   if (complexityScore >= parsedRequest.tokens) {
+    const error = {
+      errors: [
+        {
+          message: `Token limit exceeded`,
+          extensions: {
+            cost: {
+              requestedQueryCost: complexityScore,
+              currentTokensAvailable:  Number(parsedRequest.tokens.toFixed(2)),
+              maximumTokensAvailable: config.complexityLimit,
+            },
+            responseDetails: {
+              status: 429,
+              statusText: "Too Many Requests",
+            }
+          }
+        }
+      ]
+    }
     console.log('Complexity of this query is too high');
     await client.disconnect();
+    res.status(429).json(error);
     return next(Error);
   }
   console.log('Tokens before subtraction: ', parsedRequest.tokens)

@@ -134,7 +134,26 @@ const rateLimiter = function (config: any) {
         tokenBucket = cache.nonRedis(config, complexityScore, tokenBucket, req)
 
         if (complexityScore >= tokenBucket[requestIP].tokens) {
+          const error = {
+            errors: [
+              {
+                message: `Token limit exceeded`,
+                extensions: {
+                  cost: {
+                    requestedQueryCost: complexityScore,
+                    currentTokensAvailable:  Number(tokenBucket[requestIP].tokens.toFixed(2)),
+                    maximumTokensAvailable: config.complexityLimit,
+                  },
+                  responseDetails: {
+                    status: 429,
+                    statusText: "Too Many Requests",
+                  }
+                }
+              }
+            ]
+          }
           console.log('Complexity of this query is too high');
+          res.status(429).json(error);
           return next(Error);
         }
         console.log('Tokens before subtraction: ', tokenBucket[requestIP].tokens)
