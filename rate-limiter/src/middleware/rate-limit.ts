@@ -53,6 +53,7 @@ const parseArgumentDirectives = function(fieldDef: GraphQLField<unknown, unknown
     // console.log('arg costs', argumentCosts);
     return argumentCosts;
   }
+  return 
 }
 
 interface DirectivesInfo {
