@@ -17,7 +17,7 @@ const endpointController = {
     `;
     const values: Array<string|number> = [ userId, url, description ];
     try {
-      const result: any = await db.query(sqlCommand, values);
+      const result = await db.query(sqlCommand, values);
       res.locals.addedEndpoint = result.rows[0];
     } catch(err: any) {
       return next({
@@ -36,7 +36,7 @@ const endpointController = {
     `;
     const values: number[] = [ userId ];
     try {
-      const result: any = await db.query(sqlCommand, values);
+      const result = await db.query(sqlCommand, values);
       res.locals.endpoints = result.rows;
     } catch(err: any) {
       return next({

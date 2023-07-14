@@ -17,6 +17,8 @@ const endpointMonitor = function (config: any) {
         email: '',
         password: '',
       }
+
+      // function to calulate query depth
       const calculateQueryDepth = (selections: any): number => {
         let maxDepth = 0;
         for (const selection of selections) {
@@ -27,6 +29,8 @@ const endpointMonitor = function (config: any) {
         }
         return maxDepth;
       };
+
+      // function to find all object types
       const extractObjectTypes = (query: DocumentNode): string[] => {
         const objectTypes: string[] = [];
       
