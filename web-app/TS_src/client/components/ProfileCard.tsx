@@ -19,20 +19,24 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
     <div className='profile-card'>
       <div 
         /* background-(color)-(strength), rounded edges-(strength), overflow - too large content is hidden, box shadow (medium), box-content controls containers size, height - (75 * 0.25 rem) */
-        className='bg-gray-200 rounded-lg overflow-hidden shadow-lg box-content min-h-75 min-w-250 justify-center m-5'
+        // className='bg-gray-200 rounded-lg overflow-hidden shadow-lg box-content min-h-75 min-w-400 justify-center m-5'
         >
-        {/* Image */}
-        <div className='box border h-40 w-auto b-4 mb-4'>
+        <div className='image'>
           <img 
             src={imageSrc} 
             alt='Profile' 
             className='w-full h-full rounded'
-            />
+          />
+
+          <div className='image-card'>
+            <p>Testing, card over lay nioce!!!</p>
+          </div>
         </div>
+        
         
 
         {/* Member Name */}
-        <div className='text-center mb-4'>
+        <div className='text-center mt-2 mb-3'>
           <h2 className='text-xl font-bold'>{memberName}</h2>
         </div>
 

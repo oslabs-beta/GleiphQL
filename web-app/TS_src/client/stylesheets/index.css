@@ -2,36 +2,39 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  color: #003366;
+* {
+  /* color: #003366; */
   font-synthesis: none;
   /*optimizeLegibility instructs browser to update text rendering for improve legibility, resulting in clearer and more readable text */
   text-rendering: optimizeLegibility;
   /* antialiased enhances text rendering on browsers that support to WebKit rendering rengine (such as Safari and some versions of Chrome) */
   -webkit-font-smoothing: antialiased;
-  text-align: center;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-body {
-  margin: 0;
-  min-width: 320px;
-  min-height: 100vh;
+/* body {
   width: 100%;
-}
+  height: 100vh;
+} */
 
 h1 {
   font-size: 70px;
   line-height: 1.5;
+  color: #003366;
 }
 
 h2 {
   font-size: 55px;
   line-height: 1.5;
+  color: #003366;
 }
 
 h3 {
   font-size: 45px;
   line-height: 1.5;
+  color: #003366;
 }
 
 button {
@@ -152,10 +155,34 @@ button:focus-visible {
 
 /*  ~~ Start of component: Profile Card  ~~   */
 
-@media (max-width: 768px) {
-  .profile-card {
-    min-width: 200px; 
-  }
+.profile-card {
+  width: 275px;
+  height: 350px;
+  background-color: rgb(200, 209, 219);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 10px 10px;
+  margin: 15px;
+  color: #003366;
+}
+
+.image {
+  height: 250px;
+  object-fit: cover;
+  position: relative;
+}
+
+.image-card {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  background: #1f3d4743;
+  top: 0px;
+  right: 0px;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /*    ~~ End of component: Profile Card   ~~   */

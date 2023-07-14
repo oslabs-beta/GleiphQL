@@ -5,7 +5,7 @@ import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import useStore from '../store';
 import Button from '@mui/material/Button';
 import { Navigate } from 'react-router-dom';
-import axios from'axios';
+import axios from 'axios';
 import { ContentPasteSearchOutlined } from '@mui/icons-material';
 
 interface LoginResponse {

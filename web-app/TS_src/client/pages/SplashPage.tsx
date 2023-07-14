@@ -3,6 +3,7 @@ import Login from '../components/Login';
 import Register from '../components/Register';
 import MeetTheTeam from '../components/MeetTheTeam';
 import Footer from '../components/Footer';
+import NewLogin from '../components/NewLogin';
 import useStore from '../store';
 
 const SplashPage: React.FC<{}> = () => {
@@ -31,6 +32,11 @@ const SplashPage: React.FC<{}> = () => {
       <MeetTheTeam />
       <br />
       <Footer />
+
+      <div>
+        <h1>Test area</h1>
+        <NewLogin />
+      </div>
 
     </div>
   );
