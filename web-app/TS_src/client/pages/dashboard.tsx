@@ -5,7 +5,6 @@ import RequestTable from '../components/RequestTable';
 import Sidebar from '../components/Sidebar'
 import LineChart from '../components/LineChart';
 import ChartHeader from '../components/ChartHeader';
-import '../stylesheets/index.css'
 import { Navigate } from 'react-router-dom';
 import checkSession from '../helper-functions/checkSession';
 

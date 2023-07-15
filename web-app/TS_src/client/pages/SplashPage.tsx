@@ -5,6 +5,9 @@ import MeetTheTeam from '../components/MeetTheTeam';
 import Footer from '../components/Footer';
 import NewLogin from '../components/NewLogin';
 import useStore from '../store';
+import IntroSection from '../components/IntroSection';
+import InstructionSection from '../components/InstructionSection';
+
 
 const SplashPage: React.FC<{}> = () => {
   const { showLogin, showRegistration } = useStore();
@@ -24,11 +27,14 @@ const SplashPage: React.FC<{}> = () => {
       )}
 
       {showRegistration && (!showLogin) && (
-        <div className='register-popup'>
-          <Register />
-        </div>
+          <div className='register-popup'>
+            <Register />
+          </div>
       )}
-      <br />
+      <article className='divide-y divide-solid divide-indigo-950 divide-y-2'>
+        <IntroSection />
+        <InstructionSection />
+      </article>      <br />
       <MeetTheTeam />
       <br />
       <Footer />
