@@ -12,8 +12,8 @@ const InstructionSection: React.FC<{}> = () => {
     }
   }
   return (
-  <section className='flex flex-row p-8'>
-    <div className='w-6/12'>
+  <section className='p-8 flex flex-col md:flex-row'>
+    <div className='md:w-6/12'>
       <h2 className='text-2xl font-extrabold p-2'>Get Started Easily</h2>
       <p>
         Ready to revolutionize your GraphQL endpoint?
@@ -22,19 +22,19 @@ const InstructionSection: React.FC<{}> = () => {
       </p>
       <a href='https://github.com/oslabs-beta/graphql-rate-limiter' target='_blank' ><button className='bg-blue-950 text-white m-8'>More Info</button></a>
     </div>
-    <div className='p-8 w-6/12 grid place-items-center'>
-      <p className='p-2 w-3/6'>npm: </p>
-      <p className='w-3/6 border rounded-lg border-solid border-blue-950 flex flex-row justify-between'>
-        <p className='p-2 pl-8' id='npm'>
+    <div className='grid place-items-center md:w-6/12'>
+      <p className='p-2 md:w-3/6'>npm: </p>
+      <p className='md:w-3/6 border rounded-lg border-solid border-blue-950 flex flex-row justify-between'>
+        <p className='p-4 md:pl-8' id='npm'>
           npm install gleiphql
         </p>
         <button className='border-none w-fit' onClick={() => copyText('npm')}>
           <span className="material-symbols-outlined">content_copy</span>
         </button>
       </p>
-      <p className='p-2 w-3/6'>Or yarn: </p>
-      <p className='w-3/6 border rounded-lg border-solid border-blue-950 flex flex-row justify-between'>
-        <p className='p-2 pl-8' id='yarn'>
+      <p className='p-2 md:w-3/6'>Or yarn: </p>
+      <p className='md:w-3/6 border rounded-lg border-solid border-blue-950 flex flex-row justify-between'>
+        <p className='p-4 md:pl-8' id='yarn'>
           yarn add gleiphql
         </p>
         <button className='border-none w-fit' onClick={() => copyText('yarn')}>
@@ -43,6 +43,7 @@ const InstructionSection: React.FC<{}> = () => {
       </p>
     </div>
   </section>
+  
   );
 }
 
