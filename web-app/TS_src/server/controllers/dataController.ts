@@ -1,18 +1,18 @@
 import db from '../models/dbModel';
 import { Request, Response, NextFunction } from 'express';
+import { verifyUser } from './userController';
 
-const findEndpointId = async (url: string, userID: string, password: string) => {
+const findEndpointId = async (url: string, userID: string) => {
   const sqlCommand: string = `
   SELECT *
   FROM endpoints
   JOIN users ON endpoints.owner_id = users.user_id
   WHERE endpoints.url = $1
     AND users.user_id = $2
-    AND users.password = $3;
   `;
-  const values: string[] = [ url, userID, password ];
+  const values: string[] = [ url, userID ];
   try {
-    const result: any = await db.query(sqlCommand, values);
+    const result = await db.query(sqlCommand, values);
     return result.rows[0].endpoint_id;
   } catch (err: any) {
     return null;
@@ -28,20 +28,23 @@ const dataController = {
       timestamp === '' || 
       objectTypes === undefined || 
       queryString === undefined || 
-      complexityScore === undefined
+      complexityScore === undefined ||
+      email === undefined ||
+      password === undefined
     ) return next({
       log: 'Error in dataController.addData: not given all necessary inputs',
       status: 400,
       message: { error: 'Did not receive necessary inputs to add data for the endpoint' }
     });
-    if (res.locals.signIn === false) {
+    const userInfo = await verifyUser(email, password);
+    if (!userInfo.signedIn) {
       return next({
         log: 'Error in dataController.addData: Could not validate user credentials',
         status: 400,
         message: { error: 'Could not validate user credentials' }
       });
     }
-    const endpointId: string = await findEndpointId(url, res.locals.userId, res.locals.userPW);
+    const endpointId: string = await findEndpointId(url, userInfo.userId);
     if(!endpointId) return next({
       log: 'Error in dataController.addData: could not find the endpoint in the database',
       status: 400,
@@ -55,7 +58,7 @@ const dataController = {
     `;
     const values = [ endpointId, ip, timestamp, {objectTypes: objectTypes}, queryString, complexityScore, depth ];
     try {
-      const result: any = await db.query(sqlCommand, values);
+      const result = await db.query(sqlCommand, values);
       res.locals.addedRequest = result.rows[0];
     } catch (err: any) {
       return next({
@@ -73,7 +76,7 @@ const dataController = {
     `;
     const values: number[] = [ endpointId ];
     try {
-      const result: any = await db.query(sqlCommand, values);
+      const result = await db.query(sqlCommand, values);
       res.locals.requests = result.rows;
     } catch (err: any) {
       return next({

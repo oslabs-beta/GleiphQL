@@ -29,7 +29,7 @@ const LineChart: React.FC<{}> = () => {
 
   useEffect(() => {
     console.log('Current endpoint: ', currEndPoint)
-    const endpointRequests = fetch(`/api/data/${currEndPoint.id}`)
+    fetch(`/api/data/${currEndPoint.id}`)
     .then((res)=>res.json())
     .then((data)=>{
       console.log("endpoint requests: ", data)

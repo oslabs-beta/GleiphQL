@@ -10,13 +10,21 @@ import IconButton from "@mui/material/IconButton";
 import MenuIcon from "@mui/icons-material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import Menu from "@mui/material/Menu";
+import axios from 'axios';
 
 // interface NavbarProps {
 //   handleLoginToggle: () => void;
 // }
 
 const Navbar: React.FC<{}> = () => {
-  const { loginToggle, currUser, setAnchorEl, anchorEl } = useStore();
+  const { loginToggle, currUser, setAnchorEl, anchorEl, isLoggedIn, setIsLoggedIn, setCurrUser, setCurrEndPoint } = useStore();
+
+  const logOut = async() => {
+    setCurrUser(0, '');
+    setCurrEndPoint(0, '');
+    setIsLoggedIn(false);
+    await axios.post('/api/account/logout');
+  }
 
   const handleMenu = (event: any) => {
     setAnchorEl(event.currentTarget);
@@ -82,20 +90,35 @@ const Navbar: React.FC<{}> = () => {
           >
             {currUser.email === "" ? "" : `WELCOME, ${currUser.email.split("@")[0].toUpperCase()}`}
           </Typography>
+          { isLoggedIn? 
           <Button
-            onClick={()=>loginToggle(true)}
-            sx={{
-              backgroundColor: "#ffffff",
-              color: "#003366",
-              textDecoration: "none",
-              marginLeft: "25px",
-              fontWeight: "bold",
-              "&:hover": { backgroundColor: "#003366", color: "#FFFFFF" },
-            }}
-          >
-            {currUser.email === "" ? "Login" : `Logout`}
-          </Button>
-        </Box>
+          onClick={logOut}
+          sx={{
+            backgroundColor: "#ffffff",
+            color: "#003366",
+            textDecoration: "none",
+            marginLeft: "25px",
+            fontWeight: "bold",
+            "&:hover": { backgroundColor: "#003366", color: "#FFFFFF" },
+          }}
+        >
+          LOGOUT
+          </Button>: 
+          <Button
+          onClick={()=>loginToggle(true)}
+          sx={{
+            backgroundColor: "#ffffff",
+            color: "#003366",
+            textDecoration: "none",
+            marginLeft: "25px",
+            fontWeight: "bold",
+            "&:hover": { backgroundColor: "#003366", color: "#FFFFFF" },
+          }}
+        >
+          LOGIN
+        </Button>
+      }
+      </Box>
       </Toolbar>
     </AppBar>
   )
