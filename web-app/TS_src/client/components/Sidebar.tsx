@@ -37,7 +37,7 @@ const Sidebar: React.FC<{}> = () => {
   //wrap endpoint array in things
   //just use button that when you click sets currEndPoint
   return (
-    <div className='sidebar'>
+    <div className='flex flex-col w-1/4 mt-80'>
       <Typography variant="h5">
         My Endpoints
       </Typography>

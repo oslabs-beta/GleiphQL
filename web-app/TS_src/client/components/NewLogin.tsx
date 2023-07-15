@@ -4,7 +4,7 @@ import { Navigate } from 'react-router-dom';
 import { AiOutlineClose } from 'react-icons/ai';
 import axios from 'axios';
 
-interface LoginResponse {
+interface NewLoginResponse {
   userExists: boolean;
   signedIn: boolean;
   userId?: number;
@@ -33,7 +33,7 @@ const NewLogin: React.FC<{}> = () => {
     }
 
     try {
-      const response = await axios.post<LoginResponse>('/api/account/login', userLogin);
+      const response = await axios.post<NewLoginResponse>('/api/account/login', userLogin);
 
       if (response.data.userExists && response.data.signedIn) {
         setCurrUser(response.data.userId||0, response.data.userEmail||'');
@@ -64,16 +64,20 @@ const NewLogin: React.FC<{}> = () => {
 
           <div className='flex flex-col test-gray-400 py-2'>
             <label>Username</label>
-            <input className='rounded-lg bg-gray-700 mt-2 p-2 focus:border-clue-500 focus:bg-gray-800 focus:outline-none' type='text' />
+            <input className='rounded-lg bg-gray-700 mt-2 p-2 focus:border-blue-500 focus:bg-gray-800 focus:outline-none' type='text' />
           </div>
 
           <div className='flex flex-col test-gray-400 py-2'>
             <label>Password</label>
-            <input className='rounded-lg bg-gray-700 mt-2 p-2 focus:border-clue-500 focus:bg-gray-800 focus:outline-none' type='password' />
+            <input className='rounded-lg bg-gray-700 mt-2 p-2 focus:border-blue-500 focus:bg-gray-800 focus:outline-none' type='password' />
           </div>
 
-          <button className='w-full my-5 py-2 bg-teal-500 shadow-lg shadow-teal-500/50 hover:shadow-teal/40 test-white font-semibold rounded-lg'>SIGN IN</button>
+          <button className='w-full my-5 py-2 bg-teal-500 shadow-lg shadow-teal-500 hover:shadow-md text-white font-semibold rounded-lg'>SIGN IN</button>
         </form>
+
+        <div className='w-12 h-12 m-3 p-3 bg-amber-500 rounded-lg border-solid text-purple-500'>
+          <p>TEST CAN WE SEE THIS BACKGROUND COLOR?</p>
+        </div>
       </div>
     </>
   );

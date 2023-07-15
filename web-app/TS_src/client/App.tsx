@@ -5,7 +5,7 @@ import Navbar from './components/Navbar';
 function App() {
 
   return (
-    <>
+    <div className='flex flex-col justify-center align-middle'>
       <Navbar />
       <div className='AppContainer'>
 
@@ -14,7 +14,7 @@ function App() {
           <Route path='/' element={ <SplashPage /> } />
         </Routes> */}
       </div>
-    </>
+    </div>
 
   )
 }

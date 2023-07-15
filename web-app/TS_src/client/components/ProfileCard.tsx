@@ -36,7 +36,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
         
 
         {/* Member Name */}
-        <div className='text-center mt-2 mb-3'>
+        <div className='text-center mt-1 mb-1'>
           <h2 className='text-xl font-bold'>{memberName}</h2>
         </div>
 

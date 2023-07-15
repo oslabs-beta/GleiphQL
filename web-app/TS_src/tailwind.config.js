@@ -1,11 +1,14 @@
 /** @type {import('tailwindcss').Config} */
-//const path = require('path');
+const colors = require('tailwindcss/colors')
+
 
 module.exports = { 
   content: [ 
-    './pages/**/*.{js,ts,jsx,tsx}', 
-    './components/**/*.{js,ts,jsx,tsx}', 
-    './app/**/*.{js,ts,jsx,tsx}', 
+    './components/**/*.{html,js,ts,jsx,tsx}',
+    './pages/**/*.{html, js, ts, jsx, tsx}',
+    './index.html',
+    './dist/**/*.{html,js,ts,jsx,tsx}' ,
+    './TS_src/**/*.{html,js,jsx,ts,tsx}'
   ], 
   theme: {
     screens: {
@@ -15,6 +18,8 @@ module.exports = {
       xl: '1440px',
     },
     colors: {
+      transparent: 'transparent',
+      current: 'currentColor',
       'blue': '#1fb6ff',
       'purple': '#7e5bef',
       'pink': '#ff49db',
@@ -24,6 +29,7 @@ module.exports = {
       'gray-dark': '#273444',
       'gray': '#8492a6',
       'gray-light': '#d3dce6',
+      'amber': '#FFC107'
     },
     fontFamily: {
       sans: ['Graphik', 'sans-serif'],
@@ -41,18 +47,8 @@ module.exports = {
     extend: {}, 
   }, 
   plugins: [], 
-}
+};
 
-// module.exports = {
-//   content: [
-//     path.join(__dirname, './TS_src/**/*.{js, ts, jsx, tsx}'),
-//     path.join(__dirname, './TS_src/client/index.html'),
-//   ],
-//   theme: {
-//     extend: {},
-//   },
-//   plugins: [],
-// }
 
 /*
 https://github.com/sanity-io/sanity/issues/3884

@@ -5,7 +5,7 @@ import RequestTable from '../components/RequestTable';
 import Sidebar from '../components/Sidebar'
 import LineChart from '../components/LineChart';
 import ChartHeader from '../components/ChartHeader';
-import '../stylesheets/Dashboard.css'
+import '../stylesheets/index.css'
 import { Navigate } from 'react-router-dom';
 import checkSession from '../helper-functions/checkSession';
 
@@ -22,10 +22,10 @@ const Dashboard: React.FC<{}> = () => {
     <>
       {!isLoggedIn && <Navigate to="/" replace={true} />}
       <Navbar />
-      <div className="dashboard-page">
+      <div className="flex flex-row">
         <Sidebar />
         { currEndPoint.id? 
-        <main className='main-section'>
+        <main className='flex flex-col align-middle mr-2.5 w-4/5'>
           <ChartHeader />
           <LineChart />
           <RequestTable />
