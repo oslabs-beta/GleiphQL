@@ -21,10 +21,10 @@ const Dashboard: React.FC<{}> = () => {
     <>
       {!isLoggedIn && <Navigate to="/" replace={true} />}
       <Navbar />
-      <div className="flex flex-row">
+      <div className="dashboard-page">
         <Sidebar />
         { currEndPoint.id? 
-        <main className='flex flex-col align-middle mr-2.5 w-4/5'>
+        <main className='main-section'>
           <ChartHeader />
           <LineChart />
           <RequestTable />
