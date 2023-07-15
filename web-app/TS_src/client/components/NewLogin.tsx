@@ -54,7 +54,6 @@ const NewLogin: React.FC<{}> = () => {
 
   return (
     <>
-      <h3>Hello new Login</h3>
       <AiOutlineClose />
       
       <div className='bg-gray-800 flex flex-col justify-center'>
@@ -74,10 +73,6 @@ const NewLogin: React.FC<{}> = () => {
 
           <button className='w-full my-5 py-2 bg-teal-500 shadow-lg shadow-teal-500 hover:shadow-md text-white font-semibold rounded-lg'>SIGN IN</button>
         </form>
-
-        <div className='w-12 h-12 m-3 p-3 bg-amber-500 rounded-lg border-solid text-purple-500'>
-          <p>TEST CAN WE SEE THIS BACKGROUND COLOR?</p>
-        </div>
       </div>
     </>
   );

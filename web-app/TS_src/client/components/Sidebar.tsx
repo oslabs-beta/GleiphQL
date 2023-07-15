@@ -43,7 +43,7 @@ const Sidebar: React.FC<{}> = () => {
       </Typography>
       <Box sx={{
         '& > :not(style)': { m: 1, width: '25ch' },
-       }}>
+      }}>
       {endpointArray}
       </Box>
     </div>
