@@ -277,6 +277,22 @@ class ComplexityAnalysis {
           }
       }))
     }
+
+    if (this.config.redis === true) {
+      await cache.redis(this.config, this.complexityScore, req, res, next)
+    }
+    // if the user does not want to use redis, the cache will be saved in the "tokenBucket" object
+    else if (this.config.redis !== true) {
+      this.tokenBucket = cache.nonRedis(this.config, this.complexityScore, this.tokenBucket, req)
+
+      if (this.complexityScore >= this.tokenBucket[this.ip].tokens) {
+        console.log('Complexity of this query is too high');
+        return next(Error);
+      }
+      console.log('Tokens before subtraction: ', this.tokenBucket[this.ip].tokens)
+      this.tokenBucket[this.ip].tokens -= this.complexityScore;
+      console.log('Tokens after subtraction: ', this.tokenBucket[this.ip].tokens)
+    }
   }
 
   resolveUnionTypes(fieldType: GraphQLUnionType) {
