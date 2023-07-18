@@ -1,9 +1,8 @@
 import React from 'react';
-import Login from '../components/Login';
-import Register from '../components/Register';
 import MeetTheTeam from '../components/MeetTheTeam';
 import Footer from '../components/Footer';
-import NewLogin from '../components/NewLogin';
+import Login from '../components/Login';
+import Register from '../components/Register';
 import useStore from '../store';
 import IntroSection from '../components/IntroSection';
 import InstructionSection from '../components/InstructionSection';
@@ -38,11 +37,6 @@ const SplashPage: React.FC<{}> = () => {
       <MeetTheTeam />
       <br />
       <Footer />
-
-      <div>
-        <h1>Test area</h1>
-        <NewLogin />
-      </div>
 
     </div>
   );
