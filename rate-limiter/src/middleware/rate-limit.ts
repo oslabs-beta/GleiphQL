@@ -175,7 +175,7 @@ class ComplexityAnalysis {
           if (node.kind === Kind.FIELD) {
 
             let baseVal = 1;
-            let internalPaginationLimit = 0;
+            let internalPaginationLimit: number;
             let argumentCosts = 0;
 
             if (this.parentTypeStack.length === 0) this.currMult = 0;
@@ -183,27 +183,103 @@ class ComplexityAnalysis {
             const parentType = schemaType.getParentType();
 
             if(parentType) {
+
               const fieldDef = parentType && isAbstractType(parentType) ? schemaType.getFieldDef() : parentType.getFields()[node.name.value];
 
-            if(fieldDef) {
-              const fieldDefArgs = fieldDef.args;
-              console.log('These are relevant fieldArgs', fieldDef.args);
-              const fieldType = fieldDef.type;
-              const fieldTypeUnion = getNamedType(fieldType);
-              console.log('Union?', fieldTypeUnion);
-              if(fieldTypeUnion instanceof GraphQLUnionType) {
-                this.resolveUnionTypes(fieldTypeUnion, schemaType)
+              if(fieldDef) {
+                const fieldDefArgs = fieldDef.args;
+                console.log('These are relevant fieldArgs', fieldDef.args);
+                const fieldType = fieldDef.type;
+                const fieldTypeUnion = getNamedType(fieldType);
+                console.log('Union?', fieldTypeUnion);
+                const isList = isListType(fieldType) || (isNonNullType(fieldType) && isListType(fieldType.ofType));
+                const argumentDirectiveCost = this.parseArgumentDirectives(fieldDef);
+                const directiveAdjustedBaseVal = parseDirectives(fieldDef, baseVal)
+
+                if(argumentDirectiveCost) {
+                  argumentDirectiveCost.forEach((directive: any) => {
+                    console.log('Attempting to resolve cost of resolving argument')
+                    const directiveValue = Number(directive.directiveValue)
+                    argumentCosts += directiveValue;
+                  })
+                }
+
+                baseVal = directiveAdjustedBaseVal.costDirective;
+                internalPaginationLimit = directiveAdjustedBaseVal.paginationLimit;
+
+                if(isList) {
+                  console.log(`${node.name.value} is a list`);
+                  const argNode = node.arguments?.find(arg => (arg.name.value === 'limit' || arg.name.value === 'first' || arg.name.value === 'last' || arg.name.value === 'before' || arg.name.value === 'after'));
+                  this.currMult = this.config.paginationLimit;
+
+                  if(internalPaginationLimit) this.currMult = internalPaginationLimit;
+
+                  if (argNode && argNode.value.kind === 'IntValue') {
+                    const argValue = parseInt(argNode.value.value, 10);
+                    console.log(`Found limit argument with value ${argValue}`);
+                    //unclear how we want to handle this base behavior, may be best to create a default case that is editable by user
+                    if(argValue > internalPaginationLimit) console.log('The passed in argument exceeds paginationLimit, define intended default behavior for this case')
+                    this.currMult = argValue;
+                  }
+
+                  console.log('Mult is now:', this.currMult);
+
+                  for (let i = this.parentTypeStack.length-1; i >= 0; i--) {
+                    if(this.parentTypeStack[i].isList === true) {
+                    //assuming the list is currently nested within another list, adjust resolve complexity by number of list calls
+                    //indicated by the multiplier inherited by the previous list
+                    const lastListMultiplier = this.parentTypeStack[i].currMult;
+                    this.resolveComplexity += lastListMultiplier;
+                    this.resolveComplexity--;
+                    this.currMult = this.currMult * lastListMultiplier
+                    argumentCosts = argumentCosts * lastListMultiplier
+                    break;
+                      }
+                  }
+
+                //base case addition of resolveComplexity, offset in above for-loop for list cases
+                  this.resolveComplexity++;
+                  this.typeComplexity += (this.currMult * baseVal + argumentCosts);
+
+
+                } else if (fieldTypeUnion instanceof GraphQLUnionType) {
+                  const costAssociations = this.resolveUnionTypes(fieldTypeUnion)
+                } else {
+                  console.log(`This is the parentStack of the current GraphQL field type ${node.name.value}`, parentTypeStack);
+
+                  for (let i = this.parentTypeStack.length-1; i >= 0; i--) {
+                    if(this.parentTypeStack[i].isList === true) {
+                      const lastListMultiplier = this.parentTypeStack[i].currMult;
+                      this.resolveComplexity += lastListMultiplier;
+                      this.resolveComplexity--;
+                      this.currMult = lastListMultiplier
+                      break;
+                    }
+                  }
+
+                  //if the currMult === 0 indicates object not nested in list, simply increment complexity score
+                  if(this.currMult !== 0) this.typeComplexity += this.currMult * baseVal + argumentCosts; else this.typeComplexity+= baseVal + argumentCosts;
+                  this.resolveComplexity++;
+
+                }
+
+                this.parentTypeStack.push({fieldDef, isList, fieldDefArgs, this.currMult});
+                }
               }
-            }
 
             }
+
+          },
+          leave:(node) => {
+            if (node.kind === Kind.FIELD) {
+              this.parentTypeStack.pop();
+            }
           }
-        }
       }))
     }
   }
 
-  resolveUnionTypes(fieldType: GraphQLUnionType, schemaType: TypeInfo) {
+  resolveUnionTypes(fieldType: GraphQLUnionType) {
     //modularize code
     //add resolution for union of unions if possible, exists but potentially anti-pattern
     const unionTypes = this.schema.getPossibleTypes(fieldType);
@@ -217,17 +293,17 @@ class ComplexityAnalysis {
 
       let containedMult = 1;
 
-      console.log('This is the main type', containedType)
-      if(containedType instanceof GraphQLList){
-        //parse arguments/directives
-        //define pagination etc.
-        //AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHHHHHHHHHHHHHHHHHH
-        this.parentTypeStack.forEach(parentType => {
-          if(parentType.isList) {
-            containedMult = parentType.currMult;
-          }
-        })
+      for(let i = this.parentTypeStack.length-1; i > 0; i--) {
+        if(this.parentTypeStack[i].isList === true) {
+          console.log('Union type is nested within a list/lists');
+          containedMult = containedMult * this.parentTypeStack[i].currMult;
+          console.log(`The original multiplier of ${containedMult} has been updated to the multiplier of the most recent ancestor list, ${this.parentTypeStack[i].currMult}`)
+          break;
+        }
       }
+
+      console.log('This is the main type', containedType)
+
       if(containedType.astNode){
 
         containedType.astNode.fields?.forEach(field => {
@@ -251,7 +327,7 @@ class ComplexityAnalysis {
                     if(argument){
                     console.log('contained arg', argument)
                     //@ts-ignore
-                    ele.cost += Number(argument.value)
+                    ele.cost += (Number(argument.value) * containedMult);
                     }
                   }
                 })
@@ -266,7 +342,63 @@ class ComplexityAnalysis {
     return costAssociation;
   }
 
+  parseArgumentDirectives(fieldDef: GraphQLField<unknown, unknown, any>) {
+    if(fieldDef.astNode?.arguments) {
+      console.log('In parseArgumentDirectives');
+      //since the directive costs within directives placed in arguments are deeply nested, we have to use flatMap to efficiently extract them
+      //flatMap's under the hood implementation is very similar to the flattenArray things we've done before, it just integrates mapping with that process
+      const argumentDirectives = fieldDef.astNode.arguments.flatMap((arg: any) => {
+        const argName = arg.name.value;
+        return arg.directives?.map((directive: any) => ({
+          argName,
+          directiveName: directive.name.value,
+          //@ts-ignore
+          directiveValue: directive.arguments?.find(arg => arg.name.value === 'value')?.value.value,
+        }));
+      });
+      console.log('argumentDirectives', argumentDirectives);
+      const argumentCosts = argumentDirectives.filter((directive: any) => directive.directiveName === 'cost');
+      // console.log('arg costs', argumentCosts);
+      return argumentCosts;
+    } else {
+      return;
+    }
+  }
+
+  parseDirectives(fieldDef: GraphQLField<unknown, unknown, any>, baseVal: number) {
+    let listLimit = 0;
+    if(fieldDef.astNode?.directives) {
+      // console.log('This is the current value of baseVal', baseVal)
+      const directives: DirectivesInfo[] = [];
+      for (let i = 0; i < fieldDef.astNode.directives.length; i++) {
+        // console.log('These are the directives', fieldDef.astNode.directives[i]);
+        directives.push({name: fieldDef.astNode.directives[i].name, arguments: fieldDef.astNode.directives[i].arguments as readonly graphql.ConstArgumentNode[]})
+        // console.log('These are the pushed directives', directives[i]);
+      }
+      if(directives.length){
+        for (let i = 0; i < directives.length; i++) {
+          const costPaginationDirectives: PaginationDirectives[] = directives[i].arguments?.map((arg: any) => ({
+            name: directives[i].name.value,
+            value: arg.value
+          }))
+          // console.log('This is the map', map)
+
+          //.find terminates on first match so I just ran it twice, probably some way to make this dry
+
+          costPaginationDirectives.forEach((directives: PaginationDirectives)  => {
+            if(directives.name === 'cost' && directives.value) baseVal = directives.value.value;
+            if(directives.name === 'paginationLimit' && directives.value) listLimit = directives.value
+          })
+        }
+      }
+    }
+      console.log('This is the value of baseVal after accounting for directives', baseVal)
+      return {costDirective: baseVal, paginationLimit: listLimit}
+  }
+
 }
+
+//end of class
 
 const resolveUnionTypes = function(fieldType: GraphQLUnionType, schema: GraphQLSchema, typeInfo: TypeInfo, parentTypeStack: ParentType[]) {
   //modularize code
@@ -281,10 +413,10 @@ const resolveUnionTypes = function(fieldType: GraphQLUnionType, schema: GraphQLS
   interfaceTypes.forEach(containedType => {
     console.log('This is the main type', containedType)
     if(containedType instanceof GraphQLList){
+      console.log('The containedType is a list');
       //parse arguments/directives
       //define pagination etc.
       //AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHHHHHHHHHHHHHHHHHH
-      const
     }
     if(containedType.astNode){
 
@@ -341,6 +473,8 @@ const parseArgumentDirectives = function(fieldDef: GraphQLField<unknown, unknown
     console.log('argumentDirectives', argumentDirectives);
     const argumentCosts = argumentDirectives.filter((directive: any) => directive.directiveName === 'cost');
     // console.log('arg costs', argumentCosts);
+
+
     return argumentCosts;
   } else {
     return;
