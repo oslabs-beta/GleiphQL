@@ -12,7 +12,7 @@ const InstructionSection: React.FC<{}> = () => {
     }
   }
   return (
-  <section className='p-8 flex flex-col md:flex-row'>
+  <section className='p-8 text-center flex flex-col md:flex-row'>
     <div className='md:w-6/12'>
       <h2 className='text-2xl font-extrabold p-2'>Get Started Easily</h2>
       <p>

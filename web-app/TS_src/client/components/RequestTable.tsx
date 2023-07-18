@@ -1,11 +1,4 @@
 import { useEffect, useState } from 'react';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import Paper from '@mui/material/Paper';
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 import useStore from '../store';
@@ -33,36 +26,34 @@ function RequestTable () {
     .catch((err: any) => console.log(err.message));   
   }, [currEndPoint]);
   return (
-    <TableContainer component={Paper} sx={{ marginTop: "50px" }}>
-      <Table stickyHeader={true} sx={{ tableLayout: 'fixed' }}>
-        <TableHead>
-          <TableRow>
-            <TableCell>IP Address</TableCell>
-            <TableCell align="left">Complexity Score</TableCell>
-            <TableCell align="left">Number of Object Types</TableCell>
-            <TableCell align="left">Query Depth</TableCell>
-            <TableCell align="left">Timestamp</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {tableData && tableData.map((row) => {
+    <div className='rounded-lg border border-slate-100 border-1 overflow-hidden w-full m-2 mr-8'>
+      <table className='m-0 table-auto'>
+        <thead>
+          <tr className='h-12'>
+            <th className='font-normal w-1/5'>IP Address</th>
+            <th className='font-normal w-1/5'>Complexity Score</th>
+            <th className='font-normal hidden sm:table-cell'>Number of Object Types</th>
+            <th className='font-normal hidden sm:table-cell'>Query Depth</th>
+            <th className='font-normal w-1/5'>Time Stamp</th>
+          </tr>
+        </thead>
+        <tbody>
+          {tableData && tableData.map((row, index) => {
+            const color = index % 2 > 0? 'bg-white' : 'bg-slate-50';
             return (
-              <TableRow
-              key={uuidv4()}
-              sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-              >
-                <TableCell component="th" scope="row">{row.ip_address}</TableCell>
-                <TableCell align="left">{row.complexity_score}</TableCell>
-                <TableCell align="left">{row.object_types.objectTypes.length}</TableCell>
-                <TableCell align="left">{row.query_depth}</TableCell>
-                <TableCell align="left">{row.timestamp}</TableCell>
-              </TableRow>
+              <tr key={uuidv4()} className={`h-24 ${color}`}>
+                <th className='font-light'>{row.ip_address}</th>
+                <th className='font-light'>{row.complexity_score}</th>
+                <th className='font-light hidden sm:table-cell'>{row.object_types.objectTypes.length}</th>
+                <th className='font-light hidden sm:table-cell'>{row.query_depth}</th>
+                <th className='font-light'>{row.timestamp}</th>
+              </tr>
             );
           })}
-        </TableBody>
-      </Table>
-    </TableContainer>
+        </tbody>
+    </table>
 
+    </div>
   );
 };
 

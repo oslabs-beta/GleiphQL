@@ -4,8 +4,8 @@ import React from 'react';
 const IntroSection: React.FC<{}> = () => {
 
  return (
-  <section className='p-8 flex flex-col md:flex-row justify-between'>
-    <div className='p-4 md:w-6/12'>
+  <section className='p-8 flex flex-col md:flex-row justify-around'>
+    <div className='p-4 text-center md:w-6/12'>
       <h2 className='text-2xl font-extrabold p-2'>Protect and monitor your GraphQL Endpoints</h2>
       <p>
         GleiphQL is an Express middleware library which enhances performance

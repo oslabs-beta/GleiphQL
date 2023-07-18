@@ -1,11 +1,4 @@
-import React, { useEffect } from 'react';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import Paper from '@mui/material/Paper';
+import React from 'react';
 import useStore from '../store';
 
 const ChartHeader: React.FC<{}> = () => {
@@ -29,24 +22,24 @@ const ChartHeader: React.FC<{}> = () => {
   }
 
  return (
-    <TableContainer sx={{margin: "50px"}} component={Paper}>
-      <Table stickyHeader={true} aria-label="simple table">
-        <TableHead>
-          <TableRow>
-            <TableCell align="center">Total API Requests</TableCell>
-            <TableCell align="center">Total Blocked Requests</TableCell>
-            <TableCell align="center">Average Complexity Score</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-            <TableRow>
-              <TableCell align="center">{endpointRequests.length}</TableCell>
-              <TableCell align="center">{0}</TableCell>
-              <TableCell align="center">{averageComplexity()}</TableCell>
-            </TableRow>
-        </TableBody>
-      </Table>
-    </TableContainer>
+    <div className='rounded-lg border border-slate-100 border-1 overflow-hidden w-full m-4 grid grid-cols-1 place-content-center font-light'>
+      <table>
+        <thead>
+          <tr>
+            <th className='font-light'>Total API Requests</th>
+            <th className='font-light'>Total Blocked Requests</th>
+            <th className='font-light'>Average Complexity Score</th>
+          </tr>
+        </thead>
+        <tbody>
+            <tr>
+              <th>{endpointRequests.length}</th>
+              <th>{0}</th>
+              <th>{averageComplexity()}</th>
+            </tr>
+        </tbody>
+      </table>
+    </div>
   );
 }
 

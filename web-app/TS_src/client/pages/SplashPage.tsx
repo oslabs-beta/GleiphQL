@@ -11,7 +11,7 @@ const SplashPage: React.FC<{}> = () => {
   
   
   return (
-    <div className='splashpage-container'>   
+    <div>   
       {showLogin && (!showRegistration) && (
         <div className="login-popup">
           <Login />

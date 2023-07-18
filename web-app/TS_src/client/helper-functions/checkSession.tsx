@@ -1,8 +1,9 @@
 import axios from 'axios';
 
-export default async function checkSession(setIsLoggedIn: (isLoggedIn: boolean) => void, 
-setCurrUser: (currUserId: number, currUserEmail: string) => void,
-setIsLoading: (isLoading: boolean) => void) {
+export default async function checkSession(
+  setIsLoggedIn: (isLoggedIn: boolean) => void, 
+  setCurrUser: (currUserId: number, currUserEmail: string) => void,
+  setIsLoading: (isLoading: boolean) => void) {
   try {
     const response = await axios.get('/api/session');
     setIsLoggedIn(response.data.signedIn);
