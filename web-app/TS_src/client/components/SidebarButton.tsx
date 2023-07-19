@@ -1,4 +1,3 @@
-import Button from '@mui/material/Button';
 import React from 'react';
 import useStore from '../store';
 
@@ -14,8 +13,8 @@ const SidebarButton: React.FC<SidebarButtonProps> = (props) => {
   }
 
   return (
-    <div>
-      <Button sx={{fontSize: "12px", width: "90%"}} variant='contained' onClick={toggleEndPoint}>{props.endPointUrl}</Button>
+    <div className='p-1.5'>
+      <button className='w-64 h-11 border rounded-md text-sm text-white bg-blue-950 hover:bg-blue-900' onClick={toggleEndPoint}>{props.endPointUrl}</button>
     </div>
   )
 }

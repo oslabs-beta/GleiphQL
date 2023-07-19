@@ -4,6 +4,38 @@ import * as bcrypt from 'bcryptjs';
 
 const SALT_WORK_FACTOR = 10;
 
+const searchUser = async (email: string) => {
+  const sqlCommand: string = `
+  SELECT * FROM users WHERE email = $1;
+  `;
+  const values: string[] = [ email ];
+  let result;
+  try {
+    result = await db.query(sqlCommand, values);
+  } catch(err: any) {
+    console.log('error in searchUser: error in searching user in the database')
+  }
+  return result;
+}
+
+export const verifyUser =  async (email: string, password: string) => {
+  let signedIn: boolean = false;
+  let userId;
+  const result = await searchUser(email);
+  if(result && result.rows[0]) {
+    const matched: boolean = await bcrypt.compare(password, result.rows[0].password);
+    if(matched) {
+      signedIn = true;
+      userId = result.rows[0].user_id;
+    }
+  }
+  return {
+    signedIn,
+    userId,
+    userEmail: email,
+  };
+};
+
 const userController = {
   checkUserExists: async (req: Request, res: Response, next: NextFunction) => {
     const { email, password } = req.body;
@@ -12,19 +44,10 @@ const userController = {
       status: 400,
       message: { error: 'Did not receive necessary inputs to check if a user exists' }
     });
-    const sqlCommand: string = `
-    SELECT * FROM users WHERE email = $1;
-    `;
-    const values: string[] = [ email ];
     try {
-      const result: any = await db.query(sqlCommand, values);
-      if(result.rows[0] === undefined) {
-        res.locals.userExists = false;
-      } else {
-        res.locals.userExists = true;
-        res.locals.userId = result.rows[0].user_id;
-        res.locals.userPW = result.rows[0].password;
-      }
+      const result = await searchUser(email);
+      if(result && result.rows[0]) res.locals.userExists = true;
+      else res.locals.userExists = false;
     } catch(err: any) {
       return next({
         log: 'Error in userController.userExists: could not check if a user already exists',
@@ -33,8 +56,9 @@ const userController = {
       });
     }
     return next();
-  }, 
+  },
   register: async (req: Request, res: Response, next: NextFunction) => {
+    console.log(res.locals.userExists);
     if(res.locals.userExists) res.locals.userCreated = false;
     else {
       const { email, password } = req.body;
@@ -59,27 +83,6 @@ const userController = {
     }
     return next();
   },
-  login: async (req: Request, res: Response, next: NextFunction) => {
-    res.locals.signIn = false;
-    // req.session.isAuth = false;
-    const { password } = req.body;
-    try {
-      const matched: boolean = await bcrypt.compare(password, res.locals.userPW);
-      if (matched) {
-        res.locals.signIn = true;
-        // req.session.isAuth = true;
-        // req.session.userId = res.locals.userId;
-        // req.session.userEmail = email;
-      }
-    } catch(err: any) {
-      return next({
-        log: 'Error in userController.login: verifying login credentials',
-        status: 400,
-        message: { error: err.message }
-      });
-    }
-    return next();
-  }
 };
 
 export default userController;

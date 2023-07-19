@@ -1,14 +1,20 @@
-// import { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction } from 'express';
 
-// const sessionController = {
-//   authenticateeSession: (req: Request, res: Response, next: NextFunction) => {
-//     req.session.isAuth = res.locals.signIn;
-//     return next();
-//   },
-//   checkSession: (req: Request, res: Response, next: NextFunction) => {
-//     res.locals.auth = req.session.isAuth;
-//     return next();
-//   },
-// };
 
-// export default sessionController;
+const sessionController = {
+  authenticated: (req: Request, res: Response, next: NextFunction) => {
+    if(req.isAuthenticated()) return next();
+    else res.status(440).send({
+      expired: true     
+    })
+  },
+  endSession: (req: Request, res: Response, next: NextFunction) => {
+    req.logOut(err => {
+      if (err) { return next(err); }
+      res.locals.signedIn = false;
+    });
+    return next();
+  }
+};
+
+export default sessionController;

@@ -548,9 +548,29 @@ const rateLimiter = function (config: any) {
       // if the user does not want to use redis, the cache will be saved in the "tokenBucket" object
       else if (config.redis !== true) {
         tokenBucket = cache.nonRedis(config, complexityScore.complexityScore, tokenBucket, req)
+        const error = {
+          errors: [
+            {
+              message: `Token limit exceeded`,
+              extensions: {
+                cost: {
+                  requestedQueryCost: complexityScore.complexityScore,
+                  currentTokensAvailable:  Number(tokenBucket[requestIP].tokens.toFixed(2)),
+                  maximumTokensAvailable: config.complexityLimit,
+                },
+                responseDetails: {
+                  status: 429,
+                  statusText: "Too Many Requests",
+                }
+              }
+            }
+          ]
+        }
 
         if (complexityScore.complexityScore >= tokenBucket[requestIP].tokens) {
+
           console.log('Complexity of this query is too high');
+          res.status(429).json(error);
           return next(Error);
         }
         console.log('Tokens before subtraction: ', tokenBucket[requestIP].tokens)
