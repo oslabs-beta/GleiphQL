@@ -1,12 +1,14 @@
 import SplashPage from './pages/SplashPage';
-import Navbar from './components/Navbar';
+// import Navbar from './components/Navbar';
+import NewNavbar from './components/NewNavbar';
 
 
 function App() {
 
   return (
     <div className='flex flex-col justify-center align-middle'>
-      <Navbar />
+      {/* <Navbar /> */}
+      <NewNavbar />
       <div className='AppContainer'>
 
       <SplashPage />

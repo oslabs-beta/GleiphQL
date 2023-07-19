@@ -13,7 +13,7 @@ body {
   box-sizing: border-box;
 }
 
-/* h1 {
+h1 {
   font-size: 70px;
   line-height: 1.5;
 }
@@ -26,9 +26,9 @@ h2 {
 h3 {
   font-size: 45px;
   line-height: 1.5;
-} */
-/* 
-button {
+}
+
+/* button {
   border-radius: 8px;
   border: 1px solid transparent;
   padding: 0.6em 1.2em;
@@ -37,9 +37,9 @@ button {
   font-family: inherit;
   border-color: black;
   cursor: pointer;
-} */
+}
 
-/* button:hover {
+button:hover {
   border-color: #646cff;
 }
 
@@ -47,6 +47,10 @@ button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 } */
+
+/*  ~~ Start of component: Modal  ~~   */
+
+/*    ~~ End of component: Modal   ~~   */
 
 
 /*  ~~ Start of component: Login  ~~  */
@@ -153,10 +157,14 @@ button:focus-visible {
 /*    ~~ End of component: Dashboard   ~~   */
 
 
-/*  ~~ Start of component: ----  ~~   */
+/*  ~~ Start of component: Login/Register  ~~   */
 .inputLabel {
   font-weight: bold;
   margin-left: 16px;
   font-size: 16px;
 }
-/*    ~~ End of component: ----   ~~   */
+/*    ~~ End of component: Login/Register   ~~   */
+
+/*  ~~ Start of component: -----  ~~   */
+
+/*    ~~ End of component: -----   ~~   */

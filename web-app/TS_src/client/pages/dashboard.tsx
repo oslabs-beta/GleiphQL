@@ -1,12 +1,13 @@
 import React, { useState , useEffect } from 'react';
 import useStore from '../store';
-import Navbar from '../components/Navbar';
+// import Navbar from '../components/Navbar';
 import RequestTable from '../components/RequestTable';
 import Sidebar from '../components/Sidebar'
 import LineChart from '../components/LineChart';
 import ChartHeader from '../components/ChartHeader';
 import { Navigate } from 'react-router-dom';
 import checkSession from '../helper-functions/checkSession';
+import NewNavbar from '../components/NewNavbar';
 
 const Dashboard: React.FC<{}> = () => {
   const { currEndPoint, isLoggedIn, setIsLoggedIn, setCurrUser} = useStore();
@@ -20,7 +21,8 @@ const Dashboard: React.FC<{}> = () => {
   return (
     <>
       {!isLoggedIn && <Navigate to="/" replace={true} />}
-      <Navbar />
+      {/* <Navbar /> */}
+      <NewNavbar />
       <div className="dashboard-page">
         <Sidebar />
         { currEndPoint.id? 
