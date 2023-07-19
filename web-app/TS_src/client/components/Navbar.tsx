@@ -34,8 +34,8 @@ const Navbar: React.FC<{}> = () => {
           {currUser.email === "" ? "" : `WELCOME, ${currUser.email.split("@")[0].toUpperCase()}`}
         </li>
         { isLoggedIn? 
-          <li className='inline'><button className='rounded-md border bg-white text-blue-950 font-semibold p-2 w-20' onClick={logOut}>LOGOUT</button></li> : 
-          <li className='inline'><button className='rounded-md border bg-white text-blue-950 font-semibold p-2 w-20' onClick={()=>loginToggle(true)}>LOGIN</button></li>
+          <li className='inline'><button className='rounded-md border bg-white text-blue-950 hover:bg-slate-200 font-semibold p-2 w-20' onClick={logOut}>LOGOUT</button></li> : 
+          <li className='inline'><button className='rounded-md border bg-white text-blue-950 hover:bg-slate-200 font-semibold p-2 w-20' onClick={()=>loginToggle(true)}>LOGIN</button></li>
         }
       </ul>
     </nav>
