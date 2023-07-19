@@ -35,14 +35,14 @@ const Sidebar: React.FC<{}> = () => {
   //wrap endpoint array in things
   //just use button that when you click sets currEndPoint
   return (
-    <div className='p-8 flex flex-col'>
+    <nav className='p-8 flex flex-col'>
       <h1 className='text-2xl'>
         My Endpoints
       </h1>
-      <p>
+      <ul>
       {endpointArray}
-      </p>
-    </div>
+      </ul>
+    </nav>
   )
 }
 

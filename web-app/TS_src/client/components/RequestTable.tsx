@@ -53,7 +53,7 @@ function RequestTable () {
         </tbody>
     </table>
 
-    </div>
+  </div>
   );
 };
 

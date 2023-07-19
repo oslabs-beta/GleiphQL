@@ -13,9 +13,9 @@ const SidebarButton: React.FC<SidebarButtonProps> = (props) => {
   }
 
   return (
-    <div className='p-1.5'>
+    <li className='p-1.5'>
       <button className='w-64 h-11 border rounded-md text-sm text-white bg-blue-950 hover:bg-blue-900' onClick={toggleEndPoint}>{props.endPointUrl}</button>
-    </div>
+    </li>
   )
 }
 

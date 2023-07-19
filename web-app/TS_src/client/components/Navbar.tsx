@@ -25,20 +25,20 @@ const Navbar: React.FC<{}> = () => {
   };
 
   return (
-    <div className='flex p-2 h-14 justify-between bg-blue-950 text-white w-full'>
+    <nav className='flex p-2 h-14 justify-between bg-blue-950 text-white w-full'>
       <a href='/'><h1 className='text-2xl text-white'>
         GleiphQL
       </h1></a>
-      <div>
-        <div className='hidden md:inline md:p-12'>
+      <ul>
+        <li className='hidden md:inline md:p-12'>
           {currUser.email === "" ? "" : `WELCOME, ${currUser.email.split("@")[0].toUpperCase()}`}
-        </div>
+        </li>
         { isLoggedIn? 
-          <button className='rounded-md border bg-white text-blue-950 font-semibold p-2 w-24' onClick={logOut}>LOGOUT</button>: 
-          <button className='rounded-md border bg-white text-blue-950 font-semibold p-2 w-24' onClick={()=>loginToggle(true)}>LOGIN</button>
+          <li className='inline'><button className='rounded-md border bg-white text-blue-950 font-semibold p-2 w-20' onClick={logOut}>LOGOUT</button></li> : 
+          <li className='inline'><button className='rounded-md border bg-white text-blue-950 font-semibold p-2 w-20' onClick={()=>loginToggle(true)}>LOGIN</button></li>
         }
-      </div>
-    </div>
+      </ul>
+    </nav>
   )
 };
 

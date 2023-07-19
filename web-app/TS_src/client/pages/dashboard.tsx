@@ -24,11 +24,11 @@ const Dashboard: React.FC<{}> = () => {
       <div className='flex flex-col place-items-center sm:place-items-start xl:flex-row'>
         <Sidebar />
         { currEndPoint.id? 
-        <main className='flex flex-col place-items-center w-3/4 mr-2.5'>
+        <article className='flex flex-col place-items-center w-3/4 sm:w-full xl:w-3/4 mr-2.5'>
           <ChartHeader />
           <LineChart />
           <RequestTable />
-        </main> : null
+        </article> : null
         }
       </div>
     </div>
