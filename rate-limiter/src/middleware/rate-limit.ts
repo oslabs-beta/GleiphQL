@@ -1,10 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { buildSchema, isAbstractType, GraphQLInterfaceType, isNonNullType, GraphQLType, GraphQLField, parse, GraphQLList, GraphQLObjectType, GraphQLSchema, TypeInfo, visit, visitWithTypeInfo, StringValueNode, getNamedType, GraphQLNamedType, getEnterLeaveForKind, GraphQLCompositeType, getNullableType, Kind, isListType, DocumentNode, DirectiveLocation, GraphQLUnionType, GraphQLNamedOutputType, getDirectiveValues, isCompositeType } from 'graphql';
 import graphql from 'graphql';
-import { useSchema } from 'graphql-yoga';
-import { createClient } from 'redis';
 import cache from './cache.js';
-
 
 const testSDL = `
 directive @cost(value: Int) on FIELD_DEFINITION | ARGUMENT_DEFINITION
@@ -101,8 +98,7 @@ query SearchQuery {
 
 //Resolve Relay convention breaking analysis
 //Resolve argument calls nested in list casing => should be resolved
-//Resolve polymorphism of union/interface types => AAAAAAAAAAAAAAAAAAAAAAAAAH
-
+//Resolve polymorphism of union/interface types => close to resolution
 
 //What problems do you need to account for?
 
@@ -117,18 +113,15 @@ query SearchQuery {
 //Static analysis
   //User configurability of fields by directives
   //
-
-
-
 // //sample schema to test directive work
 
-
-//to-dos
-//modularize code, certain functions can be offloaded
-//generate casing for mutations/subscriptions
+//further to-dos
+//modularize code, certain functions can be offloaded => mostly done
+//generate casing for mutations/subscriptions => haha maybe later
 //implement support for resolvers => check if resolvers are saved in schema => should be in okay state => need to figure out if resolver cost can be separated
 //fix typescript typing issues, define interfaces for complex object types passed to helper functions
-//attempt to refactor the class, to handle modularization of interdependent data structures using class state
+//attempt to refactor the class, to handle modularization of interdependent data structures using class state => mostly done
+//fix casing for argument implementation costs, need to multiply said cost with nestedLists, can possibly be resolved by simply coupling argumentCosts with baseVal
 
 //relevant interfaces
 interface TokenBucket {
@@ -137,7 +130,6 @@ interface TokenBucket {
     lastRefillTime: number;
   };
 }
-
 
 interface DirectivesInfo {
   name: graphql.NameNode,
@@ -154,6 +146,7 @@ interface ParentType {
   isList: boolean,
   fieldDefArgs: readonly graphql.GraphQLArgument[],
   currMult: number,
+  isUnion: boolean
 }
 
 //start of class
@@ -179,98 +172,117 @@ class ComplexityAnalysis {
     console.log('in traverseAST');
     if (this.parsedAst) {
 
-      console.log('parsedAst exists')
+      console.log('This is the current currMult', this.currMult)
 
-      console.log('schema', this.schema);
+      // console.log('parsedAst exists')
+
+      // console.log('schema', this.schema);
 
       const schemaType = new TypeInfo(this.schema)
 
       visit(this.parsedAst, visitWithTypeInfo(schemaType, {
-        //use arrow function here within higher-order function in order to access surrounding scope
+        //use arrow function here within higher-order function in order to allow access to surrounding scope
         enter: (node) => {
+          if(node.kind !== Kind.FIELD) return;
 
-          if (node.kind === Kind.FIELD) {
+          console.log('Current node', node);
 
-            let baseVal = 1;
-            let internalPaginationLimit: number | null = null;
-            let argumentCosts = 0;
+          let baseVal = 1;
+          let internalPaginationLimit: number | null = null;
+          let argumentCosts = 0;
 
-            if (this.parentTypeStack.length === 0) this.currMult = 0;
+          if (this.parentTypeStack.length === 0) this.currMult = 0;
 
-            const parentType = schemaType.getParentType();
+          const parentType = schemaType.getParentType();
 
-            console.log('ParentType', parentType);
+          // console.log('ParentType', parentType);
 
-            if(!parentType) return;
+          if(!parentType) return;
 
-            console.log('ParentType exists');
+          // console.log('ParentType exists');
 
-            const fieldDef = parentType && isAbstractType(parentType) ? schemaType.getFieldDef() : parentType.getFields()[node.name.value];
+          const fieldDef = parentType && isAbstractType(parentType) ? schemaType.getFieldDef() : parentType.getFields()[node.name.value];
 
-            if(!fieldDef) return;
+          if(!fieldDef) return;
 
-            const fieldDefArgs = fieldDef.args;
-            console.log('These are relevant fieldArgs', fieldDef.args);
-            const fieldType = fieldDef.type;
-            const fieldTypeUnion = getNamedType(fieldType);
-            console.log('Union?', fieldTypeUnion);
-            const isList = isListType(fieldType) || (isNonNullType(fieldType) && isListType(fieldType.ofType));
-            const argumentDirectiveCost = this.parseArgumentDirectives(fieldDef);
-            const directiveAdjustedBaseVal = this.parseDirectives(fieldDef, baseVal)
+          const fieldDefArgs = fieldDef.args;
+          // console.log('These are relevant fieldArgs', fieldDef.args);
+          const fieldType = fieldDef.type;
+          const fieldTypeUnion = getNamedType(fieldType);
+          console.log('Union?', fieldTypeUnion);
+          const isList = isListType(fieldType) || (isNonNullType(fieldType) && isListType(fieldType.ofType));
+          const isUnion = fieldTypeUnion instanceof GraphQLUnionType;
+          const argumentDirectiveCost = this.parseArgumentDirectives(fieldDef);
+          const directiveAdjustedBaseVal = this.parseDirectives(fieldDef, baseVal)
 
-            if(argumentDirectiveCost) {
-              argumentDirectiveCost.forEach((directive: any) => {
-                console.log('Attempting to resolve cost of resolving argument')
-                const directiveValue = Number(directive.directiveValue)
-                argumentCosts += directiveValue;
-                })
+          const subUnionType = this.hasUnionAncestor();
+
+          if (subUnionType) {
+            console.log('Field has union ancestor, complexity calculation should have been resolved in resolveUnionTypes of ancestor, aborting')
+            const currMult = this.currMult
+            this.parentTypeStack.push({fieldDef, isList, fieldDefArgs, currMult, isUnion});
+            return;
+          }
+
+          if(argumentDirectiveCost) {
+            //list could be nested in another list, need to case out
+            argumentDirectiveCost.forEach((directive: any) => {
+              console.log('Attempting to resolve cost of resolving argument')
+              const directiveValue = Number(directive.directiveValue)
+              //simply appending this value to baseVal possibly resolves argument resolution calls in nestedLists
+              baseVal += directiveValue;
+              // argumentCosts += directiveValue;
+              })
+          }
+
+          baseVal = Number(directiveAdjustedBaseVal.costDirective);
+          if(directiveAdjustedBaseVal.paginationLimit) internalPaginationLimit = directiveAdjustedBaseVal.paginationLimit;
+
+          if(isList === true) {
+            console.log(`${node.name.value} is a list`);
+            const argNode = node.arguments?.find(arg => (arg.name.value === 'limit' || arg.name.value === 'first' || arg.name.value === 'last' || arg.name.value === 'before' || arg.name.value === 'after'));
+            this.currMult = this.config.paginationLimit;
+
+            if(internalPaginationLimit) this.currMult = internalPaginationLimit;
+
+            if (argNode && argNode.value.kind === 'IntValue') {
+              const argValue = parseInt(argNode.value.value, 10);
+              console.log(`Found limit argument with value ${argValue}`);
+              //unclear how we want to handle this base behavior, may be best to create a default case that is editable by user
+              if(internalPaginationLimit) {
+                if(argValue > internalPaginationLimit) console.log('The passed in argument exceeds paginationLimit, define intended default behavior for this case')
+              }
+                this.currMult = argValue;
             }
 
-            baseVal = directiveAdjustedBaseVal.costDirective;
-            if(directiveAdjustedBaseVal.paginationLimit) internalPaginationLimit = directiveAdjustedBaseVal.paginationLimit;
+            console.log('Mult is now:', this.currMult);
 
-            if(isList === true) {
-              console.log(`${node.name.value} is a list`);
-              const argNode = node.arguments?.find(arg => (arg.name.value === 'limit' || arg.name.value === 'first' || arg.name.value === 'last' || arg.name.value === 'before' || arg.name.value === 'after'));
-              this.currMult = this.config.paginationLimit;
+            this.resolveParentTypeStack(isList, argumentCosts, baseVal);
 
-              if(internalPaginationLimit) this.currMult = internalPaginationLimit;
+            } else if (fieldTypeUnion instanceof GraphQLUnionType) {
+              const costAssociations = this.resolveUnionTypes(fieldTypeUnion)
+              const currMult = this.currMult
+              this.parentTypeStack.push({fieldDef, isList, fieldDefArgs, currMult, isUnion});
+              return;
 
-              if (argNode && argNode.value.kind === 'IntValue') {
-                const argValue = parseInt(argNode.value.value, 10);
-                console.log(`Found limit argument with value ${argValue}`);
-                //unclear how we want to handle this base behavior, may be best to create a default case that is editable by user
-                if(internalPaginationLimit) {
-                  if(argValue > internalPaginationLimit) console.log('The passed in argument exceeds paginationLimit, define intended default behavior for this case')
-                }
-                  this.currMult = argValue;
-              }
-
-              console.log('Mult is now:', this.currMult);
+            } else {
+              console.log(`This is the parentStack of the current GraphQL field type ${node.name.value}`, this.parentTypeStack);
 
               this.resolveParentTypeStack(isList, argumentCosts, baseVal);
-
-              } else if (fieldTypeUnion instanceof GraphQLUnionType) {
-                const costAssociations = this.resolveUnionTypes(fieldTypeUnion)
-              } else {
-                console.log(`This is the parentStack of the current GraphQL field type ${node.name.value}`, this.parentTypeStack);
-
-                this.resolveParentTypeStack(isList, argumentCosts, baseVal);
-              }
-                const currMult = this.currMult
-                this.parentTypeStack.push({fieldDef, isList, fieldDefArgs, currMult});
             }
-          },
-          leave:(node) => {
-            if (node.kind === Kind.FIELD) {
-              this.parentTypeStack.pop();
-            }
+              const currMult = this.currMult
+              this.parentTypeStack.push({fieldDef, isList, fieldDefArgs, currMult, isUnion});
+        },
+        leave:(node) => {
+          if (node.kind === Kind.FIELD) {
+            this.parentTypeStack.pop();
           }
-      }))
-    }
+        }
+    }))
+  }
 
     this.complexityScore = this.typeComplexity + this.resolveComplexity;
-    
+
     return {complexityScore: this.complexityScore, typeComplexity: this.typeComplexity, resolveComplexity: this.resolveComplexity};
   }
 
@@ -292,6 +304,7 @@ class ComplexityAnalysis {
       //base case addition of resolveComplexity, offset in above for-loop for list cases
         this.resolveComplexity++;
         this.typeComplexity += (this.currMult * baseVal + argumentCosts);
+
     } else {
 
       for (let i = this.parentTypeStack.length-1; i >= 0; i--) {
@@ -444,17 +457,21 @@ class ComplexityAnalysis {
     return {costDirective: baseVal, paginationLimit: listLimit}
   }
 
+  hasUnionAncestor() {
+    let hasUnionAncestor = false;
+    for(let i = this.parentTypeStack.length-1; i >= 0; i--) {
+      if(this.parentTypeStack[i].isUnion) hasUnionAncestor = true;
+    }
+
+    return hasUnionAncestor;
+  }
+
 }
 
 //end of class
 
 const rateLimiter = function (config: any) {
-  interface TokenBucket {
-    [key: string]: {
-      tokens: number;
-      lastRefillTime: number;
-    };
-  }
+
   let tokenBucket: TokenBucket = {};
   return async (req: Request, res: Response, next: NextFunction) => {
     if(req.body.query) {
@@ -479,11 +496,8 @@ const rateLimiter = function (config: any) {
       console.log('This is the complexity score:', complexityScore.complexityScore);
 
       //returns error if complexity heuristic reads complexity score over limit
-      //if(config.monitor === true) {
-        res.locals.complexityScore = complexityScore;
-        res.locals.complexityLimit = config.complexityLimit;
-      //   return next();
-      // }
+      res.locals.complexityScore = complexityScore;
+      res.locals.complexityLimit = config.complexityLimit;
 
       // if the user wants to use redis, a redis client will be created and used as a cache
       if (config.redis === true) {
