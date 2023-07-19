@@ -46,7 +46,7 @@ union SearchResult = Author | Book
 type Query {
   authors: [Author] @cost(value: 2)
   books(limit: Int @cost(value:10)): [Book] @cost(value: 2) @paginationLimit(value: 5)
-  search(term: String): [SearchResult]
+  search(term: String): [SearchResult] @paginationLimit(value: 10)
 }
 `
 
@@ -116,12 +116,16 @@ query SearchQuery {
 // //sample schema to test directive work
 
 //further to-dos
+
 //modularize code, certain functions can be offloaded => mostly done
 //generate casing for mutations/subscriptions => haha maybe later
 //implement support for resolvers => check if resolvers are saved in schema => should be in okay state => need to figure out if resolver cost can be separated
 //fix typescript typing issues, define interfaces for complex object types passed to helper functions
 //attempt to refactor the class, to handle modularization of interdependent data structures using class state => mostly done
 //fix casing for argument implementation costs, need to multiply said cost with nestedLists, can possibly be resolved by simply coupling argumentCosts with baseVal
+//ensure that inline-fragments are appropriately handled
+//resolve calling for lists of unions
+
 
 //relevant interfaces
 interface TokenBucket {
@@ -185,7 +189,7 @@ class ComplexityAnalysis {
         enter: (node) => {
           if(node.kind !== Kind.FIELD) return;
 
-          console.log('Current node', node);
+          // console.log('Current node', node);
 
           let baseVal = 1;
           let internalPaginationLimit: number | null = null;
@@ -209,16 +213,16 @@ class ComplexityAnalysis {
           // console.log('These are relevant fieldArgs', fieldDef.args);
           const fieldType = fieldDef.type;
           const fieldTypeUnion = getNamedType(fieldType);
-          console.log('Union?', fieldTypeUnion);
           const isList = isListType(fieldType) || (isNonNullType(fieldType) && isListType(fieldType.ofType));
           const isUnion = fieldTypeUnion instanceof GraphQLUnionType;
+          console.log('isUnion?', isUnion);
           const argumentDirectiveCost = this.parseArgumentDirectives(fieldDef);
           const directiveAdjustedBaseVal = this.parseDirectives(fieldDef, baseVal)
 
           const subUnionType = this.hasUnionAncestor();
 
           if (subUnionType) {
-            console.log('Field has union ancestor, complexity calculation should have been resolved in resolveUnionTypes of ancestor, aborting')
+            console.log('Field has union ancestor, complexity calculation should have been resolved in resolveUnionTypes of ancestor, aborting traversal')
             const currMult = this.currMult
             this.parentTypeStack.push({fieldDef, isList, fieldDefArgs, currMult, isUnion});
             return;
@@ -236,9 +240,12 @@ class ComplexityAnalysis {
           }
 
           baseVal = Number(directiveAdjustedBaseVal.costDirective);
-          if(directiveAdjustedBaseVal.paginationLimit) internalPaginationLimit = directiveAdjustedBaseVal.paginationLimit;
+          if(directiveAdjustedBaseVal.paginationLimit) {
+            internalPaginationLimit = Number(directiveAdjustedBaseVal.paginationLimit);
+            console.log('Internal pagination limits', internalPaginationLimit);
+          }
 
-          if(isList === true) {
+          if(isList === true && isUnion !== true) {
             console.log(`${node.name.value} is a list`);
             const argNode = node.arguments?.find(arg => (arg.name.value === 'limit' || arg.name.value === 'first' || arg.name.value === 'last' || arg.name.value === 'before' || arg.name.value === 'after'));
             this.currMult = this.config.paginationLimit;
@@ -260,8 +267,9 @@ class ComplexityAnalysis {
             this.resolveParentTypeStack(isList, argumentCosts, baseVal);
 
             } else if (fieldTypeUnion instanceof GraphQLUnionType) {
-              const costAssociations = this.resolveUnionTypes(fieldTypeUnion)
-              const currMult = this.currMult
+              const largestUnion = this.resolveUnionTypes(fieldTypeUnion, internalPaginationLimit, isList)
+              const currMult = largestUnion.containedMult
+              this.typeComplexity += largestUnion.cost;
               this.parentTypeStack.push({fieldDef, isList, fieldDefArgs, currMult, isUnion});
               return;
 
@@ -327,13 +335,15 @@ class ComplexityAnalysis {
     }
   }
 
-  resolveUnionTypes(fieldType: GraphQLUnionType) {
+  resolveUnionTypes(fieldType: GraphQLUnionType, paginationLimit: number | null, isList: boolean) {
     //modularize code
     //add resolution for union of unions if possible, exists but potentially anti-pattern
+    console.log('Is union a list?', isList);
+    console.log('If there is a list, is there pagination limit defined?', paginationLimit);
     const unionTypes = this.schema.getPossibleTypes(fieldType);
     const costAssociation = unionTypes.map(containedType => {
       return {
-        name: containedType.name, cost: 0
+        name: containedType.name, cost: 0, containedMult: 0
       }
     })
 
@@ -342,6 +352,7 @@ class ComplexityAnalysis {
     unionTypes.forEach(containedType => {
 
       let containedMult = 1;
+      if(paginationLimit) containedMult *= paginationLimit;
 
       for(let i = this.parentTypeStack.length-1; i > 0; i--) {
         if(this.parentTypeStack[i].isList === true) {
@@ -351,6 +362,10 @@ class ComplexityAnalysis {
           break;
         }
       }
+
+      costAssociation.forEach(ele => {
+        ele.containedMult = containedMult;
+      })
 
       console.log('This is the main type', containedType)
 
@@ -388,7 +403,34 @@ class ComplexityAnalysis {
 
     })
     console.log('cost associations post-resolution', costAssociation);
-    return costAssociation;
+
+    const largestUnion = this.findLargestUnion(costAssociation);
+
+    console.log('Largest union?', largestUnion);
+
+    return largestUnion;
+  }
+
+  findLargestUnion(costAssociations: {
+    name: string;
+    cost: number;
+    containedMult: number;
+  }[]){
+    const largestCost = {
+      name: '',
+      cost: -Infinity,
+      containedMult: 0
+    }
+
+    costAssociations.forEach(ele => {
+      if(ele.cost > largestCost.cost){
+        largestCost.name = ele.name;
+        largestCost.cost = ele.cost;
+        largestCost.containedMult = ele.containedMult
+      }
+    })
+
+    return largestCost
   }
 
   parseArgumentDirectives(fieldDef: GraphQLField<unknown, unknown, any>) {
@@ -447,7 +489,7 @@ class ComplexityAnalysis {
 
       costPaginationDirectives.forEach((directives: PaginationDirectives) => {
         if(directives.name === 'cost' && directives.value) baseVal = directives.value.value;
-        if(directives.name === 'paginationLimit' && directives.value) listLimit = directives.value;
+        if(directives.name === 'paginationLimit' && directives.value) listLimit = directives.value.value;
       })
     }
 
