@@ -13,12 +13,7 @@ const SplashPage: React.FC<{}> = () => {
   
   
   return (
-    <div className='flex flex-col justify-center align-middle'>
-      <h1 className='text-center flex flex-col items-center justify-center h-full'>
-        GleiphQL
-        <em className='text-3xl'>An innovative and dynamic Rate Limiting and Cost Analysis Tool</em>
-      </h1>
-      
+    <div>   
       {showLogin && (!showRegistration) && (
         <div className="login-popup">
           <Login />

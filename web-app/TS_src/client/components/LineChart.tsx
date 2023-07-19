@@ -65,24 +65,24 @@ const LineChart: React.FC<{}> = () => {
   return (
     <>
       {chartDataType === 'Requests'? (
-        <ButtonGroup variant="contained" sx={{margin: "10px"}}>
-          <Button onClick={()=>setChartTime('Last 24 Hours')}>Last 24 Hours</Button>
-          <Button onClick={()=>setChartTime('Last 7 Days')}>Last 7 Days</Button>
-          <Button onClick={()=>setChartTime('Last 30 Days')}>Last 30 Days</Button>
-        </ButtonGroup>
+        <div className='flex flex-row bg-blue-950 text-white rounded-md overflow-hidden m-4'>
+          <button className='p-2 border border-blue-950 border-r-black hover:bg-blue-900' onClick={()=>setChartTime('Last 24 Hours')}>Last 24 Hours</button>
+          <button className='p-2 border border-blue-950 border-r-black hover:bg-blue-900' onClick={()=>setChartTime('Last 7 Days')}>Last 7 Days</button>
+          <button className='p-2 border border-blue-950 hover:bg-blue-900' onClick={()=>setChartTime('Last 30 Days')}>Last 30 Days</button>
+        </div>
       ) : (
-        <ButtonGroup variant="contained" sx={{margin: "10px"}}>
-          <Button onClick={()=>setChartTime('Last 10 Requests')}>Last 10 Requests</Button>
-          <Button onClick={()=>setChartTime('Last 30 Requests')}>Last 30 Requests</Button>
-          <Button onClick={()=>setChartTime('Last 100 Requests')}>Last 100 Requests</Button>
-        </ButtonGroup>
+        <div className='flex flex-row bg-blue-950 text-white rounded-md overflow-hidden'>
+          <button className='p-2 border border-blue-950 border-r-black hover:bg-blue-900' onClick={()=>setChartTime('Last 10 Requests')}>Last 10 Requests</button>
+          <button className='p-2 border border-blue-950 border-r-black hover:bg-blue-900' onClick={()=>setChartTime('Last 30 Requests')}>Last 30 Requests</button>
+          <button className='p-2 border border-blue-950 hover:bg-blue-900' onClick={()=>setChartTime('Last 100 Requests')}>Last 100 Requests</button>
+        </div>
       )}
       <Line options={options} data={chartData} />
-      <ButtonGroup variant="contained" sx={{margin: "10px"}}>
-        <Button onClick={()=>dataTypeChange('Requests')}>Requests</Button>
-        <Button onClick={()=>dataTypeChange('Complexity')}>Complexity</Button>
-        <Button onClick={()=>dataTypeChange('Depth')}>Depth</Button>
-      </ButtonGroup>
+      <div className='flex flex-row bg-blue-950 text-white rounded-md overflow-hidden max-w-80 m-4'>
+        <button className='p-2 border border-blue-950 border-r-black hover:bg-blue-900 w-1/3' onClick={()=>dataTypeChange('Requests')}>Requests</button>
+        <button className='p-2 border border-blue-950 border-r-black hover:bg-blue-900 w-1/3' onClick={()=>dataTypeChange('Complexity')}>Complexity</button>
+        <button className='p-2 border border-blue-950 hover:bg-blue-900 w-1/3' onClick={()=>dataTypeChange('Depth')}>Depth</button>
+      </div>
     </>
   )
 }
