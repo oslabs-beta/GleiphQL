@@ -4,8 +4,9 @@ import cors from 'cors';
 import passport from 'passport';
 import session from 'express-session';
 import configurePassport from './passport';
-
 import cookieParser from 'cookie-parser';
+import { WebSocketServer } from 'ws';
+import db from './models/dbModel';
 
 import express, {
   Express,
@@ -19,6 +20,39 @@ import accountRouter from  './routers/accountRouter';
 import dataRouter from './routers/dataRouter';
 import endpointRouter from './routers/endpointRouter';
 import sessionRouter from './routers/sessionRouter';
+
+const wssDataController = new WebSocketServer({port: 8080});
+
+console.log(`in wssData controller, should be listening on 8080, ${wssDataController}`)
+
+wssDataController.on('connection', function connection(ws, req) {
+  console.log('websocket connection established on port 8080');
+  const endpointId: number = Number(req.url?.substring(1));
+  const sqlCommand: string = `
+  SELECT * FROM requests WHERE endpoint_id = $1 ORDER BY to_timestamp(timestamp, 'Dy Mon DD YYYY HH24:MI:SS') DESC;
+  `;
+  const values: number[] = [ endpointId ];
+
+  const interval = setInterval(async () => {
+    console.log('interval called within websocket')
+    console.log('websocket interval id:', endpointId)
+    try {
+      const result: any = await db.query(sqlCommand, values);
+      ws.send(JSON.stringify(result.rows));
+    } catch (err: any) {
+      console.log('the database call within the websocket function has borked itself somehow')
+    }
+  }, 3000)
+
+  ws.on('close', () => {
+    console.log('clearing current interval:', interval)
+    clearInterval(interval);
+  })
+
+  ws.on('error', (err: any) => {
+    console.error('Websocket error in dataController:', err);
+  })
+})
 
 const PORT = 3500;
 

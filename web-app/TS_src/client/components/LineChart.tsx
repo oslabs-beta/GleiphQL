@@ -16,13 +16,21 @@ const LineChart: React.FC<{}> = () => {
   } = useStore();
 
   useEffect(() => {
-    console.log('Current endpoint: ', currEndPoint)
-    fetch(`/api/data/${currEndPoint.id}`)
-    .then((res)=>res.json())
-    .then((data)=>{
-      console.log("endpoint requests: ", data)
-      setEndpointRequests(data)
-    })
+    const fetchWS = new WebSocket(`ws://localhost:8080/${currEndPoint.id}`)
+
+    fetchWS.onmessage = function(event) {
+      const data = JSON.parse(event.data);
+      setEndpointRequests(data);
+    }
+
+    fetchWS.onerror = function(err) {
+      console.error('websocket connection failed:', err);
+    };
+
+    return () => {
+      console.log('closing current connection', currEndPoint.id);
+      fetchWS.close()
+    }
   }, [currEndPoint]);
 
   const dataTypeChange = (dataType: string) => {
