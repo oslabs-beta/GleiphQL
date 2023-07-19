@@ -13,7 +13,7 @@ interface LoginResponse {
 }
 
 const Login: React.FC<{}> = () => {
-  const { loginToggle, registerToggle, userEmail, setUserEmail, userPassword, setUserPassword, isLoggedIn, setIsLoggedIn, setCurrUser } = useStore();
+  const { loginToggle, registerToggle, userEmail, setUserEmail, userPassword, setUserPassword, isLoggedIn, setIsLoggedIn, setCurrUser, setModalOpen } = useStore();
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -24,6 +24,7 @@ const Login: React.FC<{}> = () => {
   const handleClose = () => {
     loginToggle(false);
     registerToggle(false);
+    setModalOpen(false);
   }
   const toggleRegister = () => {
     loginToggle(false);

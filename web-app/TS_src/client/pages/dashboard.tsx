@@ -1,6 +1,6 @@
 import React, { useState , useEffect } from 'react';
 import useStore from '../store';
-// import Navbar from '../components/Navbar';
+import Navbar from '../components/Navbar';
 import RequestTable from '../components/RequestTable';
 import Sidebar from '../components/Sidebar'
 import LineChart from '../components/LineChart';
@@ -9,12 +9,15 @@ import { Navigate } from 'react-router-dom';
 import checkSession from '../helper-functions/checkSession';
 import NewNavbar from '../components/NewNavbar';
 
+
 const Dashboard: React.FC<{}> = () => {
-  const { currEndPoint, isLoggedIn, setIsLoggedIn, setCurrUser} = useStore();
+  const { currEndPoint, isLoggedIn, setIsLoggedIn, setCurrUser, loginToggle, setModalOpen } = useStore();
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     checkSession(setIsLoggedIn, setCurrUser, setIsLoading);
+    loginToggle(false);
+    setModalOpen(false);
   }, []);
 
   if(isLoading) return <div>Loading...</div>;

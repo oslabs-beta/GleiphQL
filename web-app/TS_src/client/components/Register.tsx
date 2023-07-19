@@ -5,7 +5,7 @@ import '../stylesheets/index.css';
 import axios from 'axios';
 
 const Register: React.FC<{}> = () => {
-  const { loginToggle, registerToggle, userEmail, setUserEmail, setUserPassword, userPassword, confirmPassword, setConfirmPassword, passMatch, setPassMatch } = useStore();
+  const { loginToggle, registerToggle, userEmail, setUserEmail, setUserPassword, userPassword, confirmPassword, setConfirmPassword, passMatch, setPassMatch, setModalOpen } = useStore();
   const [isRegistered, setIsRegistered] = useState(false);
 
 
@@ -19,6 +19,7 @@ const Register: React.FC<{}> = () => {
   const handleClose = () => {
     registerToggle(false)
     loginToggle(false)
+    setModalOpen(false)
   }
   const toggleLogin = () => {
     registerToggle(false)

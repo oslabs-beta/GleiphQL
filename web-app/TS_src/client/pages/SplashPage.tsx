@@ -14,7 +14,7 @@ const SplashPage: React.FC<{}> = () => {
   
   return (
     <div>   
-      {showLogin && (!showRegistration) && (
+      {/* {showLogin && (!showRegistration) && (
         <div className="login-popup">
           <Login />
         </div>
@@ -24,7 +24,7 @@ const SplashPage: React.FC<{}> = () => {
           <div className='register-popup'>
             <Register />
           </div>
-      )}
+      )} */}
       <article className='divide-y divide-solid divide-indigo-950 divide-y-2'>
         <IntroSection />
         <InstructionSection />
