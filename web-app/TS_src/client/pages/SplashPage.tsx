@@ -28,9 +28,8 @@ const SplashPage: React.FC<{}> = () => {
       <article className='divide-y divide-solid divide-indigo-950 divide-y-2'>
         <IntroSection />
         <InstructionSection />
-      </article>      <br />
-      <MeetTheTeam />
-      <br />
+        <MeetTheTeam />
+      </article>
       <Footer />
 
     </div>
