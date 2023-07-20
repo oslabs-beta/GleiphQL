@@ -18,6 +18,7 @@ interface Data {
 function RequestTable () {
   const [ tableData, setTableData ] = useState<Array<Data>>([]);
   const { currEndPoint } = useStore();
+  
   useEffect(() => {
     axios.get(`/api/data/${currEndPoint.id}`)
     .then(response => {
@@ -25,8 +26,9 @@ function RequestTable () {
     })
     .catch((err: any) => console.log(err.message));   
   }, [currEndPoint]);
+
   return (
-    <div className='mt-12 rounded-lg border border-slate-100 border-1 overflow-hidden w-full m-2 mr-8'>
+    <div className='my-12 rounded-lg border border-slate-100 border-1 overflow-hidden w-full m-2 mr-8'>
       <table className='m-0 table-auto'>
         <thead>
           <tr className='h-12'>
