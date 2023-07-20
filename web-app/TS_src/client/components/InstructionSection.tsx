@@ -1,4 +1,5 @@
 import React from 'react';
+import { toast } from 'react-toastify';
 
 
 const InstructionSection: React.FC<{}> = () => {
@@ -7,6 +8,9 @@ const InstructionSection: React.FC<{}> = () => {
     try {
       // @ts-ignore
       await navigator.clipboard.writeText(text);
+      toast('Copied!',{
+        position: toast.POSITION.BOTTOM_RIGHT,
+      })
     } catch (err: any) {
       console.log(err.message);
     }

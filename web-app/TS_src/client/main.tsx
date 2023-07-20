@@ -9,6 +9,8 @@ import {
 } from 'react-router-dom';
 import ErrorPage from './pages/error-page';
 import Dashboard from './pages/dashboard';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 // this placeholder for only router we need in whole application
 {/* Ask Yeong Jiecheng readability on react router setups */}
@@ -27,5 +29,6 @@ const router = createBrowserRouter([
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
     <RouterProvider router={router} />
+    <ToastContainer position='top-center' autoClose={3000} hideProgressBar={true}/>
   </React.StrictMode>,
 )

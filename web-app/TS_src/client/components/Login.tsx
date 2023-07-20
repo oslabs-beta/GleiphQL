@@ -4,6 +4,9 @@ import { Navigate } from 'react-router-dom';
 import { FiX } from 'react-icons/fi';
 import axios from 'axios';
 import checkSession from '../helper-functions/checkSession';
+import notify from '../helper-functions/notify';
+
+
 
 interface LoginResponse {
   userExists: boolean;
@@ -49,17 +52,12 @@ const Login: React.FC<{}> = () => {
       if (response.data.signedIn) {
         setCurrUser(response.data.userId||0, response.data.userEmail||'');
         setIsLoggedIn(true);
-      } else {
-        alert('Unsuccesful Login Attempt');
-        setUserEmail('');
-        setUserPassword('');
-      }
-
+        notify('Login successful!');
+      } 
     } catch(error) {
-      console.error(error);
-      alert('Unsuccesful Login Attempt');
-      const typedError = error as Error;
-      throw new Error(`Error in login component: ${typedError.message}`);
+      notify('Login Unsuccessful. Try again.');
+      setCurrUser(0, '');
+      setIsLoggedIn(false);
     }
   }
 
