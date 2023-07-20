@@ -115,12 +115,12 @@ const useStore = create<StoreState>((set) => ({
     endpointRequests: requests
   })),
 
-  chartDataType: "Requests",
+  chartDataType: 'Requests',
   setChartDataType: (dataType: string) => set((state) => ({
     chartDataType: dataType
   })),
 
-  chartTimeInterval: "Last 7 Days",
+  chartTimeInterval: 'Last 7 Days',
   setChartTime: (chartTime: string) => set((state) => ({
     chartTimeInterval: chartTime
   })),

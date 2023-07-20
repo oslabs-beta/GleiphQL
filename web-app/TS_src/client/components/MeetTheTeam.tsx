@@ -4,11 +4,8 @@ import ProfileCard from './ProfileCard';
 const MeetTheTeam: React.FC<{}> = () => {
 
   return (
-    <>
-      <div className=''>
-        <h3>Meet the Team</h3>
-      </div>
-      
+    <section>
+      <h2 className='border-black border-b-2 border-x-0 border-t-0'>Meet the Team</h2>
       <div className='flex flex-wrap'>
         <ProfileCard
           imageSrc = '/images/JDong.png'
@@ -38,7 +35,7 @@ const MeetTheTeam: React.FC<{}> = () => {
           linkedinLink=''
         />
       </div>
-    </>
+    </section>
   );
 };
 

@@ -68,8 +68,7 @@ const Register: React.FC<{}> = () => {
 
 
   return (
-    <>
-      <div className='
+    <div className='
       relative
       border-4
       border-neutral-800
@@ -114,7 +113,7 @@ const Register: React.FC<{}> = () => {
           </div>
 
           <div className='flex flex-col test-gray-200 py-2'>
-          <label className='inputLabel'>Password</label>
+            <label className='inputLabel'>Password</label>
             <input className='
             rounded-lg 
             bg-slate-200 
@@ -149,14 +148,11 @@ const Register: React.FC<{}> = () => {
             Already have an account?
             <button className='text-blue-500 ml-2' onClick={toggleLogin}>
               Login here!
-            </button>
-            
+            </button>    
           </p>
-          
         </form>
-
       </div>
-    </>
+
   )
 }
 

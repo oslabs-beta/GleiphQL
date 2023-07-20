@@ -28,7 +28,7 @@ function RequestTable () {
   }, [currEndPoint]);
 
   return (
-    <div className='my-12 rounded-lg border border-slate-100 border-1 overflow-hidden w-full m-2 mr-8'>
+    <section className='my-12 rounded-lg border border-slate-100 border-1 overflow-hidden w-full m-2 mr-8'>
       <table className='m-0 table-auto'>
         <thead>
           <tr className='h-12'>
@@ -55,7 +55,7 @@ function RequestTable () {
         </tbody>
     </table>
 
-  </div>
+  </section>
   );
 };
 

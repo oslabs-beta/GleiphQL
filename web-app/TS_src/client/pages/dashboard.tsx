@@ -7,7 +7,7 @@ import LineChart from '../components/LineChart';
 import ChartHeader from '../components/ChartHeader';
 import { Navigate } from 'react-router-dom';
 import checkSession from '../helper-functions/checkSession';
-import NewNavbar from '../components/NewNavbar';
+
 
 
 const Dashboard: React.FC<{}> = () => {
@@ -25,7 +25,7 @@ const Dashboard: React.FC<{}> = () => {
     <div className='m1-4'>
       {!isLoggedIn && <Navigate to="/" replace={true} />}
       <Navbar />
-      <div className='flex flex-col place-items-center sm:place-items-start xl:flex-row'>
+      <main className='flex flex-col place-items-center sm:place-items-start xl:flex-row'>
         <Sidebar />
         { currEndPoint.id? 
         <article className='flex flex-col place-items-center w-3/4 sm:w-full xl:w-3/4 mr-2.5'>
@@ -34,7 +34,7 @@ const Dashboard: React.FC<{}> = () => {
           <RequestTable />
         </article> : null
         }
-      </div>
+      </main>
     </div>
   );
 }

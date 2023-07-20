@@ -36,9 +36,9 @@ const Sidebar: React.FC<{}> = () => {
   //just use button that when you click sets currEndPoint
   return (
     <nav className='p-8 flex flex-col'>
-      <h1 className='text-2xl'>
+      <h2 className='text-2xl'>
         My Endpoints
-      </h1>
+      </h2>
       <ul>
       {endpointArray}
       </ul>

@@ -22,7 +22,7 @@ const ChartHeader: React.FC<{}> = () => {
   }
 
  return (
-    <div className='rounded-lg border border-slate-100 border-1 overflow-hidden w-full m-4 grid grid-cols-1 place-content-center font-light'>
+    <header className='rounded-lg border border-slate-100 border-1 overflow-hidden w-full m-4 grid grid-cols-1 place-content-center font-light'>
       <table>
         <thead>
           <tr>
@@ -39,7 +39,7 @@ const ChartHeader: React.FC<{}> = () => {
             </tr>
         </tbody>
       </table>
-    </div>
+    </header>
   );
 }
 

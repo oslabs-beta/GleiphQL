@@ -29,7 +29,7 @@ const InstructionSection: React.FC<{}> = () => {
           npm install gleiphql
         </p>
         <button className='border-none w-fit pr-2' onClick={() => copyText('npm')}>
-          <span className="material-symbols-outlined">content_copy</span>
+          <span className='material-symbols-outlined'>content_copy</span>
         </button>
       </dd>
       <dt className='p-2'>Or yarn: </dt>

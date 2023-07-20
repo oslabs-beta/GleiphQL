@@ -5,9 +5,8 @@ import './stylesheets/index.css'
 
 import {
   createBrowserRouter,
-  RouterProvider,
-  BrowserRouter
-} from "react-router-dom";
+  RouterProvider
+} from 'react-router-dom';
 import ErrorPage from './pages/error-page';
 import Dashboard from './pages/dashboard';
 
@@ -20,7 +19,7 @@ const router = createBrowserRouter([
     errorElement: <ErrorPage />,
   },
   {
-    path: "/dashboard",
+    path: '/dashboard',
     element: <Dashboard />
   }
 ])
