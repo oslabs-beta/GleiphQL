@@ -1,13 +1,14 @@
 import React from 'react';
 import useStore from '../store';
 import axios from 'axios';
+import Modal from './Modal';
 
 // interface NavbarProps {
 //   handleLoginToggle: () => void;
 // }
 
 const Navbar: React.FC<{}> = () => {
-  const { loginToggle, currUser, setAnchorEl, anchorEl, isLoggedIn, setIsLoggedIn, setCurrUser, setCurrEndPoint } = useStore();
+  const { loginToggle, currUser, setAnchorEl, anchorEl, isLoggedIn, setIsLoggedIn, setCurrUser, setCurrEndPoint, modalOpen, setModalOpen, showLogin } = useStore();
 
   const logOut = async() => {
     setCurrUser(0, '');
@@ -35,11 +36,16 @@ const Navbar: React.FC<{}> = () => {
         </li>
         { isLoggedIn? 
           <li className='inline'><button className='rounded-md border bg-white text-blue-950 hover:bg-slate-200 font-semibold p-2 w-20' onClick={logOut}>LOGOUT</button></li> : 
-          <li className='inline'><button className='rounded-md border bg-white text-blue-950 hover:bg-slate-200 font-semibold p-2 w-20' onClick={()=>loginToggle(true)}>LOGIN</button></li>
+          <li className='inline'><button className='rounded-md border bg-white text-blue-950 hover:bg-slate-200 font-semibold p-2 w-20' onClick={()=> {
+            setModalOpen(true)
+            loginToggle(true)
+          }}>LOGIN</button></li> 
         }
+        <li className='inline'><Modal  open={modalOpen} onClose={() => setModalOpen(false)} /></li>
       </ul>
     </nav>
   )
 };
+
 
 export default Navbar;

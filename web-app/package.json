@@ -3,16 +3,18 @@
   "private": true,
   "version": "0.0.0",
   "scripts": {
-    "dev": "concurrently \"cd ./TS_src/client && vite\" \"cd ./TS_src/server && nodemon server.ts\"",
+    "dev": "concurrently \"cd ./TS_src/client && vite\" \"cd ./TS_src/server && nodemon server.ts\" \"npm run watch:css\"",
     "build": "concurrently \"tsc\" \"cd ./TS_src/client && vite build\"",
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "watch:css": "postcss TS_src/client/stylesheets/index.css -o TS_src/client/stylesheets/main.css"
   },
   "dependencies": {
-    "@emotion/react": "^11.11.0",
+    "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
+    "@heroicons/react": "^2.0.18",
     "@mui/icons-material": "^5.11.16",
-    "@mui/material": "^5.13.3",
+    "@mui/material": "^5.13.6",
     "@mui/styled-engine-sc": "^5.12.0",
     "@types/cookie-parser": "^1.4.3",
     "@types/passport-local": "^1.0.35",
@@ -35,6 +37,7 @@
     "react": "^18.2.0",
     "react-chartjs-2": "^5.2.0",
     "react-dom": "^18.2.0",
+    "react-icons": "^4.10.1",
     "react-router-dom": "^6.11.2",
     "styled-components": "^5.3.11",
     "ts-node": "^10.9.1",

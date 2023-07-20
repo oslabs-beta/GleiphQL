@@ -18,9 +18,14 @@
     "noImplicitAny": true,
     "outDir": "./dist",
     "rootDir": "./TS_src",
-    "typeRoots": ["./node_modules/@types"],
+    "typeRoots": ["./node_modules/@types/", "./types", "./node_modules"],
     "types": ["vite/client", "express"]
   },
   "references": [{ "path": "./tsconfig.node.json" }]
 }
- 
+
+/*
+https://github.com/microsoft/TypeScript/issues/54629
+
+^Addressing the types error on this file.
+*/

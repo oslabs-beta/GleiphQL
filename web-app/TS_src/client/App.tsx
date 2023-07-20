@@ -7,7 +7,9 @@ function App() {
   return (
     <div className='flex flex-col justify-center align-middle'>
       <Navbar />
+      
       <div className='AppContainer'>
+
 
       <SplashPage />
         {/* <Routes>
