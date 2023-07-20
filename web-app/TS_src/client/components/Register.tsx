@@ -1,17 +1,13 @@
-// Create a Register component hereimport React from 'react';
 import React, { useEffect, useState } from 'react';
-import Box from '@mui/material/Box';
-import TextField from '@mui/material/TextField';
-import Button from '@mui/material/Button';
-import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import useStore from '../store';
+import { FiX } from 'react-icons/fi';
+import '../stylesheets/index.css';
 import axios from 'axios';
 
-
-const Register: React.FC = () => {
-
-  const { loginToggle, registerToggle, userEmail, setUserEmail, setUserPassword, userPassword, confirmPassword, setConfirmPassword, passMatch, setPassMatch } = useStore();
+const Register: React.FC<{}> = () => {
+  const { loginToggle, registerToggle, userEmail, setUserEmail, setUserPassword, userPassword, confirmPassword, setConfirmPassword, passMatch, setPassMatch, setModalOpen } = useStore();
   const [isRegistered, setIsRegistered] = useState(false);
+
 
   useEffect(() => {
     if(isRegistered) {
@@ -23,6 +19,7 @@ const Register: React.FC = () => {
   const handleClose = () => {
     registerToggle(false)
     loginToggle(false)
+    setModalOpen(false)
   }
   const toggleLogin = () => {
     registerToggle(false)
@@ -69,56 +66,98 @@ const Register: React.FC = () => {
 
   }
 
+
   return (
-    <div className="RegisterContainer">
-      <div className='close-icon' onClick={handleClose}>
-        <CloseRoundedIcon />
-      </div>
-      <h2>Register</h2>
-      
-      <form onSubmit={handleSubmit}>
-        <Box
-          sx={{
-            '& > :not(style)': { m: 1, width: '25ch' },
-          }}
-        >
-          <TextField 
-            id="outlined-basic" 
-            label="Email" 
-            variant="outlined" 
-            value={userEmail}
+    <>
+      <div className='
+      relative
+      border-4
+      border-neutral-800
+      bg-stone-100
+      w-[450px]
+      h-[520px]
+      max-w-[450px]
+      mx-auto
+      p-8
+      px-8
+      rounded-lg
+      '>
+        <div className='absolute top-0 right-0 m-4' onClick={handleClose}>
+          <FiX />
+        </div>
+
+        <form className='w-full flex flex-col justify-center' onSubmit={handleSubmit}>
+          
+          <h2 className='text-sky-900 font-bold text-center'>Almost there!</h2>
+          <p className='text-center'>Create an account to enjoy our complexity tool</p>
+          
+          <div className='flex flex-col test-gray-200 py-2'>
+            <label className='inputLabel'>Email</label>
+            <input className='
+            peer
+            rounded-lg 
+            bg-slate-200 
+            mx-4 
+            p-2 
+            focus:bg-neutral-200 
+            focus:outline-2 
+            focus:outline-sky-600 
+            hover:border-2
+          hover:border-sky-600
+            '
+            placeholder='Enter Your Email'
+            type='text'
+            value={userEmail.toString()}
             onChange={(e) => setUserEmail(e.target.value)}
           />
-          <TextField 
-            id="outlined-basic" 
-            label="Password" 
-            variant="outlined"
-            type='password'
-            value={userPassword}
-            onChange={(e) => setUserPassword(e.target.value)} 
-          />
-          <TextField 
-            id="outlined-basic" 
-            label="Confirm Password" 
-            variant="outlined"
-            type='password'
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)} 
-          />
-        </Box>
+            
+          </div>
 
-        <Button sx={{margin: '10px'}} type='submit' variant="contained">Register</Button>
-        
-      </form>
-      
-      {/* <br></br> */}
+          <div className='flex flex-col test-gray-200 py-2'>
+          <label className='inputLabel'>Password</label>
+            <input className='
+            rounded-lg 
+            bg-slate-200 
+            mx-4 
+            p-2 
+            focus:bg-neutral-200 
+            focus:outline-2 
+            focus:outline-sky-600 
+            hover:border-solid 
+            hover:border-2 
+          hover:border-sky-600'
+            placeholder='Enter Your Password'
+            type='password'
+            value={userPassword.toString()}
+            onChange={(e) => setUserPassword(e.target.value)}
+            />
+          </div>
 
-      <Button sx={{margin: '10px'}} className='login-link' onClick={toggleLogin}  variant="contained">
-        Already a member? Login!
-      </Button>
-  
-    </div>
+          <div className='flex flex-col test-gray-200 py-2 group'>
+            <label className='inputLabel'>Confirm Password</label>
+            <input className='rounded-lg bg-slate-200 mx-4 p-2 focus:bg-neutral-200 focus:outline-2 focus:outline-sky-600 hover:border-solid hover:border-2 hover:border-sky-600'
+            placeholder='Confirm Password'
+            type='password'
+            value={confirmPassword.toString()}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            />
+          </div>
+
+          <button className='w-10/12 my-3 mx-5 py-2 bg-sky-900 shadow-lg shadow-sky-500/50 hover:shadow-sky-500/40 hover:bg-sky-600 text-white font-semibold rounded-lg border border-transparent border-black cursor-pointer'>COMPLETE REGISTER</button>
+
+          <p className='flex justify-center mb-4 p-2'>
+            Already have an account?
+            <button className='text-blue-500 ml-2' onClick={toggleLogin}>
+              Login here!
+            </button>
+            
+          </p>
+          
+        </form>
+
+      </div>
+    </>
   )
-};
+}
 
 export default Register;

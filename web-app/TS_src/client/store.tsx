@@ -1,12 +1,17 @@
 import { create } from 'zustand';
 
 interface StoreState {
+  // toggle modal for login/register components
+  modalOpen: Boolean;
+  setModalOpen: (status: boolean) => void;
+
   // login component toggle
   showLogin: Boolean;
   loginToggle: (status: boolean) => void;
   // register component toggle
   showRegistration: Boolean;
   registerToggle: (status: boolean) => void;
+
   // user login info
   userEmail: String;
   setUserEmail: (userEmail: string) => void;
@@ -56,6 +61,10 @@ interface UserInfo {
 }
 
 const useStore = create<StoreState>((set) => ({
+  // new toggle here
+  modalOpen: false,
+  setModalOpen: (status: boolean) => set((state) => ({ modalOpen: status})),
+
   showLogin: false,
   loginToggle: (status: boolean) => set((state) => ({ showLogin: status })),
 
