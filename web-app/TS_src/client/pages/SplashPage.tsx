@@ -6,6 +6,7 @@ import Register from '../components/Register';
 import useStore from '../store';
 import IntroSection from '../components/IntroSection';
 import InstructionSection from '../components/InstructionSection';
+import FeaturesSection from '../components/FeaturesSection';
 
 
 const SplashPage: React.FC<{}> = () => {
@@ -27,9 +28,12 @@ const SplashPage: React.FC<{}> = () => {
       )} */}
       <article className='divide-y divide-solid divide-indigo-950 divide-y-2'>
         <IntroSection />
+        <FeaturesSection />
         <InstructionSection />
         <MeetTheTeam />
+        
       </article>
+      
       <Footer />
 
     </div>

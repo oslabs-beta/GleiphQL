@@ -171,6 +171,16 @@ button:focus-visible {
 }
 /*    ~~ End of component: Meet The Team  ~~   */
 
+/*  ~~ Start of component: Features Section  ~~   */
+.featuresSection-bg {
+  background: linear-gradient(to top, #d3dce5 0, #87CEFA 30%, #087CC4 100%)
+}
+
+/*    ~~ End of component: Features Section   ~~   */
+
+
+
+
 /*  ~~ Start of component: ----  ~~   */
 
 /*    ~~ End of component: ----   ~~   */
