@@ -9,7 +9,7 @@ function App() {
       <Navbar />
       <div className='AppContainer'>
 
-      <SplashPage />
+        <SplashPage />
         {/* <Routes>
           <Route path='/' element={ <SplashPage /> } />
         </Routes> */}

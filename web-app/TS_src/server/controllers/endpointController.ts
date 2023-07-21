@@ -49,14 +49,29 @@ const endpointController = {
   },
   deleteEndpoint: async (req: Request, res: Response, next: NextFunction) => {
     const endpointId: number = Number(req.params.endpointId);
-    const sqlCommand: string = `
+    const { userId } = req.body;
+    const sqlCommand1: string = `
     DELETE FROM endpoints WHERE endpoint_id = $1`;
-    const values: number[] = [ endpointId ];
+    const values1: number[] = [ endpointId ];
     try {
-      await db.query(sqlCommand, values);
+      await db.query(sqlCommand1, values1);
     } catch (err: any) {
       return next({
         log: 'Error in endpointController.deleteEndpoint: could not delete endpoints from the database',
+        status: 400,
+        message: { error: err.message }
+      });
+    }
+
+    const sqlCommand2: string = `
+      SELECT * FROM endpoints WHERE owner_id = $1;`;
+    const values2: number[] = [ userId ];
+    try {
+      const result = await db.query(sqlCommand2, values2);
+      res.locals.endpoints = result.rows;
+    } catch (err: any) {
+      return next({
+        log: 'Error in endpointController.deleteEndpoint: could not retrieve endpoints for the user from the database',
         status: 400,
         message: { error: err.message }
       });
