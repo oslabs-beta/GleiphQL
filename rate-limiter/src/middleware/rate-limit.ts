@@ -1,7 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
-import { buildSchema, isAbstractType, GraphQLInterfaceType, isNonNullType, GraphQLType, GraphQLField, parse, GraphQLList, GraphQLObjectType, GraphQLSchema, TypeInfo, visit, visitWithTypeInfo, StringValueNode, getNamedType, GraphQLNamedType, getEnterLeaveForKind, GraphQLCompositeType, getNullableType, Kind, isListType, DocumentNode, DirectiveLocation, GraphQLUnionType, GraphQLNamedOutputType, getDirectiveValues, isCompositeType } from 'graphql';
+import { buildSchema, isAbstractType, GraphQLInterfaceType, isNonNullType, GraphQLType, GraphQLField, parse, GraphQLList, GraphQLObjectType, GraphQLSchema, TypeInfo, visit, visitWithTypeInfo, StringValueNode, getNamedType, GraphQLNamedType, getEnterLeaveForKind, GraphQLCompositeType, getNullableType, Kind, isListType, DocumentNode, DirectiveLocation, GraphQLUnionType, GraphQLNamedOutputType, getDirectiveValues, isCompositeType, GraphQLOutputType } from 'graphql';
 import graphql from 'graphql';
 import cache from './cache.js';
+import { SchemaTextFieldPhonetics } from 'redis';
 
 const testSDL = `
 directive @cost(value: Int) on FIELD_DEFINITION | ARGUMENT_DEFINITION
@@ -23,30 +24,129 @@ type Query {
   authors: [Author] @cost(value: 2)
   books(limit: Int @cost(value:10)): [Book] @cost(value: 2) @paginationLimit(value: 5)
 }
+`
+
+      const interfaceTestQuery1 = `
+      query {
+        search {
+          ... on Author {
+            id
+            name
+          }
+          ... on Book {
+            id
+            name
+          }
+        }
+      }
       `
 
+    const interfaceTestQuery2 = `
+    query {
+      search {
+        ... on Searchable {
+          id
+          name
+        }
+      }
+    }
+    `
       const testSDLPolymorphism = `
       directive @cost(value: Int) on FIELD_DEFINITION | ARGUMENT_DEFINITION
+      directive @paginationLimit(value: Int) on FIELD_DEFINITION
+
+      interface Searchable {
+        id: ID!
+        name: String
+      }
+
+      type Author implements Searchable {
+        id: ID! @cost(value: 1)
+        name: String @cost(value: 200)
+        books: [Book] @cost(value: 3)
+      }
+
+      type Book implements Searchable {
+        id: ID! @cost(value: 1)
+        name: String @cost(value: 2)
+        author: Author @cost(value: 3)
+      }
+
+      union SearchResult = Author | Book
+
+      type Query {
+        authors: [Author] @cost(value: 2)
+        books(limit: Int @cost(value:10)): [Book] @cost(value: 2) @paginationLimit(value: 5)
+        search: [Searchable]
+      }
+`
+
+const testSDLPolymorphism2 = `
+directive @cost(value: Int) on FIELD_DEFINITION | ARGUMENT_DEFINITION
 directive @paginationLimit(value: Int) on FIELD_DEFINITION
 
-type Author {
-  id: ID! @cost(value: 1)
-  name: String @cost(value: 200)
-  books: [Book] @cost(value: 3)
+type Related {
+  content: [Content!]!
 }
 
-type Book {
-  id: ID! @cost(value: 1)
-  title: String @cost(value: 2)
-  author: Author @cost(value: 3)
+interface Content {
+  id: ID!
+  title: String!
+  related: Related
 }
 
-union SearchResult = Author | Book
+type Post implements Content {
+  id: ID! @cost(value: 3)
+  title: String! @cost(value: 4)
+  body: String! @cost(value: 10)
+  tags: [String!]! @cost(value: 5)
+  related: Related
+}
+
+type Image implements Content {
+  id: ID! @cost(value: 5)
+  title: String! @cost(value: 6)
+  uri: String! @cost(value: 2)
+  related: Related
+}
 
 type Query {
-  authors: [Author] @cost(value: 2)
-  books(limit: Int @cost(value:10)): [Book] @cost(value: 2) @paginationLimit(value: 5)
-  search(term: String): [SearchResult] @paginationLimit(value: 10)
+  content: Content
+}
+
+
+`
+
+const testQueryPolymorphism2 = `
+query {
+  content {
+      id
+      title
+      related {
+        content {
+          id
+        }
+      }
+    }
+}
+`
+
+const testQueryPolymorphism3 = `
+query {
+  content {
+    ... on Post {
+      id
+      title
+      body
+      tags
+    }
+
+    ... on Image {
+     id
+     title
+     uri
+    }
+  }
 }
 `
 
@@ -72,6 +172,20 @@ query SearchQuery {
           title
           author {
             name
+          }
+        }
+      }
+      `
+
+      const testQueryInlineFrag = `
+      query {
+        books(limit: 4) {
+          id
+          title
+          author {
+            ... on Author {
+              name
+            }
           }
         }
       }
@@ -150,7 +264,8 @@ interface ParentType {
   isList: boolean,
   fieldDefArgs: readonly graphql.GraphQLArgument[],
   currMult: number,
-  isUnion: boolean
+  isUnion: boolean,
+  isInterface: boolean,
 }
 
 //start of class
@@ -161,10 +276,12 @@ class ComplexityAnalysis {
   private schema: GraphQLSchema;
   private parsedAst: DocumentNode;
   private parentTypeStack: ParentType[] = [];
-  private currMult: number = 0;
+  private currMult: number = 1;
   private complexityScore = 0;
   private typeComplexity = 0;
   private resolveComplexity = 0;
+  private interfaceStore: any[] = [];
+  private unionStore: any[] = [];
 
   constructor(schema: GraphQLSchema, parsedAst: DocumentNode, config: any) {
     this.config = config;
@@ -195,7 +312,7 @@ class ComplexityAnalysis {
           let internalPaginationLimit: number | null = null;
           let argumentCosts = 0;
 
-          if (this.parentTypeStack.length === 0) this.currMult = 0;
+          if (this.parentTypeStack.length === 0) this.currMult = 1;
 
           const parentType = schemaType.getParentType();
 
@@ -215,16 +332,25 @@ class ComplexityAnalysis {
           const fieldTypeUnion = getNamedType(fieldType);
           const isList = isListType(fieldType) || (isNonNullType(fieldType) && isListType(fieldType.ofType));
           const isUnion = fieldTypeUnion instanceof GraphQLUnionType;
+          const isInterface = fieldTypeUnion instanceof GraphQLInterfaceType;
           console.log('isUnion?', isUnion);
+          console.log('interface?', isInterface);
+          if(isInterface) {
+            console.log('This is the interface type:', fieldTypeUnion);
+            console.log('These are the possible types:', this.schema.getPossibleTypes(fieldTypeUnion));
+          }
           const argumentDirectiveCost = this.parseArgumentDirectives(fieldDef);
-          const directiveAdjustedBaseVal = this.parseDirectives(fieldDef, baseVal)
+          const directiveAdjustedBaseVal = this.parseDirectives(fieldDef, baseVal);
 
           const subUnionType = this.hasUnionAncestor();
 
+          const subInterfaceType = this.hasInterfaceAncestor();
+
           if (subUnionType) {
             console.log('Field has union ancestor, complexity calculation should have been resolved in resolveUnionTypes of ancestor, aborting traversal')
-            const currMult = this.currMult
-            this.parentTypeStack.push({fieldDef, isList, fieldDefArgs, currMult, isUnion});
+            const currMult = this.currMult;
+            // need to push something here to maintain stack integrity
+            this.parentTypeStack.push({fieldDef, isList, fieldDefArgs, currMult, isUnion, isInterface});
             return;
           }
 
@@ -240,12 +366,86 @@ class ComplexityAnalysis {
           }
 
           baseVal = Number(directiveAdjustedBaseVal.costDirective);
+
           if(directiveAdjustedBaseVal.paginationLimit) {
             internalPaginationLimit = Number(directiveAdjustedBaseVal.paginationLimit);
             console.log('Internal pagination limits', internalPaginationLimit);
           }
 
-          if(isList === true && isUnion !== true) {
+          if(subInterfaceType.hasInterfaceAncestor) {
+
+            if(isInterface) {
+              for(let i = 0; i < this.interfaceStore.length; i++) {
+                for (const types in this.interfaceStore[i].matchingTypes) {
+                  console.log('resetting matchingTypes field-by-field', this.interfaceStore[i].matchingTypes);
+                  this.interfaceStore[i].matchingTypes[types] = false;
+                  console.log('field reset, logging matchingTypes', this.interfaceStore[i].matchingTypes);
+                }
+              }
+            }
+
+            const implementingTypesArray = [];
+            console.log('This field has an interface as an ancestor, here is fieldType:', fieldType);
+            console.log('Here is fieldTypeUnion:', fieldTypeUnion);
+            const implementingTypes = subInterfaceType.possibleTypes;
+            console.log('Implementing types', implementingTypes);
+
+            for (const type of implementingTypes) {
+              const typeNames = this.interfaceStore.map(types => types.name);
+
+              if(!typeNames.includes(type.name)) this.interfaceStore.push({
+                name: type.name,
+                potentialCost: 0,
+                matchingTypes: {}
+              })
+            }
+
+            for (const type of implementingTypes) {
+
+              interface typeAssociation {
+                name: string
+                matchingTypes: any
+              }
+
+              const typeAssociation: typeAssociation = {
+                name: type.name,
+                matchingTypes: 0
+              }
+
+              const fields = type.getFields();
+
+              for (const fieldName in fields) {
+
+                const fieldDef = fields[fieldName];
+
+                // console.log('FieldDef within implementing types', fieldDef);
+
+                const name = fieldDef.name;
+
+                if (fieldName === node.name.value) {
+                  const directives = this.parseDirectives(fieldDef, 0);
+                  const argDirectives = this.parseArgumentDirectives(fieldDef);
+                  if(directives.costDirective) {
+                    console.log(`This is the potential cost of the field ${node.name.value}, ${directives.costDirective}, name of implementing field is ${type.name}`);
+                    for (let i = 0; i < this.interfaceStore.length; i++) {
+                      if (this.interfaceStore[i].name === type.name && !this.interfaceStore[i].matchingTypes[fieldName]) {
+                        console.log('The name stored in the possibleTypes array matches the name of the field')
+                        console.log('directives?', directives.costDirective);
+                        console.log('currMult?', this.currMult);
+                        this.interfaceStore[i].potentialCost += (Number(directives.costDirective) * this.currMult)
+                        this.interfaceStore[i].matchingTypes[fieldName] = true;
+                      }
+                    }
+                  }
+                }
+              }
+             }
+
+             for (let i = 0; i < implementingTypesArray.length; i++) {
+              console.log(this.unionStore[i].name);
+              console.log(this.unionStore[i].potentialCost);
+            }
+          } else if(isList === true && isUnion !== true) {
             console.log(`${node.name.value} is a list`);
             const argNode = node.arguments?.find(arg => (arg.name.value === 'limit' || arg.name.value === 'first' || arg.name.value === 'last' || arg.name.value === 'before' || arg.name.value === 'after'));
             this.currMult = this.config.paginationLimit;
@@ -270,7 +470,7 @@ class ComplexityAnalysis {
               const largestUnion = this.resolveUnionTypes(fieldTypeUnion, internalPaginationLimit, isList)
               const currMult = largestUnion.containedMult
               this.typeComplexity += largestUnion.cost;
-              this.parentTypeStack.push({fieldDef, isList, fieldDefArgs, currMult, isUnion});
+              this.parentTypeStack.push({fieldDef, isList, fieldDefArgs, currMult, isUnion, isInterface});
               return;
 
             } else {
@@ -279,11 +479,23 @@ class ComplexityAnalysis {
               this.resolveParentTypeStack(isList, argumentCosts, baseVal);
             }
               const currMult = this.currMult
-              this.parentTypeStack.push({fieldDef, isList, fieldDefArgs, currMult, isUnion});
+              this.parentTypeStack.push({fieldDef, isList, fieldDefArgs, currMult, isUnion, isInterface});
         },
         leave:(node) => {
           if (node.kind === Kind.FIELD) {
             this.parentTypeStack.pop();
+          }
+          if(this.parentTypeStack.length === 0) {
+            console.log('current interfaceStore before resolution', this.interfaceStore);
+            let largestInterfaceCost: number = -Infinity;
+            this.interfaceStore.forEach(ele => {
+              if(ele.potentialCost > largestInterfaceCost) largestInterfaceCost = ele.potentialCost
+              console.log('largestInterface is now:', largestInterfaceCost)
+            })
+            if(largestInterfaceCost >= 0) this.typeComplexity += largestInterfaceCost;
+            this.interfaceStore = [];
+            console.log('current interfaceStore post resolution', this.interfaceStore);
+            console.log('current unionStore', this.unionStore);
           }
         }
     }))
@@ -508,6 +720,26 @@ class ComplexityAnalysis {
     return hasUnionAncestor;
   }
 
+  hasInterfaceAncestor() {
+    let hasInterfaceAncestor = false;
+    let ancestorType!: GraphQLOutputType;
+    let possibleTypes!: readonly GraphQLObjectType<any, any>[]
+    for(let i = this.parentTypeStack.length-1; i >= 0; i--) {
+      if(this.parentTypeStack[i].isInterface) {
+        hasInterfaceAncestor = true;
+        ancestorType = this.parentTypeStack[i].fieldDef.type;
+      }
+    }
+
+    const ancestorImplementingType = getNamedType(ancestorType);
+
+    if(ancestorImplementingType instanceof GraphQLInterfaceType) {
+      possibleTypes = this.schema.getPossibleTypes(ancestorImplementingType);
+    }
+
+    return {hasInterfaceAncestor, ancestorImplementingType, possibleTypes};
+  }
+
 }
 
 //end of class
@@ -518,9 +750,8 @@ const rateLimiter = function (config: any) {
   return async (req: Request, res: Response, next: NextFunction) => {
     if(req.body.query) {
 
-      const builtSchema = buildSchema(testSDLPolymorphism)
-      const schemaType = new TypeInfo(builtSchema);
-      const parsedAst = parse(testQueryPolymorphism);
+      const builtSchema = buildSchema(testSDLPolymorphism2)
+      const parsedAst = parse(testQueryPolymorphism2);
 
       let requestIP = req.ip
 
