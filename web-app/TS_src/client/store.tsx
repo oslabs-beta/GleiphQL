@@ -51,6 +51,10 @@ interface StoreState {
    // used to track the input field of added endpoint descriptions
   addedDescription: string;
   setAddedDescription: (addedDescription: string) => void;
+
+  // used to track if dashboard sidebar is collapsed or not
+  menuCollapsed: boolean;
+  setMenuCollapsed: (status: boolean) => void;
 }
 
 
@@ -149,7 +153,12 @@ const useStore = create<StoreState>((set) => ({
   addedDescription: '',
   setAddedDescription: (addedDescription: string) => set((state) => ({
     addedDescription,
-  }))
+  })),
+
+  menuCollapsed: false,
+  setMenuCollapsed: (status: boolean) => set((state) => ({
+    menuCollapsed: status
+  })),
 
 }));
 
