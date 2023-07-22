@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { buildSchema, isAbstractType, GraphQLInterfaceType, isNonNullType, GraphQLType, GraphQLField, parse, GraphQLList, GraphQLObjectType, GraphQLSchema, TypeInfo, visit, visitWithTypeInfo, StringValueNode, getNamedType, GraphQLNamedType, getEnterLeaveForKind, GraphQLCompositeType, getNullableType, Kind, isListType, DocumentNode, DirectiveLocation, GraphQLUnionType, GraphQLNamedOutputType, getDirectiveValues, isCompositeType, GraphQLOutputType } from 'graphql';
+import { FragmentDefinitionNode, FragmentSpreadNode, buildSchema, isAbstractType, GraphQLInterfaceType, isNonNullType, GraphQLType, GraphQLField, parse, GraphQLList, GraphQLObjectType, GraphQLSchema, TypeInfo, visit, visitWithTypeInfo, StringValueNode, getNamedType, GraphQLNamedType, getEnterLeaveForKind, GraphQLCompositeType, getNullableType, Kind, isListType, DocumentNode, DirectiveLocation, GraphQLUnionType, GraphQLNamedOutputType, getDirectiveValues, isCompositeType, GraphQLOutputType, FragmentsOnCompositeTypesRule, isInterfaceType } from 'graphql';
 import graphql from 'graphql';
 import cache from './cache.js';
 import { SchemaTextFieldPhonetics } from 'redis';
@@ -113,8 +113,6 @@ type Image implements Content {
 type Query {
   content: Content
 }
-
-
 `
 
 const testQueryPolymorphism2 = `
@@ -146,6 +144,41 @@ query {
      title
      uri
     }
+  }
+}
+`
+
+const testQueryPolymorphism4 = `
+
+fragment postFields on Post {
+  id
+  title
+  body
+  tags
+  related {
+    content {
+      id
+      title
+    }
+  }
+}
+
+fragment imageFields on Image {
+  id
+  title
+  uri
+  related {
+    content {
+      id
+      title
+    }
+  }
+}
+
+query {
+  content {
+    ...postFields
+    ...imageFields
   }
 }
 `
@@ -268,6 +301,10 @@ interface ParentType {
   isInterface: boolean,
 }
 
+interface ParentTypeFragDef {
+  isFragDef: boolean;
+}
+
 //start of class
 
 class ComplexityAnalysis {
@@ -275,13 +312,14 @@ class ComplexityAnalysis {
   private config: any;
   private schema: GraphQLSchema;
   private parsedAst: DocumentNode;
-  private parentTypeStack: ParentType[] = [];
+  private parentTypeStack: any[] = [];
   private currMult: number = 1;
   private complexityScore = 0;
   private typeComplexity = 0;
   private resolveComplexity = 0;
   private interfaceStore: any[] = [];
   private unionStore: any[] = [];
+  private fragDefs: any = {};
 
   constructor(schema: GraphQLSchema, parsedAst: DocumentNode, config: any) {
     this.config = config;
@@ -295,16 +333,58 @@ class ComplexityAnalysis {
 
       console.log('This is the current currMult', this.currMult)
 
-      // console.log('parsedAst exists')
-
-      // console.log('schema', this.schema);
-
       const schemaType = new TypeInfo(this.schema)
 
       visit(this.parsedAst, visitWithTypeInfo(schemaType, {
         //use arrow function here within higher-order function in order to allow access to surrounding scope
         enter: (node) => {
-          if(node.kind !== Kind.FIELD) return;
+
+          if(node.kind === Kind.FRAGMENT_DEFINITION) {
+            console.log('this is a fragmentDef:', node)
+            this.fragDefs[node.name.value] = node;
+            console.log('fragDefs after addition', this.fragDefs);
+            this.parentTypeStack.push({isFragDef: true})
+          }
+
+          const subUnionType = this.hasUnionAncestor();
+          const subInterfaceType = this.hasInterfaceAncestor();
+          const subFragType = this.hasFragSpreadAncestor();
+
+          //must create interface casing, grabbing implememting types if fragment spreads are used to query an interface
+
+          if(node.kind === Kind.FRAGMENT_SPREAD) {
+            console.log('This is the node:', node.name.value);
+            if(this.fragDefs[node.name.value]) {
+              console.log('There is a corresponding fragment definition');
+              console.log('Fragment def:', this.fragDefs[node.name.value])
+              const selectionSet = this.fragDefs[node.name.value].selectionSet;
+              visit(selectionSet, visitWithTypeInfo(schemaType, {
+                enter: (node) => {
+                  if(node.kind === Kind.FIELD) {
+                    console.log('This is a subnode of a selection set:', node);
+                    const parentType = schemaType.getParentType();
+                    console.log('This is the parentType', parentType);
+                    if(!parentType || !isInterfaceType(parentType)) {
+                      console.log('failed to retrieve parentType in subAST')
+                      return;
+                    }
+                    const fieldDef = parentType.getFields()[node.name.value];
+                    if(isInterfaceType(parentType)) {
+                      const implementingTypes = this.schema.getPossibleTypes(parentType);
+                      console.log('possibleTypes?', implementingTypes);
+                    }
+                    console.log('fieldDef?', fieldDef);
+                    const directives = fieldDef?.astNode?.directives;
+                  }
+                }
+              }))
+            }
+          }
+
+          if(node.kind !== Kind.FIELD) {
+            console.log('not field, exiting');
+            return;
+          }
 
           // console.log('Current node', node);
 
@@ -336,22 +416,18 @@ class ComplexityAnalysis {
           console.log('isUnion?', isUnion);
           console.log('interface?', isInterface);
           if(isInterface) {
-            console.log('This is the interface type:', fieldTypeUnion);
-            console.log('These are the possible types:', this.schema.getPossibleTypes(fieldTypeUnion));
+            // console.log('This is the interface type:', fieldTypeUnion);
+            // console.log('These are the possible types:', this.schema.getPossibleTypes(fieldTypeUnion));
           }
+
           const argumentDirectiveCost = this.parseArgumentDirectives(fieldDef);
           const directiveAdjustedBaseVal = this.parseDirectives(fieldDef, baseVal);
 
-          const subUnionType = this.hasUnionAncestor();
+          baseVal = Number(directiveAdjustedBaseVal.costDirective);
 
-          const subInterfaceType = this.hasInterfaceAncestor();
-
-          if (subUnionType) {
-            console.log('Field has union ancestor, complexity calculation should have been resolved in resolveUnionTypes of ancestor, aborting traversal')
-            const currMult = this.currMult;
-            // need to push something here to maintain stack integrity
-            this.parentTypeStack.push({fieldDef, isList, fieldDefArgs, currMult, isUnion, isInterface});
-            return;
+          if(directiveAdjustedBaseVal.paginationLimit) {
+            internalPaginationLimit = Number(directiveAdjustedBaseVal.paginationLimit);
+            console.log('Internal pagination limits', internalPaginationLimit);
           }
 
           if(argumentDirectiveCost) {
@@ -365,11 +441,20 @@ class ComplexityAnalysis {
               })
           }
 
-          baseVal = Number(directiveAdjustedBaseVal.costDirective);
+          if(subFragType) {
+            // console.log('subordinate to fragment spread, aborting');
+            console.log('This is the subordinate fragment:', node.name.value);
+            const currMult = this.currMult;
+            this.parentTypeStack.push({fieldDef, isList, fieldDefArgs, currMult, isUnion, isInterface});
+            return;
+          }
 
-          if(directiveAdjustedBaseVal.paginationLimit) {
-            internalPaginationLimit = Number(directiveAdjustedBaseVal.paginationLimit);
-            console.log('Internal pagination limits', internalPaginationLimit);
+          if(subUnionType) {
+            console.log('Field has union ancestor, complexity calculation should have been resolved in resolveUnionTypes of ancestor, aborting traversal')
+            const currMult = this.currMult;
+            // need to push something here to maintain stack integrity
+            this.parentTypeStack.push({fieldDef, isList, fieldDefArgs, currMult, isUnion, isInterface});
+            return;
           }
 
           if(subInterfaceType.hasInterfaceAncestor) {
@@ -482,7 +567,7 @@ class ComplexityAnalysis {
               this.parentTypeStack.push({fieldDef, isList, fieldDefArgs, currMult, isUnion, isInterface});
         },
         leave:(node) => {
-          if (node.kind === Kind.FIELD) {
+          if (node.kind === Kind.FIELD || node.kind === Kind.FRAGMENT_DEFINITION) {
             this.parentTypeStack.pop();
           }
           if(this.parentTypeStack.length === 0) {
@@ -713,6 +798,7 @@ class ComplexityAnalysis {
 
   hasUnionAncestor() {
     let hasUnionAncestor = false;
+
     for(let i = this.parentTypeStack.length-1; i >= 0; i--) {
       if(this.parentTypeStack[i].isUnion) hasUnionAncestor = true;
     }
@@ -720,10 +806,21 @@ class ComplexityAnalysis {
     return hasUnionAncestor;
   }
 
+  hasFragSpreadAncestor() {
+    let hasFragSpreadAncestor = false;
+
+    for(let i = this.parentTypeStack.length-1; i >= 0; i--) {
+      if(this.parentTypeStack[i].isFragDef) hasFragSpreadAncestor = true;
+    }
+
+    return hasFragSpreadAncestor;
+  }
+
   hasInterfaceAncestor() {
     let hasInterfaceAncestor = false;
     let ancestorType!: GraphQLOutputType;
     let possibleTypes!: readonly GraphQLObjectType<any, any>[]
+
     for(let i = this.parentTypeStack.length-1; i >= 0; i--) {
       if(this.parentTypeStack[i].isInterface) {
         hasInterfaceAncestor = true;
@@ -733,9 +830,7 @@ class ComplexityAnalysis {
 
     const ancestorImplementingType = getNamedType(ancestorType);
 
-    if(ancestorImplementingType instanceof GraphQLInterfaceType) {
-      possibleTypes = this.schema.getPossibleTypes(ancestorImplementingType);
-    }
+    if(ancestorImplementingType instanceof GraphQLInterfaceType) possibleTypes = this.schema.getPossibleTypes(ancestorImplementingType);
 
     return {hasInterfaceAncestor, ancestorImplementingType, possibleTypes};
   }
@@ -751,7 +846,7 @@ const rateLimiter = function (config: any) {
     if(req.body.query) {
 
       const builtSchema = buildSchema(testSDLPolymorphism2)
-      const parsedAst = parse(testQueryPolymorphism2);
+      const parsedAst = parse(testQueryPolymorphism4);
 
       let requestIP = req.ip
 
