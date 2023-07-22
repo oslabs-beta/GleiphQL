@@ -7,6 +7,7 @@ import LineChart from '../components/LineChart';
 import ChartHeader from '../components/ChartHeader';
 import { Navigate } from 'react-router-dom';
 import checkSession from '../helper-functions/checkSession';
+import Sidebar from '../components/Sidebar';
 
 const Dashboard: React.FC<{}> = () => {
   const { currEndPoint, isLoggedIn, setIsLoggedIn, setCurrUser, loginToggle, setModalOpen } = useStore();
