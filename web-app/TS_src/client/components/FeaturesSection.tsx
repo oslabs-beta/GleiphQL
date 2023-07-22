@@ -42,16 +42,16 @@ const FeaturesSection: React.FC<{}> = () => {
 
 
   return (
-    <>
+    <section>
       <div className='featuresSection-bg flex flex-col justify-center items-center px-5 py-10'>
-        <h1>Features</h1>
+        <h2>Features</h2>
 
-        <section className='relative pt-16'>
+        <div className='relative pt-16'>
           <div className='container mx-auto'>
             <div className='flex flex-wrap items-center'>
 
               {/* Start of the image container */}
-              <div className='w-10/12 md:w-6/12 lg:w-4/12 px-12 md:px-4 mr-auto ml-auto -mt-78'>
+              <section className='w-10/12 md:w-6/12 lg:w-4/12 px-12 md:px-4 mr-auto ml-auto -mt-78'>
                 <div className='relative flex min-w-0 bg-white-200 w-full mb-6 shadow-lg rounded-lg'>
                   {/* Use conditional rendering to show the proper GIF*/}
                   
@@ -76,17 +76,17 @@ const FeaturesSection: React.FC<{}> = () => {
                     </>
                   )}
                 </div>
-              </div>
+              </section>
 
               {/* start of features content */}
-              <div className='w-full md:w-6/12 px-4'>
-                <div className='flex flex-wrap'>
+              <section className='w-full md:w-6/12 px-4'>
+                <ul className='flex flex-wrap'>
 
                   {/* start of left features column */}
                   <div className='w-full md:w-6/12 px-4'>
 
                     {/* start of first feature's section */}
-                    <div className='relative flex flex-col mt-4'>
+                    <li className='relative flex flex-col mt-4'>
                       <div className='px-4 py-5 flex-auto'>
                         <div className='p-3 text-center inline-flex items-center justify-center w-12 h-12 mb-5 shadow-lg rounded-full bg-white'>
                           <FcLandscape size={48}/>
@@ -101,10 +101,10 @@ const FeaturesSection: React.FC<{}> = () => {
                           onClick={() => toggleGifVisibility(1)}
                         >Let's see feature 1 in action</button>
                       </div>
-                    </div>
+                    </li>
 
                     {/* start of second feature 'Javascript components' */}
-                    <div className='relative flex flex-col min-w-0'>
+                    <li className='relative flex flex-col min-w-0'>
                       <div className='px-4 py-5 flex-auto'>
                         <div className='p-3 text-center inline-flex items-center justify-center w-12 h-12 mb-5 shadow-lg rounded-full bg-white'>
                           <FcMoneyTransfer size={48}/>
@@ -121,14 +121,14 @@ const FeaturesSection: React.FC<{}> = () => {
                           onClick={() => toggleGifVisibility(2)}
                         >Let's see feature 2 in action</button>
                       </div>
-                    </div>
+                    </li>
                     {/* end of second feature  */}
 
                   </div>
 
                   {/* start of far right column for 'pages' & 'Documentation' */}
                   <div className='w-full md:w-6/12 px-4'>
-                    <div className='relative flex flex-col min-w-0 mt-4'>
+                    <li className='relative flex flex-col min-w-0 mt-4'>
                       <div className='px-4 py-5 flex-auto'>
                         <div className='p-3 text-center inline-flex items-center justify-center w-12 h-12 mb-5 shadow-lg rounded-full bg-white'>
                           <FcPaid size={48}/>
@@ -143,10 +143,10 @@ const FeaturesSection: React.FC<{}> = () => {
                           onClick={() => toggleGifVisibility(3)}
                         >Let's see feature 3 in action</button>
                       </div>
-                    </div>
+                    </li>
                     
                     {/* start of fourth feature */}
-                    <div className='relative flex flex-col min-w-0'>
+                    <li className='relative flex flex-col min-w-0'>
                       <div className='px-4 py-5 flex-auto'>
                         <div className='p-3 text-center inline-flex items-center justify-center w-12 h-12 mb-5 shadow-lg rounded-full bg-white'>
                           <FcBullish size={48}/>
@@ -162,20 +162,20 @@ const FeaturesSection: React.FC<{}> = () => {
                           onClick={() => toggleGifVisibility(4)}
                         >Let's see feature 4 in action</button>
                       </div>
-                    </div>
+                    </li>
                     {/* end of fourth feature */}
 
                   </div>
-                </div>
-              </div>
+                </ul>
+              </section>
               {/* end of features icons content */}
 
             </div>
           </div>
-        </section>
+        </div>
 
       </div>
-    </>
+    </section>
   )
 }
 

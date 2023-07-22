@@ -26,8 +26,8 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
           className='w-full h-full rounded'
         />
 
-        <figcaption className='image-card'>
-          Testing, card over lay nioce!!!
+        <figcaption className='image-overlay'>
+          {memberBio}
         </figcaption>
       </figure>
       {/* Member Name */}

@@ -11,6 +11,7 @@ const SplashPage: React.FC<{}> = () => {
   return (  
     <main className='divide-y divide-solid divide-indigo-950 divide-y-2'>
       <IntroSection />
+      <FeaturesSection />
       <InstructionSection />
       <MeetTheTeam />
     </main>
