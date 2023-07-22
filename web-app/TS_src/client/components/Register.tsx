@@ -5,7 +5,6 @@ import '../stylesheets/index.css';
 import axios from 'axios';
 import notify from '../helper-functions/notify';
 
-
 const Register: React.FC<{}> = () => {
   const { loginToggle, registerToggle, userEmail, setUserEmail, setUserPassword, userPassword, confirmPassword, setConfirmPassword, passMatch, setPassMatch, setModalOpen } = useStore();
   const [isRegistered, setIsRegistered] = useState(false);
@@ -41,7 +40,7 @@ const Register: React.FC<{}> = () => {
 
     //conditional to check passwords match
     if (userPassword !== confirmPassword) {
-      notify('Passwords do not match.');
+      notify('Passwords do not match.', 'error');
       return;
     }
 
@@ -51,13 +50,14 @@ const Register: React.FC<{}> = () => {
 
       if (response.data.userCreated) {
         setIsRegistered(true);
-        notify('Account successfully created!');
+        notify('Account successfully created!', 'success');
+        handleClose();
       } else {
-        notify('Could not create account. Try again.');
+        notify('Could not create account. Try again.', 'error');
         
       }
     } catch(error) {
-      notify('Could not create account. Try again.');
+      notify('Could not create account. Try again.', 'error');
     }
 
   }

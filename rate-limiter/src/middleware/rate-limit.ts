@@ -560,7 +560,7 @@ const rateLimiter = function (config: any) {
                 },
                 responseDetails: {
                   status: 429,
-                  statusText: "Too Many Requests",
+                  statusText: 'Too Many Requests',
                 }
               }
             }

@@ -52,10 +52,10 @@ const Login: React.FC<{}> = () => {
       if (response.data.signedIn) {
         setCurrUser(response.data.userId||0, response.data.userEmail||'');
         setIsLoggedIn(true);
-        notify('Login successful!');
+        notify('Login successful!', 'success');
       } 
     } catch(error) {
-      notify('Login Unsuccessful. Try again.');
+      notify('Login unsuccessful. Try again.', 'error');
       setCurrUser(0, '');
       setIsLoggedIn(false);
     }
