@@ -16,6 +16,7 @@ body {
 h1 {
   font-size: 70px;
   line-height: 1.5;
+  font-weight: bold;
 }
 
 h2 {
@@ -97,7 +98,8 @@ button:focus-visible {
   height: 350px;
   background-color: rgb(200, 209, 219);
   border-radius: 10px;
-  overflow: hidden;
+  /* This hides the image overlay */
+  overflow: hidden; 
   box-shadow: 8px 8px;
   margin: 15px;
   color: #013870;
@@ -109,17 +111,32 @@ button:focus-visible {
   position: relative;
 }
 
-.image-card {
+.image-overlay {
   width: 100%;
   height: 100%;
   position: absolute;
-  background: #1f3d4743;
+  background: rgba(40, 40, 40, 0.6);
   top: 0px;
-  right: 0px;
+  /* positions overlay to the right side of the image  */
+  right: -100%;
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 15px;
+  font-size: 14px;
+  font-weight: bold;
+  backdrop-filter: blur(5px);
+  transition: 1s;
+}
+
+.image:hover .image-overlay {
+  right: 0;
+}
+
+.profile-card-icons:hover {
+  color: #f2f2f2;
+  transition: .5s;
 }
 
 /*    ~~ End of component: Profile Card   ~~   */
@@ -146,6 +163,22 @@ button:focus-visible {
 } */
 
 /*    ~~ End of component: Dashboard   ~~   */
+
+
+/*  ~~ Start of component: Meet The Team  ~~   */
+.meetTheTeam-bg {
+  background: linear-gradient(to bottom, #d3dce5 0, #87CEFA 30%, #087CC4 100%)
+}
+/*    ~~ End of component: Meet The Team  ~~   */
+
+/*  ~~ Start of component: Features Section  ~~   */
+.featuresSection-bg {
+  background: linear-gradient(to top, #d3dce5 0, #87CEFA 30%, #087CC4 100%)
+}
+
+/*    ~~ End of component: Features Section   ~~   */
+
+
 
 
 /*  ~~ Start of component: ----  ~~   */

@@ -7,6 +7,7 @@ interface ProfileCardProps {
   memberName: string;
   githubLink: string;
   linkedinLink: string;
+  memberBio: string;
 }
 
 const ProfileCard: React.FC<ProfileCardProps> = ({
@@ -14,6 +15,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
   memberName,
   githubLink,
   linkedinLink,
+  memberBio
 }) => {
   return (
     <div className='profile-card'>
@@ -28,13 +30,11 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
             className='w-full h-full rounded'
           />
 
-          <div className='image-card'>
-            <p>Testing, card over lay nioce!!!</p>
+          <div className='image-overlay'>
+            <p>{memberBio}</p>
           </div>
         </div>
         
-        
-
         {/* Member Name */}
         <div className='text-center mt-1 mb-1'>
           <h2 className='text-xl font-bold'>{memberName}</h2>
@@ -42,10 +42,10 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
 
         {/* Icons */}
         <div className='flex justify-center mb-2'>
-          <a href={githubLink} target='_blank' rel='noopener noreferrer' className='mr-4'>
+          <a href={githubLink} target='_blank' rel='noopener noreferrer' className='profile-card-icons mr-4'>
             <FaGithub size={48} />
           </a>
-          <a href={linkedinLink} target='_blank' rel='noopener referrer'>
+          <a href={linkedinLink} target='_blank' rel='noopener referrer' className='profile-card-icons'>
             <FaLinkedin size={48} />
           </a>
 
