@@ -150,12 +150,12 @@ button:focus-visible {
   color:rgb(107, 192, 164)
 }
 
-.chart-container {
+#chartContainer {
   position: relative;
   padding: 24px;
   margin: 24px;
   height: 80vh;
-  width: 80vw;
+  width: 70vw;
 }
 
 /*    ~~ End of component: yyoon's ~~   */

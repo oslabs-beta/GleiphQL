@@ -42,7 +42,7 @@ const FeaturesSection: React.FC<{}> = () => {
 
 
   return (
-    <section>
+     <section>
       <div className='featuresSection-bg flex flex-col justify-center items-center px-5 py-10'>
         <h2>Features</h2>
 
