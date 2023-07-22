@@ -7,14 +7,15 @@ import LineChart from '../components/LineChart';
 import ChartHeader from '../components/ChartHeader';
 import { Navigate } from 'react-router-dom';
 import checkSession from '../helper-functions/checkSession';
-import Sidebar from '../components/Sidebar';
 
 const Dashboard: React.FC<{}> = () => {
-  const { currEndPoint, isLoggedIn, setIsLoggedIn, setCurrUser} = useStore();
+  const { currEndPoint, isLoggedIn, setIsLoggedIn, setCurrUser, loginToggle, setModalOpen } = useStore();
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     checkSession(setIsLoggedIn, setCurrUser, setIsLoading);
+    loginToggle(false);
+    setModalOpen(false);
   }, []);
 
   if(isLoading) return <div>Loading...</div>;

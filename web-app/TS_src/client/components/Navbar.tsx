@@ -1,13 +1,14 @@
 import React from 'react';
 import useStore from '../store';
 import axios from 'axios';
+import Modal from './Modal';
 
 // interface NavbarProps {
 //   handleLoginToggle: () => void;
 // }
 
 const Navbar: React.FC<{}> = () => {
-  const { loginToggle, currUser, setAnchorEl, anchorEl, isLoggedIn, setIsLoggedIn, setCurrUser, setCurrEndPoint } = useStore();
+  const { loginToggle, currUser, setAnchorEl, anchorEl, isLoggedIn, setIsLoggedIn, setCurrUser, setCurrEndPoint, modalOpen, setModalOpen, showLogin } = useStore();
 
   const logOut = async() => {
     setCurrUser(0, '');
@@ -35,11 +36,18 @@ const Navbar: React.FC<{}> = () => {
         </div>
         { isLoggedIn? 
           <button className='rounded-md border bg-white text-blue-950 font-semibold p-2 w-24' onClick={logOut}>LOGOUT</button>: 
-          <button className='rounded-md border bg-white text-blue-950 font-semibold p-2 w-24' onClick={()=>loginToggle(true)}>LOGIN</button>
+          <button className='rounded-md border bg-white text-blue-950 font-semibold p-2 w-24' onClick={()=> {
+            setModalOpen(true)
+            loginToggle(true)
+          }
+            
+          }>LOGIN</button>
         }
+        <Modal  open={modalOpen} onClose={() => setModalOpen(false)} />
       </div>
     </div>
   )
 };
+
 
 export default Navbar;
