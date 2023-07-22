@@ -5,8 +5,8 @@ import sessionController from '../controllers/sessionController';
 
 const endpointRouter: Router = Router();
 
-endpointRouter.post('/:userId', sessionController.authenticated, endpointController.addEndpoint, (req: Request, res: Response) => {
-  res.status(200).json(res.locals.addedEndpoint);
+endpointRouter.post('/:userId', sessionController.authenticated, endpointController.addEndpoint, endpointController.retrieveEndpoints, (req: Request, res: Response) => {
+  res.status(200).json(res.locals.endpoints);
 });
 
 endpointRouter.get('/:userId', sessionController.authenticated, endpointController.retrieveEndpoints, (req: Request, res: Response) => {
@@ -14,7 +14,7 @@ endpointRouter.get('/:userId', sessionController.authenticated, endpointControll
 });
 
 endpointRouter.delete('/:endpointId', sessionController.authenticated, endpointController.deleteEndpoint, dataController.deleteData, (req: Request, res: Response) => {
-  res.status(200).json();
+  res.status(200).json(res.locals.endpoints);
 })
 
 export default endpointRouter;

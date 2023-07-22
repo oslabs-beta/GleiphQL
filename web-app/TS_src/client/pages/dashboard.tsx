@@ -2,13 +2,12 @@ import React, { useState , useEffect } from 'react';
 import useStore from '../store';
 import Navbar from '../components/Navbar';
 import RequestTable from '../components/RequestTable';
-import Sidebar from '../components/Sidebar'
+import SidebarOld from '../components/Sidebar-old'
 import LineChart from '../components/LineChart';
 import ChartHeader from '../components/ChartHeader';
 import { Navigate } from 'react-router-dom';
 import checkSession from '../helper-functions/checkSession';
-
-
+import Sidebar from '../components/Sidebar';
 
 const Dashboard: React.FC<{}> = () => {
   const { currEndPoint, isLoggedIn, setIsLoggedIn, setCurrUser, loginToggle, setModalOpen } = useStore();
