@@ -7,6 +7,7 @@ interface ProfileCardProps {
   memberName: string;
   githubLink: string;
   linkedinLink: string;
+  memberBio: string;
 }
 
 const ProfileCard: React.FC<ProfileCardProps> = ({
@@ -14,6 +15,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
   memberName,
   githubLink,
   linkedinLink,
+  memberBio
 }) => {
   return (
     <div className='profile-card'>
