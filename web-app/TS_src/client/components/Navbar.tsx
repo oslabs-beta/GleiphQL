@@ -26,7 +26,7 @@ const Navbar: React.FC<{}> = () => {
   };
 
   return (
-    <div className='flex p-2 h-14 justify-between bg-blue-950 text-white w-full'>
+    <div className='flex sticky top-0 p-2 h-14 justify-between bg-blue-950 text-white w-full'>
       <a href='/'><h1 className='text-2xl text-white'>
         GleiphQL
       </h1></a>
