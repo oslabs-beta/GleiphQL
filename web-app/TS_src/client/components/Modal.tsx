@@ -28,8 +28,7 @@ const Modal: React.FC<ModalProps> = ({ open, onClose }) => {
     <div className='fixed inset-0 bg-black bg-opacity-25 backdrop-blur-sm flex justify-center items-center text-black z-10'>
       <div onClick={(e) => {e.stopPropagation()}}>
         {showLogin && !showRegistration && <Login />}
-        {!showLogin && showRegistration && <Register />}
-        
+        {!showLogin && showRegistration && <Register />}  
       </div>
     </div>
   )

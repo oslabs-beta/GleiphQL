@@ -1,6 +1,5 @@
 import { Router, Request, Response } from 'express';
 import dataController from '../controllers/dataController';
-import userController from '../controllers/userController';
 import sessionController from '../controllers/sessionController';
 
 const dataRouter: Router = Router();

@@ -19,39 +19,31 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
 }) => {
   return (
     <div className='profile-card'>
-      <div 
-        /* background-(color)-(strength), rounded edges-(strength), overflow - too large content is hidden, box shadow (medium), box-content controls containers size, height - (75 * 0.25 rem) */
-        // className='bg-gray-200 rounded-lg overflow-hidden shadow-lg box-content min-h-75 min-w-400 justify-center m-5'
-        >
-        <div className='image'>
-          <img 
-            src={imageSrc} 
-            alt='Profile' 
-            className='w-full h-full rounded'
-          />
+      <figure className='image'>
+        <img 
+          src={imageSrc} 
+          alt='Profile' 
+          className='w-full h-full rounded'
+        />
 
-          <div className='image-overlay'>
-            <p>{memberBio}</p>
-          </div>
-        </div>
-        
-        {/* Member Name */}
-        <div className='text-center mt-1 mb-1'>
-          <h2 className='text-xl font-bold'>{memberName}</h2>
-        </div>
+        <figcaption className='image-overlay'>
+          {memberBio}
+        </figcaption>
+      </figure>
+      {/* Member Name */}
+      <h3 className='text-center mt-1 mb-1 text-xl font-bold'>{memberName}</h3>
 
-        {/* Icons */}
-        <div className='flex justify-center mb-2'>
-          <a href={githubLink} target='_blank' rel='noopener noreferrer' className='profile-card-icons mr-4'>
-            <FaGithub size={48} />
-          </a>
-          <a href={linkedinLink} target='_blank' rel='noopener referrer' className='profile-card-icons'>
-            <FaLinkedin size={48} />
-          </a>
-
-        </div>
-      </div>
+      {/* Icons */}
+      <p className='flex justify-center mb-2'>
+        <a href={githubLink} target='_blank' rel='noopener noreferrer' className='mr-4'>
+          <FaGithub size={48} />
+        </a>
+        <a href={linkedinLink} target='_blank' rel='noopener referrer'>
+          <FaLinkedin size={48} />
+        </a>
+      </p>
     </div>
+
   );
 };
 

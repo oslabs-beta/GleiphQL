@@ -68,7 +68,7 @@ const redis = async function (config: any, complexityScore: number, req: Request
             },
             responseDetails: {
               status: 429,
-              statusText: "Too Many Requests",
+              statusText: 'Too Many Requests',
             }
           }
         }
