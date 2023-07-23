@@ -1,5 +1,6 @@
 import SplashPage from './pages/SplashPage';
 import Navbar from './components/Navbar';
+import Footer from './components/Footer';
 
 
 function App() {
@@ -7,17 +8,12 @@ function App() {
   return (
     <div className='flex flex-col justify-center align-middle'>
       <Navbar />
-      
-      <div className='AppContainer'>
-
-
       <SplashPage />
         {/* <Routes>
           <Route path='/' element={ <SplashPage /> } />
         </Routes> */}
-      </div>
+      <Footer />
     </div>
-
   )
 }
 

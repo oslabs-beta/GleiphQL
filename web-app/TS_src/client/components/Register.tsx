@@ -3,6 +3,7 @@ import useStore from '../store';
 import { FiX } from 'react-icons/fi';
 import '../stylesheets/index.css';
 import axios from 'axios';
+import notify from '../helper-functions/notify';
 
 const Register: React.FC<{}> = () => {
   const { loginToggle, registerToggle, userEmail, setUserEmail, setUserPassword, userPassword, confirmPassword, setConfirmPassword, passMatch, setPassMatch, setModalOpen } = useStore();
@@ -28,7 +29,6 @@ const Register: React.FC<{}> = () => {
 
   const handleSubmit = async(e: React.FormEvent) => {
     e.preventDefault();
-
     setUserEmail('');
     setUserPassword('');
     setConfirmPassword('');
@@ -40,36 +40,31 @@ const Register: React.FC<{}> = () => {
 
     //conditional to check passwords match
     if (userPassword !== confirmPassword) {
-      alert('Passwords don\'t match. Please try again.')
+      notify('Passwords do not match.', 'error');
       return;
     }
+
 
     try {
       const response = await axios.post('/api/account/register', registerUser);
 
       if (response.data.userCreated) {
         setIsRegistered(true);
-        alert('Account successfully created. Redirecting to login.')
+        notify('Account successfully created!', 'success');
+        handleClose();
       } else {
-        alert('Could not create account. Try again');
+        notify('Could not create account. Try again.', 'error');
         
       }
     } catch(error) {
-      alert('Could not create account. Try again');
-      setUserEmail('');
-      setUserPassword('');
-      setConfirmPassword('');
-
-      // const typedError = error as Error;
-      // throw new Error(`Error in register component: ${typedError.message}`);
+      notify('Could not create account. Try again.', 'error');
     }
 
   }
 
 
   return (
-    <>
-      <div className='
+    <div className='
       relative
       border-4
       border-neutral-800
@@ -114,7 +109,7 @@ const Register: React.FC<{}> = () => {
           </div>
 
           <div className='flex flex-col test-gray-200 py-2'>
-          <label className='inputLabel'>Password</label>
+            <label className='inputLabel'>Password</label>
             <input className='
             rounded-lg 
             bg-slate-200 
@@ -149,14 +144,11 @@ const Register: React.FC<{}> = () => {
             Already have an account?
             <button className='text-blue-500 ml-2' onClick={toggleLogin}>
               Login here!
-            </button>
-            
+            </button>    
           </p>
-          
         </form>
-
       </div>
-    </>
+
   )
 }
 
