@@ -188,7 +188,7 @@ const Sidebar: React.FC<{}> = () => {
               </li>
               <li className='relative flex content-center'>
                 <button
-                  className='mt-2 ml-3 inline-block rounded bg-primary px-2 py-1.5 text-xs font-medium uppercase leading-tight text-white shadow-md transition duration-150 ease-in-out hover:bg-primary-700 hover:shadow-lg focus:bg-primary-700 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-primary-800 active:shadow-lg'
+                  className='mt-2 ml-3 inline-block rounded bg-primary px-2 py-1.5 text-xs uppercase leading-tight text-white shadow-md transition duration-150 ease-in-out hover:bg-primary-700 hover:shadow-lg focus:bg-primary-700 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-primary-800 active:shadow-lg'
                   aria-haspopup='true'
                   onClick={saveEndpoint}
                 >
@@ -281,7 +281,7 @@ const Sidebar: React.FC<{}> = () => {
                             className='mb- mt-1 flex content-center'
                           >
                             <button
-                              className='ml-3 inline-block rounded bg-red-700 px-1.5 py-1 text-xs font-medium uppercase leading-tight text-white shadow-md transition duration-150 ease-in-out hover:bg-red-800 hover:shadow-lg focus:bg-red-800 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-red-900 active:shadow-lg'
+                              className='ml-3 inline-block rounded bg-red-700 px-1.5 py-1 text-xs uppercase leading-tight text-white shadow-md transition duration-150 ease-in-out hover:bg-red-800 hover:shadow-lg focus:bg-red-800 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-red-900 active:shadow-lg'
                               aria-haspopup='true'
                               onClick={()=>setOpen(true)}
                               data-modal-target='defaultModal'

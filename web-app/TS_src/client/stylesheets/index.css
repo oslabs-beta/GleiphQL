@@ -1,16 +1,63 @@
 @import 'tailwindcss/base';
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
+/* Exo thin font from Google. */
+@import url(https://fonts.googleapis.com/css?family=Exo:100);
+
+/* Background data (Original source: https://subtlepatterns.com/grid-me/) */
+/* Animations */
+@-webkit-keyframes bg-scrolling-reverse {
+  100% { background-position: 50px 50px; }
+}
+@-moz-keyframes    bg-scrolling-reverse {
+  100% { background-position: 50px 50px; }
+}
+@-o-keyframes      bg-scrolling-reverse {
+  100% { background-position: 50px 50px; }
+}
+@keyframes         bg-scrolling-reverse {
+  100% { background-position: 50px 50px; }
+}
+@-webkit-keyframes bg-scrolling {
+  0% { background-position: 50px 50px; }
+}
+@-moz-keyframes    bg-scrolling {
+  0% { background-position: 50px 50px; }
+}
+@-o-keyframes      bg-scrolling {
+  0% { background-position: 50px 50px; }
+}
+@keyframes         bg-scrolling {
+  0% { background-position: 50px 50px; }
+}
+
+
+html {
+  scroll-behavior: smooth;
+ }
+
+
+ /* Main styles */
 
 body {
-  font-synthesis: none;
-   /*optimizeLegibility instructs browser to update text rendering for improve legibility, resulting in clearer and more readable text */
-  text-rendering: optimizeLegibility;
-  /* antialiased enhances text rendering on browsers that support to WebKit rendering rengine (such as Safari and some versions of Chrome) */
-  -webkit-font-smoothing: antialiased;
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  font: 800 18px/1.5 exo, ubuntu, "segoe ui", helvetica, arial, sans-serif;
+}
+
+.splashpage {
+  color: #000000;
+  text-align: center;
+  background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAIAAACRXR/mAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAIGNIUk0AAHolAACAgwAA+f8AAIDpAAB1MAAA6mAAADqYAAAXb5JfxUYAAABnSURBVHja7M5RDYAwDEXRDgmvEocnlrQS2SwUFST9uEfBGWs9c97nbGtDcquqiKhOImLs/UpuzVzWEi1atGjRokWLFi1atGjRokWLFi1atGjRokWLFi1af7Ukz8xWp8z8AAAA//8DAJ4LoEAAlL1nAAAAAElFTkSuQmCC') repeat 0 0;
+  -webkit-animation: bg-scrolling-reverse .92s infinite; 
+  -moz-animation:    bg-scrolling-reverse .92s infinite; 
+  -o-animation:      bg-scrolling-reverse .92s infinite; 
+  animation:         bg-scrolling-reverse .92s infinite; 
+  -webkit-animation-timing-function: linear;
+  -moz-animation-timing-function:    linear;
+  -o-animation-timing-function:      linear;
+  animation-timing-function:         linear;
 }
 
 h1 {
@@ -164,21 +211,6 @@ button:focus-visible {
 
 
 /*    ~~ End of component: Dashboard   ~~   */
-
-
-/*  ~~ Start of component: Meet The Team  ~~   */
-.meetTheTeam-bg {
-  background: linear-gradient(to bottom, #d3dce5 0, #87CEFA 30%, #087CC4 100%)
-}
-/*    ~~ End of component: Meet The Team  ~~   */
-
-/*  ~~ Start of component: Features Section  ~~   */
-.featuresSection-bg {
-  background: linear-gradient(to top, #d3dce5 0, #87CEFA 30%, #087CC4 100%)
-}
-
-/*    ~~ End of component: Features Section   ~~   */
-
 
 
 

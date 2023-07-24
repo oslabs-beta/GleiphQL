@@ -6,7 +6,7 @@ import Footer from './components/Footer';
 function App() {
 
   return (
-    <div className='flex flex-col justify-center align-middle'>
+    <div className='flex flex-col justify-center align-middle splashpage'>
       <Navbar />
       <SplashPage />
         {/* <Routes>

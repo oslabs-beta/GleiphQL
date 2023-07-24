@@ -87,7 +87,7 @@ const Login: React.FC<{}> = () => {
             hover:border-2
             hover:border-sky-600
             '
-            placeholder='Confirm Password'
+            placeholder='Enter Your Username'
             type='text' 
             value={userEmail.toString()}
             onChange={(e) => setUserEmail(e.target.value)}

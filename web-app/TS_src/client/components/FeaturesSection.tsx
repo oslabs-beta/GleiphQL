@@ -44,15 +44,15 @@ const FeaturesSection: React.FC<{}> = () => {
   return (
      <section>
       <div className='featuresSection-bg flex flex-col justify-center items-center px-5 py-10'>
-        <h2>Features</h2>
+        <h2 className='text-5xl font-extrabold'>Features</h2>
 
-        <div className='relative pt-16'>
+        <div>
           <div className='container mx-auto'>
             <div className='flex flex-wrap items-center'>
 
               {/* Start of the image container */}
-              <section className='w-10/12 md:w-6/12 lg:w-4/12 px-12 md:px-4 mr-auto ml-auto -mt-78'>
-                <div className='relative flex min-w-0 bg-white-200 w-full mb-6 shadow-lg rounded-lg'>
+              <section className='w-10/12 md:w-6/12 lg:w-12/12 px-12 md:px-4 mr-auto ml-auto'>
+                <div className='flex min-w-0 bg-white-200 w-full mb-6 shadow-lg rounded-lg'>
                   {/* Use conditional rendering to show the proper GIF*/}
                   
                   {features[0].isVisible ? (
@@ -83,17 +83,17 @@ const FeaturesSection: React.FC<{}> = () => {
                 <ul className='flex flex-wrap'>
 
                   {/* start of left features column */}
-                  <div className='w-full md:w-6/12 px-4'>
+                  <div className='w-full md:w-6/12'>
 
                     {/* start of first feature's section */}
-                    <li className='relative flex flex-col mt-4'>
+                    <li className='h-1/2 flex flex-col mt-4'>
                       <div className='px-4 py-5 flex-auto'>
                         <div className='p-3 text-center inline-flex items-center justify-center w-12 h-12 mb-5 shadow-lg rounded-full bg-white'>
                           <FcLandscape size={48}/>
                         </div>
                         <h6 className='text-xl mb-1 font-semibold'>Complexity Analysis</h6>
                         <p className='mb-4'>
-                          Accurate complexity scores to resource intensive each server request maybe. 
+                         Dynamically calculate the resource requirements of each query, providing you with invaluable insights into its impact on your system.
                         </p>
                         <button 
                           className='m-2 p-2 rounded-md bg-sky-900 shadow-lg shadow-sky-500/50 hover:shadow-sky-500/40 hover:bg-sky-600 text-white'
@@ -104,7 +104,7 @@ const FeaturesSection: React.FC<{}> = () => {
                     </li>
 
                     {/* start of second feature 'Javascript components' */}
-                    <li className='relative flex flex-col min-w-0'>
+                    <li className='h-1/2 flex flex-col min-w-0'>
                       <div className='px-4 py-5 flex-auto'>
                         <div className='p-3 text-center inline-flex items-center justify-center w-12 h-12 mb-5 shadow-lg rounded-full bg-white'>
                           <FcMoneyTransfer size={48}/>
@@ -113,7 +113,7 @@ const FeaturesSection: React.FC<{}> = () => {
                           Rate Limiting
                         </h6>
                         <p className='mb-4'>
-                          Ensure that your server side resources are protected from malicious queries.
+                          Control and regulate incoming requests, ensuring fair and efficient resource allocation while safeguarding against abusive usage patterns.
                         </p>
                         <button 
                           className='m-2 p-2 rounded-md bg-sky-900 shadow-lg shadow-sky-500/50 hover:shadow-sky-500/40 hover:bg-sky-600 text-white'
@@ -127,15 +127,15 @@ const FeaturesSection: React.FC<{}> = () => {
                   </div>
 
                   {/* start of far right column for 'pages' & 'Documentation' */}
-                  <div className='w-full md:w-6/12 px-4'>
-                    <li className='relative flex flex-col min-w-0 mt-4'>
+                  <div className='w-full md:w-6/12'>
+                    <li className='h-1/2 flex flex-col min-w-0 mt-4'>
                       <div className='px-4 py-5 flex-auto'>
                         <div className='p-3 text-center inline-flex items-center justify-center w-12 h-12 mb-5 shadow-lg rounded-full bg-white'>
                           <FcPaid size={48}/>
                         </div>
                         <h6 className='text-xl mb-1 font-semibold'>Monitoring</h6>
                         <p className='mb-4'>
-                          Instant updates when testing your graph QL queries.
+                          Gain deep visibility into your API's usage patterns, track response times, monitor error rates, and optimize your system's performance.
                         </p>
                         <button 
                           className='m-2 p-2 rounded-md bg-sky-900 shadow-lg shadow-sky-500/50 hover:shadow-sky-500/40 hover:bg-sky-600 text-white'
@@ -146,15 +146,15 @@ const FeaturesSection: React.FC<{}> = () => {
                     </li>
                     
                     {/* start of fourth feature */}
-                    <li className='relative flex flex-col min-w-0'>
+                    <li className='h-1/2 flex flex-col min-w-0'>
                       <div className='px-4 py-5 flex-auto'>
                         <div className='p-3 text-center inline-flex items-center justify-center w-12 h-12 mb-5 shadow-lg rounded-full bg-white'>
                           <FcBullish size={48}/>
                         </div>
                         <h6 className='text-xl mb-1 font-semibold'>Documentation</h6>
                         <p className='mb-4'>
-                          Built by developers for developers. You will love how easy
-                          it is to work with Gleiph QL!
+                          Built by developers for developers. Our comprehensive documentation makes it easy
+                          to work with GleiphQL!
                         </p>
                         <button 
                           className='m-2 p-2 rounded-md bg-sky-900 shadow-lg shadow-sky-500/50 hover:shadow-sky-500/40 hover:bg-sky-600 text-white'
