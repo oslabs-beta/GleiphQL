@@ -9,6 +9,19 @@
 // https://on.cypress.io/custom-commands
 // ***********************************************
 //
+// Create command to copy clipboard text
+// Cypress.Commands.add('copyToClipboard', (text: string) => {
+//   cy.window().then((win) => {
+//     const clipboardSpy = cy.spy(win.navigator.clipboard, 'writeText');
+//     cy.stub(win.navigator.clipboard, 'writeText').callsFake((t) => {
+//       expect(t).to.equal(text); // Assert that the correct text is being copied
+//       return Promise.resolve(); // Resolve the promist with an empty value
+//     });
+//   });
+// });
+
+
+
 //
 // -- This is a parent command --
 // Cypress.Commands.add('login', (email, password) => { ... })

@@ -22,7 +22,16 @@ const InstructionSection: React.FC<{}> = () => {
         Take the first step towards a faster, smarter,
         and more secure API infrastructure.
       </p>
-      <a href='https://github.com/oslabs-beta/graphql-rate-limiter' target='_blank' ><button className='rounded-md border text-white bg-blue-950 hover:bg-blue-900 font-semibold p-2 m-4 w-32'>More Info</button></a>
+      <a
+        id='moreInfo-btn'
+        href='https://github.com/oslabs-beta/graphql-rate-limiter' 
+        target='_blank' 
+        data-expected-url='https://github.com/oslabs-beta/GleiphQL'>
+        <button 
+          className='rounded-md border text-white bg-blue-950 hover:bg-blue-900 font-semibold p-2 m-4 w-32'
+          
+        >More Info</button>
+      </a>
     </div>
     <dl className='grid place-items-center md:w-1/2'>
       <dt className='p-2'>npm: </dt>
