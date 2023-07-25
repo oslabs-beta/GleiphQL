@@ -26,9 +26,9 @@ const ChartHeader: React.FC<{}> = () => {
       <table>
         <thead>
           <tr>
-            <th className='font-light'>Total API Requests</th>
-            <th className='font-light'>Total Blocked Requests</th>
-            <th className='font-light'>Average Complexity Score</th>
+            <th>Total API Requests</th>
+            <th>Total Blocked Requests</th>
+            <th>Average Complexity Score</th>
           </tr>
         </thead>
         <tbody>

@@ -9,7 +9,7 @@ import FeaturesSection from '../components/FeaturesSection';
 
 const SplashPage: React.FC<{}> = () => {  
   return (  
-    <main className='divide-y divide-solid divide-indigo-950 divide-y-2'>
+    <main>
       <IntroSection />
       <FeaturesSection />
       <InstructionSection />
