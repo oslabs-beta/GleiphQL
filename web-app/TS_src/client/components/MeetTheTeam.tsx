@@ -28,7 +28,8 @@ const MeetTheTeam: React.FC<{}> = () => {
           memberName='Kevin Phan'
           githubLink='https://github.com/KP824'
           linkedinLink='https://www.linkedin.com/in/kevinphan760/'
-          memberBio={`Presenting our very own "Rave-Hiker Extraordinaire"! Outside of their professional pursuits, their kindness shines through in every interaction, making them a beloved friend and colleague to all.
+          memberBio={`Presenting our "Rave-Hiker Extraordinaire"! By day, they are a full-stack problem-solving 
+            virtuoso. But when the sun sets, they transform into the life of the party, embracing their love for  electronic dance music. 
             So whether they're coding or dancing under the neon lights, they're sure to leave you impressed and inspired!`}
         />
 
