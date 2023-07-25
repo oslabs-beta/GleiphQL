@@ -6,8 +6,6 @@ import axios from 'axios';
 import checkSession from '../helper-functions/checkSession';
 import notify from '../helper-functions/notify';
 
-
-
 interface LoginResponse {
   userExists: boolean;
   signedIn: boolean;
@@ -76,17 +74,7 @@ const Login: React.FC<{}> = () => {
         <h2 className='text-sky-900 font-bold text-center'>SIGN IN</h2>
         <div className='flex flex-col test-gray-200  py-2'>
           <label className='inputLabel'>Username</label>
-          <input className='
-            rounded-lg 
-            bg-slate-200 
-            mx-4 
-            p-2 
-            focus:bg-neutral-200 
-            focus:outline-2 
-            focus:outline-sky-600 
-            hover:border-2
-            hover:border-sky-600
-            '
+          <input className='rounded-lg bg-slate-200 mx-4 p-2 focus:bg-neutral-200 focus:outline-2 focus:outline-sky-600'
             placeholder='Enter Your Username'
             type='text' 
             value={userEmail.toString()}
@@ -95,7 +83,7 @@ const Login: React.FC<{}> = () => {
         </div>
         <div className='flex flex-col test-gray-200 justify-evenly py-2'>
           <label className='inputLabel'>Password</label>
-          <input className='rounded-lg bg-slate-200 mx-4 p-2 focus:bg-neutral-200 focus:outline-2 focus:outline-sky-600 hover:border-solid hover:border-2 hover:border-sky-600'
+          <input className='rounded-lg bg-slate-200 mx-4 p-2 focus:bg-neutral-200 focus:outline-2 focus:outline-sky-600'
             placeholder='Enter Your Password'
             type='password'
             value={userPassword.toString()}

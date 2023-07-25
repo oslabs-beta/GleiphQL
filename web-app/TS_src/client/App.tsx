@@ -9,9 +9,6 @@ function App() {
     <div className='flex flex-col justify-center align-middle splashpage'>
       <Navbar />
       <SplashPage />
-        {/* <Routes>
-          <Route path='/' element={ <SplashPage /> } />
-        </Routes> */}
       <Footer />
     </div>
   )
