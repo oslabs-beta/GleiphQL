@@ -14,10 +14,10 @@ const InstructionSection: React.FC<{}> = () => {
     }
   }
   return (
-  <section className='p-8 text-center flex flex-col md:flex-row'>
+  <section className='p-8 text-center flex flex-col items-center md:flex-row h-[400px]'>
     <div className='md:w-1/2'>
-      <h2 className='text-2xl font-extrabold p-2'>Get Started Easily</h2>
-      <p>
+      <h2 className='text-5xl py-2 font-extrabold text-left'>Get Started Easily</h2>
+      <p className='text-xl text-left'>
         Ready to revolutionize your GraphQL endpoint?
         Take the first step towards a faster, smarter,
         and more secure API infrastructure.

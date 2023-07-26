@@ -33,7 +33,7 @@ const Dashboard: React.FC<{}> = () => {
         <RequestTable />
       </main> : null
       }
-      </div>
+    </div>
   );
 }
 

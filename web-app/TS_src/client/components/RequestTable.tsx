@@ -32,11 +32,11 @@ function RequestTable () {
       <table className='m-0 table-auto'>
         <thead>
           <tr className='h-12'>
-            <th className='font-normal w-1/5'>IP Address</th>
-            <th className='font-normal w-1/5'>Complexity Score</th>
-            <th className='font-normal hidden sm:table-cell'>Number of Object Types</th>
-            <th className='font-normal hidden sm:table-cell'>Query Depth</th>
-            <th className='font-normal w-1/5'>Time Stamp</th>
+            <th className='w-1/5'>IP Address</th>
+            <th className='w-1/5'>Complexity Score</th>
+            <th className='hidden sm:table-cell'>Number of Object Types</th>
+            <th className='hidden sm:table-cell'>Query Depth</th>
+            <th className='w-1/5'>Time Stamp</th>
           </tr>
         </thead>
         <tbody>
@@ -44,11 +44,11 @@ function RequestTable () {
             const color = index % 2 > 0? 'bg-white' : 'bg-slate-50';
             return (
               <tr key={uuidv4()} className={`h-24 ${color}`}>
-                <th className='font-light'>{row.ip_address}</th>
-                <th className='font-light'>{row.complexity_score}</th>
-                <th className='font-light hidden sm:table-cell'>{row.object_types.objectTypes.length}</th>
-                <th className='font-light hidden sm:table-cell'>{row.query_depth}</th>
-                <th className='font-light'>{row.timestamp}</th>
+                <th>{row.ip_address}</th>
+                <th>{row.complexity_score}</th>
+                <th className='hidden sm:table-cell'>{row.object_types.objectTypes.length}</th>
+                <th className='hidden sm:table-cell'>{row.query_depth}</th>
+                <th>{row.timestamp}</th>
               </tr>
             );
           })}
