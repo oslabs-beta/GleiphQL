@@ -102,7 +102,7 @@ app.use((err: ErrorRequestHandler, req: Request, res: Response, next: NextFuncti
 });
 
 app.use((req: Request, res: Response) =>
-  res.status(404).send("This is not the page you're looking for...")
+  res.status(404).send('This is not the page you\'re looking for...')
 );
 
 app.listen(PORT, () =>

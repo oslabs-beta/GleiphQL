@@ -80,14 +80,14 @@ const endpointMonitor = function (config: any) {
         const response = await fetch('http://localhost:3000/api/data', {
           method: 'POST',
           headers: {
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
           }, 
           body: JSON.stringify(endpointData)
         });
         const data = await response.json();
       }
       catch {
-        console.log("Unable to save to database")
+        console.log('Unable to save to database')
       }
   
       if(res.locals.complexityScore >= res.locals.complexityLimit) {

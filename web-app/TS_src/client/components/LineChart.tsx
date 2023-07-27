@@ -74,7 +74,7 @@ const LineChart: React.FC<{}> = () => {
           <button className='p-2 border border-blue-950 hover:bg-blue-900' onClick={()=>setChartTime('Last 100 Requests')}>Last 100 Requests</button>
         </p>
       )}
-      <p className='chart-container'>
+      <p id='chartContainer'>
         <Line options={options} data={chartData} />
       </p>
       <p className='flex flex-row bg-blue-950 text-white rounded-md overflow-hidden w-80 m-4'>

@@ -1,13 +1,19 @@
-import React from 'react';
+import React, { useState } from 'react';
 import useStore from '../store';
 import axios from 'axios';
+import Modal from './Modal';
+import * as Scroll from 'react-scroll';
+import { Link, Element } from 'react-scroll';
 
 // interface NavbarProps {
 //   handleLoginToggle: () => void;
 // }
 
 const Navbar: React.FC<{}> = () => {
-  const { loginToggle, currUser, setAnchorEl, anchorEl, isLoggedIn, setIsLoggedIn, setCurrUser, setCurrEndPoint } = useStore();
+  const { loginToggle, currUser, setAnchorEl, anchorEl, isLoggedIn, setIsLoggedIn, setCurrUser, setCurrEndPoint, modalOpen, setModalOpen, showLogin } = useStore();
+
+  // hook to keep tract of active nav section
+  const [activeSection, setActiveSection] = useState<string>('intro');
 
   const logOut = async() => {
     setCurrUser(0, '');
@@ -25,21 +31,82 @@ const Navbar: React.FC<{}> = () => {
   };
 
   return (
-    <nav className='flex p-2 h-14 justify-between bg-blue-950 text-white w-full'>
-      <a href='/'><h1 className='text-2xl text-white'>
-        GleiphQL
-      </h1></a>
-      <ul>
-        <li className='hidden md:inline md:p-12'>
-          {currUser.email === "" ? "" : `WELCOME, ${currUser.email.split("@")[0].toUpperCase()}`}
-        </li>
+    <header className='flex items-center sticky top-0 p-2 h-14 bg-blue-950 text-white w-screen z-50'>
+      
+        <h1 className='text-2xl text-white ml-5'>
+          <Link 
+            to='intro' 
+            spy={true} 
+            smooth={true} 
+            offset={-100} 
+            duration={500} 
+            activeClass='nav-active' 
+            onClick={() => setActiveSection('intro')}
+          >
+            GleiphQL
+          </Link>
+        </h1>
+
+      <div id='nav-btns' className='flex flex-row flex-grow justify-end'>
+        <ul className='flex space-x-4 mr-1'>
+          <li>
+            <Link 
+              to='features' 
+              spy={true} 
+              smooth={true} 
+              offset={-50} 
+              duration={500}
+              activeClass='nav-active' 
+              onClick={() => setActiveSection('features')}
+            >
+              Features
+            </Link>
+          </li>
+          <li>
+            <Link 
+              to='get-started' 
+              spy={true} 
+              smooth={true} 
+              offset={30} 
+              duration={500}
+              activeClass='nav-active' 
+              onClick={() => setActiveSection('get-started')}
+            >
+              Get Started
+            </Link>
+          </li>
+          <li>
+            <Link 
+              to='meet-team' 
+              spy={true} 
+              smooth={true} 
+              offset={30} 
+              duration={500}
+              activeClass='nav-active' 
+              onClick={() => setActiveSection('meet-team')}
+            >
+              Our Team
+            </Link>
+          </li>
+        </ul>
+      </div>
+
+      <nav className='mr-5'>
+        <span className='hidden md:inline md:p-5'>
+            {currUser.email === "" ? "" : `WELCOME, ${currUser.email.split("@")[0].toUpperCase()}`}
+        </span>
         { isLoggedIn? 
-          <li className='inline'><button className='rounded-md border bg-white text-blue-950 hover:bg-slate-200 font-semibold p-2 w-20' onClick={logOut}>LOGOUT</button></li> : 
-          <li className='inline'><button className='rounded-md border bg-white text-blue-950 hover:bg-slate-200 font-semibold p-2 w-20' onClick={()=>loginToggle(true)}>LOGIN</button></li>
+          <button className='rounded-md border bg-white text-blue-950 hover:bg-slate-200 font-semibold p-2 w-20' onClick={logOut}>LOGOUT</button> : 
+          <button className='rounded-md border bg-white text-blue-950 hover:bg-slate-200 font-semibold p-2 w-20' onClick={()=> {
+            setModalOpen(true)
+            loginToggle(true)
+          }}>LOGIN</button>
         }
-      </ul>
-    </nav>
+        <Modal  open={modalOpen} onClose={() => setModalOpen(false)} />
+      </nav>
+    </header>
   )
 };
+
 
 export default Navbar;
