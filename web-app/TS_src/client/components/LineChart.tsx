@@ -4,6 +4,7 @@ import configChartData from '../helper-functions/dashboard-helpers';
 import useStore from '../store';
 import "chart.js/auto";
 
+
 const LineChart: React.FC<{}> = () => {
   const { 
     endpointRequests, 
