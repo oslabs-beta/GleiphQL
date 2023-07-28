@@ -64,19 +64,7 @@ const Register: React.FC<{}> = () => {
 
 
   return (
-    <div className='
-      relative
-      border-4
-      border-neutral-800
-      bg-stone-100
-      w-[450px]
-      h-[520px]
-      max-w-[450px]
-      mx-auto
-      p-8
-      px-8
-      rounded-lg
-      '>
+    <div className='relative border-4 border-neutral-800 bg-stone-100 w-[450px] h-[520px] max-w-[450px] mx-auto p-8 px-8 rounded-lg'>
         <div className='absolute top-0 right-0 m-4' onClick={handleClose}>
           <FiX />
         </div>
@@ -84,57 +72,35 @@ const Register: React.FC<{}> = () => {
         <form className='w-full flex flex-col justify-center' onSubmit={handleSubmit}>
           
           <h2 className='text-sky-900 font-bold text-center'>Almost there!</h2>
-          <p className='text-center'>Create an account to enjoy our complexity tool</p>
+          <p className='text-center'>Create an account to enjoy Gleiph QL</p>
           
           <div className='flex flex-col test-gray-200 py-2'>
             <label className='inputLabel'>Email</label>
-            <input className='
-            peer
-            rounded-lg 
-            bg-slate-200 
-            mx-4 
-            p-2 
-            focus:bg-neutral-200 
-            focus:outline-2 
-            focus:outline-sky-600 
-            hover:border-2
-          hover:border-sky-600
-            '
-            placeholder='Enter Your Email'
-            type='text'
-            value={userEmail.toString()}
-            onChange={(e) => setUserEmail(e.target.value)}
-          />
-            
+            <input className='peer rounded-lg bg-slate-200 mx-4 p-2 focus:bg-neutral-200 focus:outline-2 focus:outline-sky-600'
+              placeholder='Enter Your Email'
+              type='text'
+              value={userEmail.toString()}
+              onChange={(e) => setUserEmail(e.target.value)}
+            />
           </div>
 
           <div className='flex flex-col test-gray-200 py-2'>
             <label className='inputLabel'>Password</label>
-            <input className='
-            rounded-lg 
-            bg-slate-200 
-            mx-4 
-            p-2 
-            focus:bg-neutral-200 
-            focus:outline-2 
-            focus:outline-sky-600 
-            hover:border-solid 
-            hover:border-2 
-          hover:border-sky-600'
-            placeholder='Enter Your Password'
-            type='password'
-            value={userPassword.toString()}
-            onChange={(e) => setUserPassword(e.target.value)}
+            <input className='rounded-lg bg-slate-200 mx-4 p-2 focus:bg-neutral-200 focus:outline-2 focus:outline-sky-600'
+              placeholder='Enter Your Password'
+              type='password'
+              value={userPassword.toString()}
+              onChange={(e) => setUserPassword(e.target.value)}
             />
           </div>
 
           <div className='flex flex-col test-gray-200 py-2 group'>
             <label className='inputLabel'>Confirm Password</label>
-            <input className='rounded-lg bg-slate-200 mx-4 p-2 focus:bg-neutral-200 focus:outline-2 focus:outline-sky-600 hover:border-solid hover:border-2 hover:border-sky-600'
-            placeholder='Confirm Password'
-            type='password'
-            value={confirmPassword.toString()}
-            onChange={(e) => setConfirmPassword(e.target.value)}
+            <input className='rounded-lg bg-slate-200 mx-4 p-2 focus:bg-neutral-200 focus:outline-2 focus:outline-sky-600'
+              placeholder='Confirm Password'
+              type='password'
+              value={confirmPassword.toString()}
+              onChange={(e) => setConfirmPassword(e.target.value)}
             />
           </div>
 

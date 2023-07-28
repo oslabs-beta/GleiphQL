@@ -34,7 +34,7 @@
 
 html {
   scroll-behavior: smooth;
- }
+}
 
 
  /* Main styles */
@@ -75,27 +75,6 @@ h3 {
   font-size: 45px;
   line-height: 1.5;
 }
-/* 
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  border-color: black;
-  cursor: pointer;
-} */
-
-/* button:hover {
-  border-color: #646cff;
-}
-
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-} */
-
 
 /*  ~~ Start of component: Login  ~~  */
 .LoginContainer {
@@ -207,10 +186,26 @@ button:focus-visible {
 
 /*    ~~ End of component: yyoon's ~~   */
 
-/*  ~~ Start of component: Dashboard  ~~   */
+/*  ~~ Start of component: Navbar  ~~   */
+/* Transparent border for the active Link element */
+.nav-active {
+  position: relative;
+  border-bottom: 2px solid transparent;
+}
 
+/* Active bar using ::after pseudo-element */
+.nav-active::after {
+  content: '';
+  position: absolute;
+  height: 2px;
+  background-color: #ffffff;
+  margin-top: 4px;
+  bottom: -2px; /* control the position of the active bar */
+  left: 0;
+  width: 100%;
+}
 
-/*    ~~ End of component: Dashboard   ~~   */
+/*    ~~ End of component: Navbar   ~~   */
 
 
 
