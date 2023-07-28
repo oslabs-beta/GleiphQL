@@ -46,7 +46,7 @@ const FeaturesSection: React.FC<{}> = () => {
     <>
       <Element name='features'>
         <section id='features'>
-          <div className='featuresSection-bg h-screen flex flex-col justify-center items-center px-5 py-10'>
+          <div className='featuresSection-bg min-h-screen flex flex-col justify-center items-center px-5 py-10'>
             <h2 className='text-5xl font-extrabold'>Features</h2>
           <div>
 
