@@ -17,7 +17,7 @@ const InstructionSection: React.FC<{}> = () => {
   return (
     <>
       <Element name='get-started'>
-        <section id='get-started' className='h-screen p-8 text-center flex flex-col justify-evenly items-center md:flex-row'>
+        <section id='get-started' className='min-h-screen p-8 text-center flex flex-col justify-evenly items-center md:flex-row'>
           <div className='md:w-1/2'>
             <h2 className='text-2xl font-extrabold p-2'>Get Started Easily</h2>
             <p>
