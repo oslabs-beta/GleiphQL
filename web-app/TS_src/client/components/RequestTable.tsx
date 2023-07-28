@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 import useStore from '../store';
+import streamWS from '../helper-functions/websocket';
 
 
 interface Data {
@@ -16,15 +17,10 @@ interface Data {
 }
 
 function RequestTable () {
-  const [ tableData, setTableData ] = useState<Array<Data>>([]);
-  const { currEndPoint } = useStore();
-  
+  const { endpointRequests, currEndPoint, setEndpointRequests } = useStore();
+
   useEffect(() => {
-    axios.get(`/api/data/${currEndPoint.id}`)
-    .then(response => {
-      setTableData(response.data);
-    })
-    .catch((err: any) => console.log(err.message));   
+    streamWS(currEndPoint, setEndpointRequests);
   }, [currEndPoint]);
 
   return (
@@ -40,7 +36,7 @@ function RequestTable () {
           </tr>
         </thead>
         <tbody>
-          {tableData && tableData.map((row, index) => {
+          {endpointRequests && endpointRequests.map((row: Data, index: number) => {
             const color = index % 2 > 0? 'bg-white' : 'bg-slate-50';
             return (
               <tr key={uuidv4()} className={`h-24 ${color}`}>

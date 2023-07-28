@@ -10,8 +10,7 @@ import {
 
 const queryEndPoints = async (userId: number): Promise<any> => {
   const response = await axios.get(`/api/endpoint/${userId}`);
-  //@ts-ignore
-  return response.data;
+  return response;
 }
 
 const Sidebar: React.FC<{}> = () => {
@@ -25,7 +24,8 @@ const Sidebar: React.FC<{}> = () => {
     addedURL, 
     addedDescription,
     menuCollapsed,
-    setMenuCollapsed
+    setMenuCollapsed,
+    connection,
   } = useStore();
 
   const [open, setOpen] = useState(false)
@@ -64,7 +64,8 @@ const Sidebar: React.FC<{}> = () => {
     const fetchData = async () => {
       // fix any
       try {
-        const queryArr: any[] = await queryEndPoints(currUser.userId);
+        const response = await queryEndPoints(currUser.userId);
+        const queryArr = response.data;
         if(queryArr.length) {
           setEndpointArray(queryArr);
           setCurrEndPoint(queryArr[0].endpoint_id, queryArr[0].url);

@@ -29,7 +29,7 @@ wssDataController.on('connection', function connection(ws, req) {
   console.log('websocket connection established on port 8080');
   const endpointId: number = Number(req.url?.substring(1));
   const sqlCommand: string = `
-  SELECT * FROM requests WHERE endpoint_id = $1 ORDER BY to_timestamp(timestamp, 'Dy Mon DD YYYY HH24:MI:SS') DESC;
+  SELECT TOP 30 * FROM requests WHERE endpoint_id = $1 ORDER BY to_timestamp(timestamp, 'Dy Mon DD YYYY HH24:MI:SS') DESC;
   `;
   const values: number[] = [ endpointId ];
 

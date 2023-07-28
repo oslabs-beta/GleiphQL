@@ -9,7 +9,7 @@ import checkSession from '../helper-functions/checkSession';
 import Sidebar from '../components/Sidebar';
 
 const Dashboard: React.FC<{}> = () => {
-  const { currEndPoint, isLoggedIn, setIsLoggedIn, setCurrUser, loginToggle, setModalOpen } = useStore();
+  const { currEndPoint, isLoggedIn, setIsLoggedIn, setCurrUser, loginToggle, setModalOpen, setConnection } = useStore();
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {

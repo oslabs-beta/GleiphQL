@@ -3,35 +3,25 @@ import { Line } from 'react-chartjs-2';
 import configChartData from '../helper-functions/dashboard-helpers';
 import useStore from '../store';
 import "chart.js/auto";
+import streamWS from '../helper-functions/websocket';
+
+
 
 const LineChart: React.FC<{}> = () => {
   const { 
     endpointRequests, 
-    setEndpointRequests, 
     chartTimeInterval, 
     setChartTime, 
     chartDataType, 
     setChartDataType,
-    currEndPoint
+    currEndPoint,
+    setEndpointRequests
   } = useStore();
 
   useEffect(() => {
-    const fetchWS = new WebSocket(`ws://localhost:8080/${currEndPoint.id}`)
-
-    fetchWS.onmessage = function(event) {
-      const data = JSON.parse(event.data);
-      setEndpointRequests(data);
-    }
-
-    fetchWS.onerror = function(err) {
-      console.error('websocket connection failed:', err);
-    };
-
-    return () => {
-      console.log('closing current connection', currEndPoint.id);
-      fetchWS.close()
-    }
+    streamWS(currEndPoint, setEndpointRequests);
   }, [currEndPoint]);
+
 
   const dataTypeChange = (dataType: string) => {
     setChartDataType(dataType)

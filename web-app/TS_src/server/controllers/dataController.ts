@@ -56,7 +56,7 @@ const dataController = {
     VALUES ($1, $2, $3, $4, $5, $6, $7)
     RETURNING *;
     `;
-    const values = [ endpointId, ip, timestamp, {objectTypes: objectTypes}, queryString, complexityScore, depth ];
+    const values = [ endpointId, ip, timestamp, {objectTypes: objectTypes}, queryString, complexityScore.complexityScore, depth ];
     try {
       const result = await db.query(sqlCommand, values);
       res.locals.addedRequest = result.rows[0];
@@ -72,7 +72,7 @@ const dataController = {
   receiveData: async (req: Request, res: Response, next: NextFunction) => {
     const endpointId: number = Number(req.params.endpointId);
     const sqlCommand: string = `
-    SELECT * FROM requests WHERE endpoint_id = $1 ORDER BY to_timestamp(timestamp, 'Dy Mon DD YYYY HH24:MI:SS') DESC;
+    SELECT TOP 30 * FROM requests WHERE endpoint_id = $1 ORDER BY to_timestamp(timestamp, 'Dy Mon DD YYYY HH24:MI:SS') DESC;
     `;
     const values: number[] = [ endpointId ];
     try {
