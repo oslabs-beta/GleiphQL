@@ -5,7 +5,11 @@ import passport from 'passport';
 import session from 'express-session';
 import configurePassport from './passport';
 import cookieParser from 'cookie-parser';
-import { pool } from './models/dbModel';
+import db, { pool } from './models/dbModel';
+
+import WebSocket from "ws";
+import { WebSocketServer } from 'ws';
+
 
 import express, {
   Express,
