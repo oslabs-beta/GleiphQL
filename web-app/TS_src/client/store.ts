@@ -61,7 +61,7 @@ interface StoreState {
   menuCollapsed: boolean;
   setMenuCollapsed: (status: boolean) => void;
 
-  connection: (() => void) | null;
+  connection:  (() => void) | null;
   setConnection: (c: () => void) => void; 
 }
 
@@ -173,7 +173,7 @@ const useStore = create<StoreState>((set) => ({
   })),
 
   connection: null,
-  setConnection: (c: () => void) => set((state) => ({
+  setConnection: (c: () => any) => set((state) => ({
     connection: c
   }))
 }));

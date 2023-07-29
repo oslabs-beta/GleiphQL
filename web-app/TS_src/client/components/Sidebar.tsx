@@ -25,7 +25,7 @@ const Sidebar: React.FC<{}> = () => {
     addedDescription,
     menuCollapsed,
     setMenuCollapsed,
-    connection,
+    setEndpointRequests,
   } = useStore();
 
   const [open, setOpen] = useState(false)
@@ -34,6 +34,7 @@ const Sidebar: React.FC<{}> = () => {
 
   const toggleEndPoint = (id: number, url: string) => {
     setCurrEndPoint(id, url);
+    setEndpointRequests([]);
   }
 
   const handleEndpointChange = (input: any) => {

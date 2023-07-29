@@ -25,24 +25,28 @@ const wssDataController = new WebSocketServer({port: 8080});
 
 console.log(`in wssData controller, should be listening on 8080, ${wssDataController}`)
 
-wssDataController.on('connection', function connection(ws, req) {
-  console.log('websocket connection established on port 8080');
+wssDataController.on('connection', async function connection(ws, req) {
+  console.log('a websocket connection established on port 8080');
   const endpointId: number = Number(req.url?.substring(1));
-  const sqlCommand: string = `
-  SELECT TOP 30 * FROM requests WHERE endpoint_id = $1 ORDER BY to_timestamp(timestamp, 'Dy Mon DD YYYY HH24:MI:SS') DESC;
-  `;
-  const values: number[] = [ endpointId ];
 
-  const interval = setInterval(async () => {
-    console.log('interval called within websocket')
-    console.log('websocket interval id:', endpointId)
+
+  const query = async () => {
+    // console.log('interval called within websocket')
+    console.log('connection id:', endpointId);
+    const sqlCommand: string = `
+    SELECT * FROM requests WHERE endpoint_id = $1 ORDER BY to_timestamp(timestamp, 'Dy Mon DD YYYY HH24:MI:SS') DESC;
+    `;
+    const values: number[] = [ endpointId ];
     try {
       const result: any = await db.query(sqlCommand, values);
       ws.send(JSON.stringify(result.rows));
     } catch (err: any) {
       console.log('the database call within the websocket function has borked itself somehow')
     }
-  }, 3000)
+  }
+
+  query();
+  const interval = setInterval(query, 3000)
 
   ws.on('close', () => {
     console.log('clearing current interval:', interval)

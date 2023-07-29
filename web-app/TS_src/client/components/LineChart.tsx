@@ -18,10 +18,6 @@ const LineChart: React.FC<{}> = () => {
     setEndpointRequests
   } = useStore();
 
-  useEffect(() => {
-    streamWS(currEndPoint, setEndpointRequests);
-  }, [currEndPoint]);
-
 
   const dataTypeChange = (dataType: string) => {
     setChartDataType(dataType)

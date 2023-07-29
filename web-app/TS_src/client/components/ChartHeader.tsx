@@ -21,7 +21,7 @@ const ChartHeader: React.FC<{}> = () => {
     return Math.round(averageScore * 100) / 100
   }
 
- return (
+  return (
     <header className='rounded-lg border border-slate-100 border-1 overflow-hidden w-3/4 m-4 grid grid-cols-1 place-content-center font-light'>
       <table>
         <thead>

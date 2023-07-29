@@ -19,10 +19,6 @@ interface Data {
 function RequestTable () {
   const { endpointRequests, currEndPoint, setEndpointRequests } = useStore();
 
-  useEffect(() => {
-    streamWS(currEndPoint, setEndpointRequests);
-  }, [currEndPoint]);
-
   return (
     <section className='my-12 rounded-lg border border-slate-100 border-1 overflow-hidden w-3/4 m-2'>
       <table className='m-0 table-auto'>
@@ -36,7 +32,7 @@ function RequestTable () {
           </tr>
         </thead>
         <tbody>
-          {endpointRequests && endpointRequests.map((row: Data, index: number) => {
+          {endpointRequests && endpointRequests.slice(0, 30).map((row: Data, index: number) => {
             const color = index % 2 > 0? 'bg-white' : 'bg-slate-50';
             return (
               <tr key={uuidv4()} className={`h-24 ${color}`}>
