@@ -5,8 +5,7 @@ import passport from 'passport';
 import session from 'express-session';
 import configurePassport from './passport';
 import cookieParser from 'cookie-parser';
-import { WebSocketServer } from 'ws';
-import db from './models/dbModel';
+import { pool } from './models/dbModel';
 
 import express, {
   Express,
@@ -67,9 +66,13 @@ app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 
 app.use(session({
+  store: new (require('connect-pg-simple')(session))({
+    pool: pool,
+    tableName: 'sessions'
+  }),
   secret: process.env.SESSION_SECRET || 'secret',
   resave: false ,
-  saveUninitialized: true ,
+  saveUninitialized: false,
   cookie: { maxAge: 60 * 60 * 1000 }
 }))
 
