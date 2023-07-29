@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import useStore from '../store';
 import axios from 'axios';
 import Modal from './Modal';
-import * as Scroll from 'react-scroll';
 import { Link, Element } from 'react-scroll';
 
 // interface NavbarProps {
@@ -47,49 +46,55 @@ const Navbar: React.FC<{}> = () => {
           </Link>
         </h1>
 
-      <div id='nav-btns' className='flex flex-row flex-grow justify-end'>
+      <section id='nav-btns' className='flex flex-row flex-grow justify-end'>
         <ul className='flex space-x-4 mr-1'>
-          <li>
-            <Link 
-              to='features' 
-              spy={true} 
-              smooth={true} 
-              offset={-50} 
-              duration={500}
-              activeClass='nav-active' 
-              onClick={() => setActiveSection('features')}
-            >
-              Features
-            </Link>
-          </li>
-          <li>
-            <Link 
-              to='get-started' 
-              spy={true} 
-              smooth={true} 
-              offset={30} 
-              duration={500}
-              activeClass='nav-active' 
-              onClick={() => setActiveSection('get-started')}
-            >
-              Get Started
-            </Link>
-          </li>
-          <li>
-            <Link 
-              to='meet-team' 
-              spy={true} 
-              smooth={true} 
-              offset={30} 
-              duration={500}
-              activeClass='nav-active' 
-              onClick={() => setActiveSection('meet-team')}
-            >
-              Our Team
-            </Link>
-          </li>
+          {/* Conditionally render the list items only if the user is not logged in */}
+          {!isLoggedIn && (
+            <>
+              <li>
+                <Link 
+                  to='features' 
+                  spy={true} 
+                  smooth={true} 
+                  offset={-50} 
+                  duration={500}
+                  activeClass='nav-active' 
+                  onClick={() => setActiveSection('features')}
+                >
+                  Features
+                </Link>
+              </li>
+              <li>
+                <Link 
+                  to='get-started' 
+                  spy={true} 
+                  smooth={true} 
+                  offset={30} 
+                  duration={500}
+                  activeClass='nav-active' 
+                  onClick={() => setActiveSection('get-started')}
+                >
+                  Get Started
+                </Link>
+              </li>
+              <li>
+                <Link 
+                  to='meet-team' 
+                  spy={true} 
+                  smooth={true} 
+                  offset={30} 
+                  duration={500}
+                  activeClass='nav-active' 
+                  onClick={() => setActiveSection('meet-team')}
+                >
+                  Our Team
+                </Link>
+              </li>
+            </>
+          )}
+          
         </ul>
-      </div>
+      </section>
 
       <nav className='mr-5'>
         <span className='hidden md:inline md:p-5'>
