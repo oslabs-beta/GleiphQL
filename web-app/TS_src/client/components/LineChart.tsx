@@ -3,28 +3,22 @@ import { Line } from 'react-chartjs-2';
 import configChartData from '../helper-functions/dashboard-helpers';
 import useStore from '../store';
 import "chart.js/auto";
+import streamWS from '../helper-functions/websocket';
+
+
 
 
 const LineChart: React.FC<{}> = () => {
   const { 
     endpointRequests, 
-    setEndpointRequests, 
     chartTimeInterval, 
     setChartTime, 
     chartDataType, 
     setChartDataType,
-    currEndPoint
+    currEndPoint,
+    setEndpointRequests
   } = useStore();
 
-  useEffect(() => {
-    console.log('Current endpoint: ', currEndPoint)
-    fetch(`/api/data/${currEndPoint.id}`)
-    .then((res)=>res.json())
-    .then((data)=>{
-      console.log("endpoint requests: ", data)
-      setEndpointRequests(data)
-    })
-  }, [currEndPoint]);
 
   const dataTypeChange = (dataType: string) => {
     setChartDataType(dataType)

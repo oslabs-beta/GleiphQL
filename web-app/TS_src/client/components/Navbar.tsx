@@ -9,7 +9,7 @@ import { Link, Element } from 'react-scroll';
 // }
 
 const Navbar: React.FC<{}> = () => {
-  const { loginToggle, currUser, setAnchorEl, anchorEl, isLoggedIn, setIsLoggedIn, setCurrUser, setCurrEndPoint, modalOpen, setModalOpen, showLogin } = useStore();
+  const { loginToggle, currUser, setAnchorEl, anchorEl, isLoggedIn, setIsLoggedIn, setCurrUser, setCurrEndPoint, modalOpen, setModalOpen, showLogin, connection } = useStore();
 
   // hook to keep tract of active nav section
   const [activeSection, setActiveSection] = useState<string>('intro');
@@ -18,6 +18,7 @@ const Navbar: React.FC<{}> = () => {
     setCurrUser(0, '');
     setCurrEndPoint(0, '');
     setIsLoggedIn(false);
+    if(connection) connection();
     await axios.post('/api/account/logout');
   }
 
