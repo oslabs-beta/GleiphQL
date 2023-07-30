@@ -1,33 +1,53 @@
-import { Fragment, useRef, useState } from 'react'
+import { ReactElement, Fragment } from 'react'
 import { Dialog, Transition } from '@headlessui/react'
 import useStore from '../store';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import { 
+  Endpoint, 
+  UserInfo, 
+  SetStatusFx,
+  Connection,
+  SetNumAndStrFx
+} from '../types';
 
 interface ConfirmationModalProps {
   open: boolean;
-  setOpen: (value: boolean) => void;
+  setOpen: SetStatusFx;
   cancelButtonRef: React.RefObject<HTMLButtonElement>;
-  setEndpointArray: (value: any) => void;
+  setEndpointArray: (endpoints: Endpoint[]) => void;
 }
 
-export default function ConfirmationModal({open, setOpen, cancelButtonRef, setEndpointArray}: ConfirmationModalProps) {
-  
-  const {  
-    currEndPoint,
-    currUser, 
-  } = useStore();
+interface PartialStore {
+  currEndpoint: Endpoint;
+  setCurrEndpoint: SetNumAndStrFx;
+  currUser: UserInfo;
+  connection: Connection;
+}
 
-  const deleteEndpoint = async () => {
-    const response = await fetch(`/api/endpoint/${currEndPoint.id}`, {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({userId: currUser.userId})
-    });
-    const newQueryArr = await response.json();
-    setEndpointArray(newQueryArr);
-    setOpen(false);
+export default function ConfirmationModal({open, setOpen, cancelButtonRef, setEndpointArray}: ConfirmationModalProps) : ReactElement {
+  
+  const { currEndpoint, setCurrEndpoint, currUser, connection } : PartialStore = useStore();
+
+  // delete selected endpoint in database for user and update sidebar with the remaining endpoints
+  const deleteEndpoint = async () : Promise<void> => {
+    // end WebSocket connection for the current endpoint
+    if(connection) connection();
+    try {
+      const response: Response = await fetch(`/api/endpoint/${currEndpoint.endpoint_id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({userId: currUser.userId})
+      });
+      const newQueryArr: Endpoint[] = await response.json();
+      setEndpointArray(newQueryArr);
+      if(!newQueryArr.length) setCurrEndpoint(0, '');
+      setOpen(false);
+    } catch(err: unknown) {
+      if(err instanceof Error) console.log(err.message);
+      else console.log('unknown error');
+    }
   }
 
   return (
@@ -63,7 +83,7 @@ export default function ConfirmationModal({open, setOpen, cancelButtonRef, setEn
                       <WarningAmberIcon className='h-6 w-6 text-red-600' aria-hidden='true' />
                     </div>
                     <div className='mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left'>
-                      <Dialog.Title as='h3' className='text-base font-semibold leading-6 text-gray-900'>
+                      <Dialog.Title as='h2' className='text-base font-semibold leading-6 text-gray-900'>
                         Delete endpoint
                       </Dialog.Title>
                       <div className='mt-2'>
@@ -86,7 +106,7 @@ export default function ConfirmationModal({open, setOpen, cancelButtonRef, setEn
                   <button
                     type='button'
                     className='mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto'
-                    onClick={() => setOpen(false)}
+                    onClick={() : void => setOpen(false)}
                     ref={cancelButtonRef}
                   >
                     Cancel

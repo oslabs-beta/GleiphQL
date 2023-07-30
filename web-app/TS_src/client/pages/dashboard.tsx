@@ -1,4 +1,4 @@
-import React, { useState , useEffect } from 'react';
+import { FC, ReactElement, useState , useEffect } from 'react';
 import useStore from '../store';
 import Navbar from '../components/Navbar';
 import RequestTable from '../components/RequestTable';
@@ -8,22 +8,54 @@ import { Navigate } from 'react-router-dom';
 import checkSession from '../helper-functions/checkSession';
 import Sidebar from '../components/Sidebar';
 import streamWS from '../helper-functions/websocket';
-import axios from 'axios';
+import {
+  SetStatusFx,
+  SetNumAndStrFx,
+  SetConnection,
+  SetEndpointRequests,
+  Endpoint,
+  Connection
+} from '../types';
 
-const Dashboard: React.FC<{}> = () => {
-  const { currEndPoint, isLoggedIn, setIsLoggedIn, setCurrUser, loginToggle, setModalOpen, connection, setConnection, setEndpointRequests } = useStore();
-  const [isLoading, setIsLoading] = useState(true);
+interface PartialStore {
+  currEndpoint: Endpoint;
+  isLoggedIn: boolean;
+  setIsLoggedIn: SetStatusFx;
+  setCurrUser: SetNumAndStrFx;
+  loginToggle: SetStatusFx;
+  setModalOpen: SetStatusFx;
+  connection: Connection;
+  setConnection: SetConnection;
+  setEndpointRequests: SetEndpointRequests;
+}
+const Dashboard: FC = () : ReactElement => {
+  const { 
+    currEndpoint, 
+    isLoggedIn, 
+    setIsLoggedIn, 
+    setCurrUser, 
+    loginToggle, 
+    setModalOpen, 
+    connection, 
+    setConnection, 
+    setEndpointRequests 
+  } : PartialStore = useStore();
 
-  useEffect(() => {
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  // checking if there is an active session
+  useEffect(() : void => {
     checkSession(setIsLoggedIn, setCurrUser, setIsLoading);
     loginToggle(false);
     setModalOpen(false);
   }, []);
 
-  useEffect(() => {
+  // establish connection with WebSocket Server for current endpoint
+  useEffect(() : void => {
+    // end previous connection if any
     if(connection !== null) connection();
-    if(currEndPoint.id) setConnection(streamWS(currEndPoint, setEndpointRequests));
-  }, [currEndPoint]);
+    if(currEndpoint.endpoint_id) setConnection(streamWS(currEndpoint, setEndpointRequests));
+  }, [currEndpoint]);
 
   if(isLoading) return <div>Loading...</div>;
   return (
@@ -33,13 +65,18 @@ const Dashboard: React.FC<{}> = () => {
       <div>
         <Sidebar />
       </div>
-      { currEndPoint.id?
       <main className='flex flex-col place-items-center w-screen sm:pl-12'>
-        <ChartHeader />
-        <LineChart />
-        <RequestTable />
-      </main> : null
+      { currEndpoint.endpoint_id? 
+        <>
+          <ChartHeader />
+          <LineChart />
+          <RequestTable />
+        </> : 
+        <div className='mt-8 flex flex-col place-items-center w-screen sm:pl-12'>
+          Add an endpoint
+        </div>
       }
+      </main> 
     </div>
   );
 }

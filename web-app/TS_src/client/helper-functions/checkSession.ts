@@ -1,16 +1,21 @@
 import axios from 'axios';
+import { UserResponse, SetStatusFx, SetNumAndStrFx } from '../types';
 
-export default async function checkSession(
-  setIsLoggedIn: (isLoggedIn: boolean) => void, 
-  setCurrUser: (currUserId: number, currUserEmail: string) => void,
-  setIsLoading: (isLoading: boolean) => void) {
+// check if there is an active session
+export default async function checkSession (
+  setIsLoggedIn: SetStatusFx,
+  setCurrUser: SetNumAndStrFx,
+  setIsLoading: SetStatusFx) : Promise<void> {
   try {
-    const response = await axios.get('/api/session');
-    setIsLoggedIn(response.data.signedIn);
-    setCurrUser(response.data.userId || 0, response.data.userEmail || '');
-    setIsLoading(false);
-  } catch (err: any) {
-    console.log(err.message);
+    const response: UserResponse = (await axios.get('/api/session')).data;
+    if(response.signedIn) {
+      setIsLoggedIn(response.signedIn);
+      setCurrUser(response.userId || 0, response.userEmail || '');
+      setIsLoading(false);
+    }
+  } catch (err: unknown) {
+    if(err instanceof Error) console.log(err.message);
+    else console.log('unknown error');
     setIsLoggedIn(false);
     setCurrUser(0, '');
     setIsLoading(false);

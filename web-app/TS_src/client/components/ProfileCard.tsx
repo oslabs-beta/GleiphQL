@@ -1,4 +1,4 @@
-import React from 'react';
+import { FC, ReactElement } from 'react';
 import { FaGithub, FaLinkedin } from 'react-icons/fa';
 
 
@@ -10,13 +10,13 @@ interface ProfileCardProps {
   memberBio: string;
 }
 
-const ProfileCard: React.FC<ProfileCardProps> = ({
+const ProfileCard: FC<ProfileCardProps> = ({
   imageSrc,
   memberName,
   githubLink,
   linkedinLink,
   memberBio
-}) => {
+}) : ReactElement => {
   return (
     <div className='profile-card'>
       <figure className='image'>
@@ -30,10 +30,9 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
           {memberBio}
         </figcaption>
       </figure>
-      {/* Member Name */}
+
       <h3 className='text-center mt-1 mb-1 text-xl font-bold'>{memberName}</h3>
 
-      {/* Icons */}
       <p className='flex justify-center mb-2'>
         <a href={githubLink} target='_blank' rel='noopener noreferrer' className='mr-4'>
           <FaGithub size={48} />

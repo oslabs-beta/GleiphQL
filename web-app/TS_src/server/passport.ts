@@ -8,7 +8,7 @@ const authUser = async (email: string, password: string, done: Function) => {
     const authenticatedUser = result.signedIn? { signedIn: result.signedIn, userId: result.userId, userEmail: email } : false;
     return done(null, authenticatedUser);
   } catch(err) {
-    done(err);
+    return done(err);
   }
 };
 

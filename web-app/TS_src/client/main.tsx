@@ -12,8 +12,6 @@ import Dashboard from './pages/dashboard';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-// this placeholder for only router we need in whole application
-{/* Ask Yeong Jiecheng readability on react router setups */}
 const router = createBrowserRouter([
   {
     path: '/',
@@ -34,5 +32,5 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
       autoClose={3000} 
       hideProgressBar={true} 
     />
-  </React.StrictMode>,
+  </React.StrictMode>
 )

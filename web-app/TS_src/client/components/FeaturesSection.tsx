@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { ReactElement, FC, useState } from 'react';
 import loginGif from '../public/images/loginGif.gif';
 import teamModalsGif from '../public/images/teamModalsGif.gif';
 import dashboardGif from '../public/images/dashboardGif.gif';
@@ -7,10 +7,14 @@ import gleiphGif from '../public/images/gleiphQLGif.gif';
 import { FcLandscape, FcMoneyTransfer, FcPaid, FcBullish } from 'react-icons/fc';
 import { Element } from 'react-scroll';
 
+interface Feature {
+  gifUrl: string;
+  isVisible: boolean;
+}
 
-const FeaturesSection: React.FC<{}> = () => {
+const FeaturesSection: FC = () : ReactElement => {
   // declare an array for all the gifs to display in this component:
-  const featuresData = [
+  const featuresData : Feature[] = [
     // the first element in the array is the default gif that will render
     { gifUrl: gleiphGif, isVisible: true },
     // the subsequent elements represent the GIFs for each feature
@@ -20,20 +24,20 @@ const FeaturesSection: React.FC<{}> = () => {
     { gifUrl: testingGif, isVisible: false }
   ];
 
-  // hook to manage features:
-  const [features, setFeatures] = useState(featuresData);
+
+  const [features, setFeatures] = useState<Feature[]>(featuresData);
   
   // function to toggle the visibility of a features's GIF:
-  const toggleGifVisibility = (index: number) => {
-    setFeatures((prevFeatures) => {
-      const updatedFeatures = [...prevFeatures];
+  const toggleGifVisibility = (index: number) : void => {
+    setFeatures((prevFeatures: Feature[]) => {
+      const updatedFeatures: Feature[] = [...prevFeatures];
 
-      // hide the default GIF by setting isVisible to false at index 0
+      // hide the default GIF 
       if (index !== 0) {
         updatedFeatures[0].isVisible = false;
       }
 
-      updatedFeatures.forEach((feature, i) => {
+      updatedFeatures.forEach((feature: Feature, i: number) => {
         // set the current feature's visibility based on the provided index
         feature.isVisible = i === index;
       });
@@ -57,23 +61,20 @@ const FeaturesSection: React.FC<{}> = () => {
                   <section className='w-10/12 md:w-6/12 lg:w-12/12 px-12 md:px-4 mr-auto ml-auto'>
                     <div className='flex min-w-0 bg-white-200 w-full mb-6 shadow-lg rounded-lg'>
                       {/* Use conditional rendering to show the proper GIF*/}
-                      
                       {features[0].isVisible ? (
-                        // if the isVisible property of the default GIF (index 0) is true, render it
                         <img alt='...' src={features[0].gifUrl} className='w-full h-auto align-middle rounded-lg' />
                       ) : (
-                        // if condition is false, render the other GIFs
                         <>
-                          {features.map((feature, index) => {
+                          {features.slice(1).map((feature, index) => {
                             // use the map function to iterate over all features (including the default value)
-                            if (index !== 0 && feature.isVisible) {
+                            if (feature.isVisible) {
                               // checkif the current feature is not the default one (index 0) and its isVisible property is true
                               // if both conditions are true, render the GIF for this feature
                               return (
                                 <img key={index} alt='...' src={feature.gifUrl} className='w-full h-auto align-middle rounded-lg' />
                               );
                             }
-                            // if none conditions are met, return nothing
+                            // if no conditions are met
                             return null;
                           })}
                         </>
@@ -94,7 +95,7 @@ const FeaturesSection: React.FC<{}> = () => {
                             <div className='p-3 text-center inline-flex items-center justify-center w-12 h-12 mb-5 shadow-lg rounded-full bg-white'>
                               <FcLandscape size={48}/>
                             </div>
-                            <h6 className='text-xl mb-1 font-semibold'>Complexity Analysis</h6>
+                            <h3 className='text-xl mb-1 font-semibold'>Complexity Analysis</h3>
                             <p className='mb-4'>
                             Dynamically calculate the resource requirements of each query, providing you with invaluable insights into its impact on your system.
                             </p>
@@ -112,9 +113,9 @@ const FeaturesSection: React.FC<{}> = () => {
                             <div className='p-3 text-center inline-flex items-center justify-center w-12 h-12 mb-5 shadow-lg rounded-full bg-white'>
                               <FcMoneyTransfer size={48}/>
                             </div>
-                            <h6 className='text-xl mb-1 font-semibold'>
+                            <h3 className='text-xl mb-1 font-semibold'>
                               Rate Limiting
-                            </h6>
+                            </h3>
                             <p className='mb-4'>
                               Control and regulate incoming requests, ensuring fair and efficient resource allocation while safeguarding against abusive usage patterns.
                             </p>
@@ -136,7 +137,7 @@ const FeaturesSection: React.FC<{}> = () => {
                             <div className='p-3 text-center inline-flex items-center justify-center w-12 h-12 mb-5 shadow-lg rounded-full bg-white'>
                               <FcPaid size={48}/>
                             </div>
-                            <h6 className='text-xl mb-1 font-semibold'>Monitoring</h6>
+                            <h3 className='text-xl mb-1 font-semibold'>Monitoring</h3>
                             <p className='mb-4'>
                               Gain deep visibility into your API's usage patterns, track response times, monitor error rates, and optimize your system's performance.
                             </p>
@@ -154,7 +155,7 @@ const FeaturesSection: React.FC<{}> = () => {
                             <div className='p-3 text-center inline-flex items-center justify-center w-12 h-12 mb-5 shadow-lg rounded-full bg-white'>
                               <FcBullish size={48}/>
                             </div>
-                            <h6 className='text-xl mb-1 font-semibold'>Documentation</h6>
+                            <h3 className='text-xl mb-1 font-semibold'>Documentation</h3>
                             <p className='mb-4'>
                               Built by developers for developers. Our comprehensive documentation makes it easy
                               to work with GleiphQL!

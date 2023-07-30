@@ -1,17 +1,17 @@
-import React, { useState } from 'react';
+import { FC, ReactElement} from 'react';
 import ProfileCard from './ProfileCard';
 import { Element } from 'react-scroll';
 
-const MeetTheTeam: React.FC<{}> = () => {
+const MeetTheTeam: FC = () : ReactElement => {
 
   return (
     <>
       <Element name='meet-team'>
         <section id='meet-team' className='meetTheTeam-bg min-h-screen flex flex-col justify-center items-center p-10'>
-          <h2 className='border-black border-b-2 border-x-0 border-t-0'>Meet the Team</h2>
+          <h2 className='text-5xl font-extrabold border-black border-b-2 border-x-0 border-t-0'>Meet the Team</h2>
           <div className='flex flex-wrap justify-center'>
             <ProfileCard
-              imageSrc = '/images/JDong.png'
+              imageSrc = '../public/images/JDong.png'
               memberName = 'Jiecheng Dong'
               githubLink = 'https://github.com/jiedong111'
               linkedinLink = 'https://www.linkedin.com/in/jiecheng-dong-1522b8248/'
@@ -19,7 +19,7 @@ const MeetTheTeam: React.FC<{}> = () => {
             />
 
             <ProfileCard
-              imageSrc='/images/ALarkin.jpg'
+              imageSrc='../public/images/ALarkin.jpg'
               memberName='Andrew Larkin'
               githubLink='https://github.com/larkinaj'
               linkedinLink='https://www.linkedin.com/in/andrew-larkin-71395940/'
@@ -27,7 +27,7 @@ const MeetTheTeam: React.FC<{}> = () => {
             />
 
             <ProfileCard
-              imageSrc='/images/KPhan.jpg'
+              imageSrc='../public/images/KPhan.jpg'
               memberName='Kevin Phan'
               githubLink='https://github.com/KP824'
               linkedinLink='https://www.linkedin.com/in/kevinphan760/'
@@ -37,7 +37,7 @@ const MeetTheTeam: React.FC<{}> = () => {
             />
 
             <ProfileCard
-              imageSrc='/images/YYoon.jpg'
+              imageSrc='../public/images/YYoon.jpg'
               memberName='Yeong Sil Yoon'
               githubLink='https://github.com/wendyys96'
               linkedinLink=''
