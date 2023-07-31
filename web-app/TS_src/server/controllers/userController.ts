@@ -83,6 +83,43 @@ const userController = {
     }
     return next();
   },
+  deleteUser: async (req: Request, res: Response, next: NextFunction) => {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return next({
+        log: 'Error in userController.deleteUser: not given all necessary inputs',
+        status: 400,
+        message: { error: 'Did not receive necessary inputs to delete a user' },
+      });
+    }
+
+    try {
+      // Verify the user's credentials before proceeding with deletion
+      const user = await verifyUser(email, password);
+      if (!user.signedIn) {
+        return ({
+          log: 'Error in userController.deleteUser: invalid credentials',
+          status: 401, 
+          message: { error: 'Invalid credentials. Cannot delete user.' },
+        });
+      }
+      // Perform the account deletion in database
+      const sqlCommand: string = `
+        DELETE FROM users WHERE email = $1;  
+      `;
+      const values: string[] = [email];
+      await db.query(sqlCommand, values);
+
+      res.locals.deleted = true;
+    } catch (err: any) {
+      return next({
+        log: 'Error in userController.deleteUser: could not delete user',
+        status: 500,
+        message: { error: err.message },
+      });
+    }
+    return next();
+  } 
 };
 
 export default userController;

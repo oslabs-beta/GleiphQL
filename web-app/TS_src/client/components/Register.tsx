@@ -76,7 +76,9 @@ const Register: React.FC<{}> = () => {
           
           <div className='flex flex-col test-gray-200 py-2'>
             <label className='inputLabel'>Email</label>
-            <input className='peer rounded-lg bg-slate-200 mx-4 p-2 focus:bg-neutral-200 focus:outline-2 focus:outline-sky-600'
+            <input
+              data-cy='register-username'
+              className='peer rounded-lg bg-slate-200 mx-4 p-2 focus:bg-neutral-200 focus:outline-2 focus:outline-sky-600'
               placeholder='Enter Your Email'
               type='text'
               value={userEmail.toString()}
@@ -86,7 +88,9 @@ const Register: React.FC<{}> = () => {
 
           <div className='flex flex-col test-gray-200 py-2'>
             <label className='inputLabel'>Password</label>
-            <input className='rounded-lg bg-slate-200 mx-4 p-2 focus:bg-neutral-200 focus:outline-2 focus:outline-sky-600'
+            <input
+              data-cy='register-password'
+              className='rounded-lg bg-slate-200 mx-4 p-2 focus:bg-neutral-200 focus:outline-2 focus:outline-sky-600'
               placeholder='Enter Your Password'
               type='password'
               value={userPassword.toString()}
@@ -96,7 +100,9 @@ const Register: React.FC<{}> = () => {
 
           <div className='flex flex-col test-gray-200 py-2 group'>
             <label className='inputLabel'>Confirm Password</label>
-            <input className='rounded-lg bg-slate-200 mx-4 p-2 focus:bg-neutral-200 focus:outline-2 focus:outline-sky-600'
+            <input
+              data-cy='register-confirm-password'
+              className='rounded-lg bg-slate-200 mx-4 p-2 focus:bg-neutral-200 focus:outline-2 focus:outline-sky-600'
               placeholder='Confirm Password'
               type='password'
               value={confirmPassword.toString()}
@@ -104,12 +110,15 @@ const Register: React.FC<{}> = () => {
             />
           </div>
 
-          <button className='w-10/12 my-3 mx-5 py-2 bg-sky-900 shadow-lg shadow-sky-500/50 hover:shadow-sky-500/40 hover:bg-sky-600 text-white font-semibold rounded-lg border border-transparent border-black cursor-pointer'>COMPLETE REGISTER</button>
+          <button
+            data-cy='register-submit'
+            className='w-10/12 my-3 mx-5 py-2 bg-sky-900 shadow-lg shadow-sky-500/50 hover:shadow-sky-500/40 hover:bg-sky-600 text-white font-semibold rounded-lg border border-transparent border-black cursor-pointer'
+          >COMPLETE REGISTER</button>
 
           <p className='flex justify-center mb-4 p-2'>
-            Already have an account?
+            Already have an account?{' '}
             <button className='text-blue-500 ml-2' onClick={toggleLogin}>
-              Login here!
+            Login here!
             </button>    
           </p>
         </form>

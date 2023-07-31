@@ -74,7 +74,9 @@ const Login: React.FC<{}> = () => {
         <h2 className='text-sky-900 font-bold text-center'>SIGN IN</h2>
         <div className='flex flex-col test-gray-200  py-2'>
           <label className='inputLabel'>Username</label>
-          <input className='rounded-lg bg-slate-200 mx-4 p-2 focus:bg-neutral-200 focus:outline-2 focus:outline-sky-600'
+          <input
+            data-cy='login-username'
+            className='rounded-lg bg-slate-200 mx-4 p-2 focus:bg-neutral-200 focus:outline-2 focus:outline-sky-600'
             placeholder='Enter Your Username'
             type='text' 
             value={userEmail.toString()}
@@ -83,17 +85,24 @@ const Login: React.FC<{}> = () => {
         </div>
         <div className='flex flex-col test-gray-200 justify-evenly py-2'>
           <label className='inputLabel'>Password</label>
-          <input className='rounded-lg bg-slate-200 mx-4 p-2 focus:bg-neutral-200 focus:outline-2 focus:outline-sky-600'
+          <input
+            data-cy='login-password'
+            className='rounded-lg bg-slate-200 mx-4 p-2 focus:bg-neutral-200 focus:outline-2 focus:outline-sky-600'
             placeholder='Enter Your Password'
             type='password'
             value={userPassword.toString()}
             onChange={(e) => setUserPassword(e.target.value)} 
           />
         </div>
-        <button className='w-10/12 my-3 mx-5 py-2 bg-sky-900 shadow-lg shadow-sky-500/50 hover:shadow-sky-500/40 hover:bg-sky-600 text-white font-semibold rounded-lg border border-transparent border-black cursor-pointer'>CONTINUE</button>
+        <button
+          data-cy='login-submit'
+          className='w-10/12 my-3 mx-5 py-2 bg-sky-900 shadow-lg shadow-sky-500/50 hover:shadow-sky-500/40 hover:bg-sky-600 text-white font-semibold rounded-lg border border-transparent border-black cursor-pointer'
+        >CONTINUE</button>
         <p className='flex justify-center mb-4 p-2'>
           Not a member?{' '}
-          <button className='text-blue-500 ml-2' onClick={toggleRegister}>
+          <button
+            data-cy='toggle-register'
+            className='text-blue-500 ml-2' onClick={toggleRegister}>
             Sign up here!
           </button>
         </p>
