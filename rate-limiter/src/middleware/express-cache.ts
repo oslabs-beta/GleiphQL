@@ -56,6 +56,22 @@ const redis = async function (config: any, complexityScore: number, req: Request
   }
   parsedRequest = JSON.parse(currRequest)
   if (complexityScore >= parsedRequest.tokens) {
+    if (res.locals.gleiphqlData) {
+      res.locals.gleiphqlData.complexityScore = complexityScore
+      try {
+        const response = await fetch('http://localhost:3000/api/data', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          }, 
+          body: JSON.stringify(res.locals.gleiphqlData)
+        });
+        const data = await response.json();
+      }
+      catch {
+        console.log('Unable to save to database')
+      }
+    }
     const error = {
       errors: [
         {
@@ -82,6 +98,22 @@ const redis = async function (config: any, complexityScore: number, req: Request
   console.log('Tokens before subtraction: ', parsedRequest.tokens)
   parsedRequest.tokens -= complexityScore;
   console.log('Tokens after subtraction: ', parsedRequest.tokens)
+  if (res.locals.gleiphqlData) {
+    res.locals.gleiphqlData.complexityScore = complexityScore
+    try {
+      const response = await fetch('http://localhost:3000/api/data', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }, 
+        body: JSON.stringify(res.locals.gleiphqlData)
+      });
+      const data = await response.json();
+    }
+    catch {
+      console.log('Unable to save to database')
+    }
+  }
   await client.set(requestIP, JSON.stringify(parsedRequest))
   
   // disconnect from the redis client
@@ -117,9 +149,9 @@ const nonRedis = function (config: any, complexityScore: number, tokenBucket: To
   return tokenBucket
 }
 
-const cache = {
+const expressCache = {
   redis,
   nonRedis
 }
 
-export default cache
+export default expressCache

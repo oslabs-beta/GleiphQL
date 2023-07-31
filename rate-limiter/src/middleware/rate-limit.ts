@@ -26,101 +26,14 @@ import {
   GraphQLUnionType, 
   GraphQLNamedOutputType, 
   getDirectiveValues, 
-  isCompositeType 
+  isCompositeType,
+  GraphQLError
 } from 'graphql';
 import graphql from 'graphql';
-import cache from './cache.js';
+import fetch from 'node-fetch';
+import expressCache from './express-cache.js';
+import apolloCache from './apollo-cache.js';
 
-const testSDL = `
-directive @cost(value: Int) on FIELD_DEFINITION | ARGUMENT_DEFINITION
-directive @paginationLimit(value: Int) on FIELD_DEFINITION
-
-type Author {
-  id: ID! @cost(value: 1)
-  name: String @cost(value: 200) => typeInfo vs resolveInfo
-  books: [Book] @cost(value: 3)
-}
-
-type Book {
-  id: ID! @cost(value: 1)
-  title: String @cost(value: 2)
-  author: Author @cost(value: 3)
-}
-
-type Query {
-  authors: [Author] @cost(value: 2)
-  books(limit: Int @cost(value:10)): [Book] @cost(value: 2) @paginationLimit(value: 5)
-}
-      `
-
-      const testSDLPolymorphism = `
-      directive @cost(value: Int) on FIELD_DEFINITION | ARGUMENT_DEFINITION
-directive @paginationLimit(value: Int) on FIELD_DEFINITION
-
-type Author {
-  id: ID! @cost(value: 1)
-  name: String @cost(value: 200)
-  books: [Book] @cost(value: 3)
-}
-
-type Book {
-  id: ID! @cost(value: 1)
-  title: String @cost(value: 2)
-  author: Author @cost(value: 3)
-}
-
-union SearchResult = Author | Book
-
-type Query {
-  authors: [Author] @cost(value: 2)
-  books(limit: Int @cost(value:10)): [Book] @cost(value: 2) @paginationLimit(value: 5)
-  search(term: String): [SearchResult] @paginationLimit(value: 10)
-}
-`
-
-const testQueryPolymorphism = `
-query SearchQuery {
-  search(term: "example") {
-    ... on Author {
-      id
-      name
-    }
-    ... on Book {
-      id
-      title
-    }
-  }
-}
-`
-
-      const testQuery = `
-      query {
-        books(limit: 4) {
-          id
-          title
-          author {
-            name
-          }
-        }
-      }
-      `
-
-      const testQueryFrag = `
-      query {
-        ...BookFields
-      }
-
-      fragment BookFields on Query {
-        books(limit: 4) {
-          id
-          title
-          author {
-            name
-          }
-        }
-      }
-
-      `
 
 //To-dos
 
@@ -243,7 +156,6 @@ class ComplexityAnalysis {
           const fieldTypeUnion = getNamedType(fieldType);
           const isList = isListType(fieldType) || (isNonNullType(fieldType) && isListType(fieldType.ofType));
           const isUnion = fieldTypeUnion instanceof GraphQLUnionType;
-          console.log('isUnion?', isUnion);
           const argumentDirectiveCost = this.parseArgumentDirectives(fieldDef);
           const directiveAdjustedBaseVal = this.parseDirectives(fieldDef, baseVal)
 
@@ -302,7 +214,6 @@ class ComplexityAnalysis {
               return;
 
             } else {
-              console.log(`This is the parentStack of the current GraphQL field type ${node.name.value}`, this.parentTypeStack);
 
               this.resolveParentTypeStack(isList, argumentCosts, baseVal);
             }
@@ -540,12 +451,11 @@ class ComplexityAnalysis {
 
 //end of class
 
-const rateLimiter = function (config: any) {
-
+const expressRateLimiter = function (config: any) {
+  
   let tokenBucket: TokenBucket = {};
   return async (req: Request, res: Response, next: NextFunction) => {
     if(req.body.query) {
-
       // const builtSchema = buildSchema(testSDLPolymorphism)
       // const schemaType = new TypeInfo(builtSchema);
       // const parsedAst = parse(testQueryPolymorphism);
@@ -573,32 +483,47 @@ const rateLimiter = function (config: any) {
 
       // if the user wants to use redis, a redis client will be created and used as a cache
       if (config.redis === true) {
-        await cache.redis(config, complexityScore.complexityScore, req, res, next)
+        await expressCache.redis(config, complexityScore.complexityScore, req, res, next)
       }
       // if the user does not want to use redis, the cache will be saved in the "tokenBucket" object
       else if (config.redis !== true) {
-        tokenBucket = cache.nonRedis(config, complexityScore.complexityScore, tokenBucket, req)
-        const error = {
-          errors: [
-            {
-              message: `Token limit exceeded`,
-              extensions: {
-                cost: {
-                  requestedQueryCost: complexityScore.complexityScore,
-                  currentTokensAvailable:  Number(tokenBucket[requestIP].tokens.toFixed(2)),
-                  maximumTokensAvailable: config.complexityLimit,
-                },
-                responseDetails: {
-                  status: 429,
-                  statusText: 'Too Many Requests',
+        tokenBucket = expressCache.nonRedis(config, complexityScore.complexityScore, tokenBucket, req)
+        if (complexityScore.complexityScore >= tokenBucket[requestIP].tokens) {
+          if (res.locals.gleiphqlData) {
+            res.locals.gleiphqlData.complexityScore = complexityScore
+            console.log('Monitor data NEW: ', res.locals.gleiphqlData)
+            try {
+              const response = await fetch('http://localhost:3000/api/data', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                }, 
+                body: JSON.stringify(res.locals.gleiphqlData)
+              });
+              const data = await response.json();
+            }
+            catch {
+              console.log('Unable to save to database')
+            }
+          }
+          const error = {
+            errors: [
+              {
+                message: `Token limit exceeded`,
+                extensions: {
+                  cost: {
+                    requestedQueryCost: complexityScore.complexityScore,
+                    currentTokensAvailable:  Number(tokenBucket[requestIP].tokens.toFixed(2)),
+                    maximumTokensAvailable: config.complexityLimit,
+                  },
+                  responseDetails: {
+                    status: 429,
+                    statusText: 'Too Many Requests',
+                  }
                 }
               }
-            }
-          ]
-        }
-
-        if (complexityScore.complexityScore >= tokenBucket[requestIP].tokens) {
-
+            ]
+          }
           console.log('Complexity of this query is too high');
           res.status(429).json(error);
           return next(Error);
@@ -606,10 +531,90 @@ const rateLimiter = function (config: any) {
         console.log('Tokens before subtraction: ', tokenBucket[requestIP].tokens)
         tokenBucket[requestIP].tokens -= complexityScore.complexityScore;
         console.log('Tokens after subtraction: ', tokenBucket[requestIP].tokens)
+        if (res.locals.gleiphqlData) {
+          res.locals.gleiphqlData.complexityScore = complexityScore
+          console.log('Monitor data NEW: ', res.locals.gleiphqlData)
+          try {
+            const response = await fetch('http://localhost:3000/api/data', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              }, 
+              body: JSON.stringify(res.locals.gleiphqlData)
+            });
+            const data = await response.json();
+          }
+          catch {
+            console.log('Unable to save to database')
+          }
+        }
       }
-
     };
   return next();
   }
 }
-export default rateLimiter;
+
+const apolloRateLimiter = (config: any) => {
+
+  let tokenBucket: TokenBucket = {};
+  return {
+    async requestDidStart(requestContext: any) {
+      return {
+        async didResolveOperation(requestContext: any) {
+          if (requestContext.operationName !== 'IntrospectionQuery') {
+            console.log('Validation started!');
+            const builtSchema = requestContext.schema
+            const parsedAst = requestContext.document
+            config.requestContext = requestContext
+            let requestIP = requestContext.contextValue.clientIP
+          
+            // fixes format of ip addresses
+            if (requestIP.includes('::ffff:')) {
+              requestIP = requestIP.replace('::ffff:', '');
+            }
+
+            const analysis = new ComplexityAnalysis(builtSchema, parsedAst, config);
+          
+            const complexityScore = analysis.traverseAST();
+            requestContext.contextValue.complexityScore = complexityScore
+            console.log('This is the type complexity', complexityScore.typeComplexity);
+            console.log('This is the resolve complexity', complexityScore.resolveComplexity);
+            console.log('This is the complexity score:', complexityScore.complexityScore);
+          
+            //returns error if complexity heuristic reads complexity score over limit
+            // res.locals.complexityScore = complexityScore;
+            // res.locals.complexityLimit = config.complexityLimit;
+          
+            // if the user wants to use redis, a redis client will be created and used as a cache
+            if (config.redis === true) {
+              // await apolloCache.redis(config, complexityScore.complexityScore, res, next)
+            }
+            // if the user does not want to use redis, the cache will be saved in the "tokenBucket" object
+            else if (config.redis !== true) {
+              tokenBucket = apolloCache.nonRedis(config, complexityScore.complexityScore, tokenBucket)
+          
+              if (complexityScore.complexityScore >= tokenBucket[requestIP].tokens) {
+                console.log('Complexity of this query is too high');
+                throw new GraphQLError('Complexity of this query is too high', {
+                  extensions: {
+                    cost: {
+                      requestedQueryCost: complexityScore.complexityScore,
+                      currentTokensAvailable:  Number(tokenBucket[requestIP].tokens.toFixed(2)),
+                      maximumTokensAvailable: config.complexityLimit,
+                    }
+                  },
+                });
+          
+              }
+              console.log('Tokens before subtraction: ', tokenBucket[requestIP].tokens)
+              tokenBucket[requestIP].tokens -= complexityScore.complexityScore;
+              console.log('Tokens after subtraction: ', tokenBucket[requestIP].tokens)
+            }
+          }
+        },
+      };
+    },
+  }
+};
+
+export { expressRateLimiter, apolloRateLimiter }
