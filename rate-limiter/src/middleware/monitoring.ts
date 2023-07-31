@@ -75,26 +75,7 @@ const expressEndpointMonitor = function (config: any) {
       if (query.loc) {
         endpointData.queryString = query.loc.source.body
       }
-      // console.log('Monitor data OLD: ', endpointData);
       res.locals.gleiphqlData = endpointData
-      // try {
-      //   const response = await fetch('http://localhost:3000/api/data', {
-      //     method: 'POST',
-      //     headers: {
-      //       'Content-Type': 'application/json',
-      //     }, 
-      //     body: JSON.stringify(endpointData)
-      //   });
-      //   const data = await response.json();
-      // }
-      // catch {
-      //   console.log('Unable to save to database')
-      // }
-  
-      // if(res.locals.complexityScore >= res.locals.complexityLimit) {
-      //   console.log(`Complexity score of ${res.locals.complexityScore} exceeded ${res.locals.complexityLimit}`);
-      //   return next(Error);
-      // }
     }
     next()
   }
