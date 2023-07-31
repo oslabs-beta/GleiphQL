@@ -1,4 +1,4 @@
-import { EndpointRequest } from '../types';
+import { EndpointRequest } from '../../types';
 
 type ValType = 'complexity_score' | 'query_depth'; // for use with getValue helper function
 interface DataSet {
@@ -185,13 +185,13 @@ const configChartData = (interval: string, dataType: string, endpointRequests: E
   }
 
   // configure chart.js dataset if 'Depth' button is selected
-  else {
+  else  {
     // Create array which will be used for the x-axis for the dashboard chart
     for (let i: number = 0; i < endpointRequests.length; i++) {
       if ((interval === 'Last 10 Requests' && timeInterval.length < 10) ||
         (interval === 'Last 30 Requests' && timeInterval.length < 30) ||
         (interval === 'Last 100 Requests' && timeInterval.length < 100)
-      ) createXAxisPoint(endpointRequests[i]);
+      ) timeInterval.push(createXAxisPoint(endpointRequests[i]));
     }
 
     // Use the timeInterval array to map the data points for the chart 

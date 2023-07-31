@@ -5,7 +5,7 @@ import GitHubButton from 'react-github-btn'
 
 const Footer: FC = () : ReactElement => {
   return (
-    <footer className='h-1/2 screen flex flex-col items-center justify-end'>
+    <footer className='h-1/2 screen flex flex-col items-center justify-end p-4'>
       <h2 className='underline-offset-8 text-5xl font-extrabold'>Want to Contribute? </h2>
       <p className='text-xl'>Join us and help developers secure and monitor their GraphQL endpoints.</p>
       <p className='flex flex-row justify-center desktop:p-10 desktop:m-10  my-5'>

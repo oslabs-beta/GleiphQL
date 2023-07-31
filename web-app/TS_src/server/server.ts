@@ -5,10 +5,8 @@ import passport from 'passport';
 import session from 'express-session';
 import configurePassport from './passport';
 import cookieParser from 'cookie-parser';
-import db, { pool } from './models/dbModel';
-
-import WebSocket from "ws";
-import { WebSocketServer } from 'ws';
+import { pool } from './models/dbModel';
+import { ErrorObject } from '../types';
 
 
 import express, {
@@ -17,49 +15,14 @@ import express, {
   Request,
   Response,
   ErrorRequestHandler,
-} from "express";
+} from 'express';
 
+// routers
 import accountRouter from  './routers/accountRouter';
 import dataRouter from './routers/dataRouter';
 import endpointRouter from './routers/endpointRouter';
 import sessionRouter from './routers/sessionRouter';
 
-const wssDataController = new WebSocketServer({port: 8080});
-
-console.log(`in wssData controller, should be listening on 8080, ${wssDataController}`)
-
-wssDataController.on('connection', async function connection(ws, req) {
-  console.log('a websocket connection established on port 8080');
-  const endpointId: number = Number(req.url?.substring(1));
-
-
-  const query = async () => {
-    // console.log('interval called within websocket')
-    console.log('connection id:', endpointId);
-    const sqlCommand: string = `
-    SELECT * FROM requests WHERE endpoint_id = $1 ORDER BY to_timestamp(timestamp, 'Dy Mon DD YYYY HH24:MI:SS') DESC;
-    `;
-    const values: number[] = [ endpointId ];
-    try {
-      const result: any = await db.query(sqlCommand, values);
-      ws.send(JSON.stringify(result.rows));
-    } catch (err: any) {
-      console.log('the database call within the websocket function has borked itself somehow')
-    }
-  }
-
-  query();
-  const interval = setInterval(query, 3000)
-
-  ws.on('close', () => {
-    console.log('clearing current interval:', interval)
-    clearInterval(interval);
-  })
-
-  ws.on('error', (err: any) => {
-    console.error('Websocket error in dataController:', err);
-  })
-})
 
 const PORT = 3500;
 
@@ -77,7 +40,7 @@ app.use(session({
   secret: process.env.SESSION_SECRET || 'secret',
   resave: false ,
   saveUninitialized: false,
-  cookie: { maxAge: 60 * 60 * 1000 }
+  cookie: { maxAge: 24 * 60 * 60 * 1000 }
 }))
 
 app.use(cookieParser(process.env.SESSION_SECRET));
@@ -87,12 +50,12 @@ configurePassport(passport);
 app.use(passport.initialize());
 app.use(passport.session());
 
-passport.serializeUser((userObj: any, done: any) => {
-  done(null, userObj)
+passport.serializeUser((userObj: any, done: Function) : void => {
+  done(null, userObj);
 });
-passport.deserializeUser((userObj: any, done: any) => {
+passport.deserializeUser((userObj: any, done: Function) : void => {
   //@ts-ignore
-  done (null, userObj)
+  done(null, userObj);
 })
 
 app.use('/api/account', accountRouter);
@@ -101,21 +64,21 @@ app.use('/api/endpoint', endpointRouter);
 app.use('/api/session', sessionRouter);
 
 
-app.use((err: ErrorRequestHandler, req: Request, res: Response, next: NextFunction) => {
-  const defaultErr = {
+app.use((err: ErrorRequestHandler, req: Request, res: Response, next: NextFunction) : void  => {
+  const defaultErr: ErrorObject = {
     log: 'Express error handler caught unknown middleware error',
     status: 500,
     message: { err: 'An error occurred.' },
   };
-  const errorObj = Object.assign({}, defaultErr, err);
+  const errorObj: ErrorObject = Object.assign({}, defaultErr, err);
   console.log(errorObj.log);
-  return res.status(errorObj.status).json(errorObj.message);
+  res.status(errorObj.status).json(errorObj.message);
 });
 
-app.use((req: Request, res: Response) =>
+app.use((req: Request, res: Response) : void => {
   res.status(404).send('This is not the page you\'re looking for...')
-);
+});
 
-app.listen(PORT, () =>
+app.listen(PORT, () : void =>
   console.log(`Currently listening on port: ${PORT}`)
 );

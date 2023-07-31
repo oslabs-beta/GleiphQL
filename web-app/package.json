@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "scripts": {
-    "dev": "concurrently \"cd ./TS_src/client && vite\" \"cd ./TS_src/server && nodemon server.ts\" \"npm run watch:css\"",
+    "dev": "concurrently \"cd ./TS_src/client && vite\" \"cd ./TS_src/server && nodemon server.ts\"  \"cd ./TS_src/server && nodemon websocketServer.ts\" \"npm run watch:css\"",
     "build": "concurrently \"tsc\" \"cd ./TS_src/client && vite build\"",
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
@@ -12,7 +12,7 @@
   "dependencies": {
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
-    "@headlessui/react": "^1.7.15",
+    "@headlessui/react": "^1.7.16",
     "@heroicons/react": "^2.0.18",
     "@mui/icons-material": "^5.11.16",
     "@mui/material": "^5.13.6",

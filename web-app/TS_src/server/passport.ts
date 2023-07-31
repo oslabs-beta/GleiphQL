@@ -12,7 +12,7 @@ const authUser = async (email: string, password: string, done: Function) => {
   }
 };
 
-export default function (passport : any) {
+export default function (passport: any) {
   passport.use('local', new Strategy({
     usernameField: 'email'
   }, authUser));

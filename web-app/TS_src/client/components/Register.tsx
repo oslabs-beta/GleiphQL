@@ -7,7 +7,7 @@ import notify from '../helper-functions/notify';
 import {
   SetStatusFx,
   UserResponse
-} from '../types';
+} from '../../types';
 
 interface PartialStore {
   loginToggle: SetStatusFx;
@@ -94,7 +94,7 @@ const Register: FC = () : ReactElement => {
             placeholder='Enter Your Email'
             type='text'
             value={userEmail.toString()}
-            onChange={(e: FormEvent<HTMLInputElement>) => setUserEmail(e.currentTarget.value)}
+            onChange={(e: FormEvent<HTMLInputElement>) : void => setUserEmail(e.currentTarget.value)}
           />
         </p>
         <p className='flex flex-col test-gray-200 py-2'>
@@ -103,7 +103,7 @@ const Register: FC = () : ReactElement => {
             placeholder='Enter Your Password'
             type='password'
             value={userPassword.toString()}
-            onChange={(e: FormEvent<HTMLInputElement>) => setUserPassword(e.currentTarget.value)}
+            onChange={(e: FormEvent<HTMLInputElement>) : void => setUserPassword(e.currentTarget.value)}
           />
         </p>
         <p className='flex flex-col test-gray-200 py-2 group'>
@@ -112,7 +112,7 @@ const Register: FC = () : ReactElement => {
             placeholder='Confirm Password'
             type='password'
             value={confirmPassword.toString()}
-            onChange={(e: FormEvent<HTMLInputElement>) => setConfirmPassword(e.currentTarget.value)}
+            onChange={(e: FormEvent<HTMLInputElement>) : void => setConfirmPassword(e.currentTarget.value)}
           />
         </p>
         <button className='w-10/12 my-3 mx-5 py-2 bg-sky-900 shadow-lg shadow-sky-500/50 hover:shadow-sky-500/40 hover:bg-sky-600 text-white font-semibold rounded-lg border border-transparent border-black cursor-pointer'>COMPLETE REGISTER</button>

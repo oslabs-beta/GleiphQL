@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { UserResponse, SetStatusFx, SetNumAndStrFx } from '../types';
+import { UserResponse, SetStatusFx, SetNumAndStrFx } from '../../types';
 
 // check if there is an active session
 export default async function checkSession (

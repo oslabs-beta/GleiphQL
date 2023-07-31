@@ -1,6 +1,6 @@
 import { FC, ReactElement }  from 'react';
 import useStore from '../store';
-import { EndpointRequest } from '../types';
+import { EndpointRequest } from '../../types';
 
 interface PartialStore {
   endpointRequests: EndpointRequest[];

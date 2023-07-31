@@ -2,7 +2,7 @@ import db from '../models/dbModel';
 import { Request, Response, NextFunction } from 'express';
 import * as bcrypt from 'bcryptjs';
 
-const SALT_WORK_FACTOR = 10;
+const SALT_WORK_FACTOR: number = 10;
 
 const searchUser = async (email: string) => {
   const sqlCommand: string = `

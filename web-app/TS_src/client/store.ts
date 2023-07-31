@@ -9,7 +9,7 @@ import {
   SetEndpointRequests,
   Connection,
   SetConnection,
-} from './types';
+} from '../types';
 
 interface StoreState {
   modalOpen: boolean;

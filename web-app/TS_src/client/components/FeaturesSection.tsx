@@ -29,7 +29,7 @@ const FeaturesSection: FC = () : ReactElement => {
   
   // function to toggle the visibility of a features's GIF:
   const toggleGifVisibility = (index: number) : void => {
-    setFeatures((prevFeatures: Feature[]) => {
+    setFeatures((prevFeatures: Feature[]) : Feature[] => {
       const updatedFeatures: Feature[] = [...prevFeatures];
 
       // hide the default GIF 
@@ -102,7 +102,7 @@ const FeaturesSection: FC = () : ReactElement => {
                             <button 
                               className='m-2 p-2 rounded-md bg-sky-900 shadow-lg shadow-sky-500/50 hover:shadow-sky-500/40 hover:bg-sky-600 text-white'
                               // asigning the button to toggle the GIF index at input number
-                              onClick={() => toggleGifVisibility(1)}
+                              onClick={() : void => toggleGifVisibility(1)}
                             >Let's see feature 1 in action</button>
                           </div>
                         </li>
@@ -144,7 +144,7 @@ const FeaturesSection: FC = () : ReactElement => {
                             <button 
                               className='m-2 p-2 rounded-md bg-sky-900 shadow-lg shadow-sky-500/50 hover:shadow-sky-500/40 hover:bg-sky-600 text-white'
                               // asigning the button to toggle the GIF index at input number
-                              onClick={() => toggleGifVisibility(3)}
+                              onClick={() : void => toggleGifVisibility(3)}
                             >Let's see feature 3 in action</button>
                           </div>
                         </li>
@@ -163,7 +163,7 @@ const FeaturesSection: FC = () : ReactElement => {
                             <button 
                               className='m-2 p-2 rounded-md bg-sky-900 shadow-lg shadow-sky-500/50 hover:shadow-sky-500/40 hover:bg-sky-600 text-white'
                               // asigning the button to toggle the GIF index at input number
-                              onClick={() => toggleGifVisibility(4)}
+                              onClick={() : void => toggleGifVisibility(4)}
                             >Let's see feature 4 in action</button>
                           </div>
                         </li>

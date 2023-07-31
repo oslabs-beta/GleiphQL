@@ -24,6 +24,12 @@ export interface EndpointRequest {
   query_depth: number;
 }
 
+export interface ErrorObject {
+  log: string;
+  status: number;
+  message: { err: string };
+}
+
 export type SetNumAndStrFx = (num: number, str: string) => void;
 
 export type SetStatusFx = (status: boolean) => void;

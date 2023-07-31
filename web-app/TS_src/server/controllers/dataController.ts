@@ -2,19 +2,23 @@ import db from '../models/dbModel';
 import { Request, Response, NextFunction } from 'express';
 import { verifyUser } from './userController';
 
-const findEndpointId = async (url: string, userID: string) => {
+import { Endpoint } from '../../types';
+
+// finding endpoint id given the url and user id
+const findEndpointId = async (url: string, userID: string) : Promise<number | null> => {
   const sqlCommand: string = `
-  SELECT *
-  FROM endpoints
-  JOIN users ON endpoints.owner_id = users.user_id
-  WHERE endpoints.url = $1
+    SELECT *
+    FROM endpoints
+    JOIN users ON endpoints.owner_id = users.user_id
+    WHERE endpoints.url = $1
     AND users.user_id = $2
   `;
   const values: string[] = [ url, userID ];
   try {
-    const result = await db.query(sqlCommand, values);
-    return result.rows[0].endpoint_id;
-  } catch (err: any) {
+    const result: Endpoint[] = (await db.query(sqlCommand, values)).rows;
+    return result[0].endpoint_id;
+  } catch (err: unknown) {
+    if(err instanceof Error) console.log(err.message);
     return null;
   }
 }
@@ -44,7 +48,7 @@ const dataController = {
         message: { error: 'Could not validate user credentials' }
       });
     }
-    const endpointId: string = await findEndpointId(url, userInfo.userId);
+    const endpointId: number | null = await findEndpointId(url, userInfo.userId);
     if(!endpointId) return next({
       log: 'Error in dataController.addData: could not find the endpoint in the database',
       status: 400,

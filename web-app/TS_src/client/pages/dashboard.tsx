@@ -15,7 +15,7 @@ import {
   SetEndpointRequests,
   Endpoint,
   Connection
-} from '../types';
+} from '../../types';
 
 interface PartialStore {
   currEndpoint: Endpoint;

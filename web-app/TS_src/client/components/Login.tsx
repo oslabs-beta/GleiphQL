@@ -9,7 +9,7 @@ import {
   SetStatusFx,
   SetNumAndStrFx,
   UserResponse
-} from '../types';
+} from '../../types';
 
 interface PartialStore {
   loginToggle: SetStatusFx;

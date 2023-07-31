@@ -1,4 +1,4 @@
-import { Endpoint, SetEndpointRequests, EndpointRequest } from "../types";
+import { Endpoint, SetEndpointRequests, EndpointRequest } from '../../types';
 
 // instantiating a connection with the Websocket Server to obtain updates on the current endpoint data
 const streamWS = (currEndPoint: Endpoint, setEndpointRequests: SetEndpointRequests) : (() => void) => {

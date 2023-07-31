@@ -8,7 +8,7 @@ import {
   initTE,
 } from 'tw-elements';
 
-import { Endpoint, SetEndpointRequests, SetNumAndStrFx, UserInfo } from '../types';
+import { Endpoint, SetEndpointRequests, SetNumAndStrFx, UserInfo } from '../../types';
 
 interface PartialStore {
   setCurrEndpoint: SetNumAndStrFx;
@@ -89,7 +89,7 @@ const Sidebar: FC = () : ReactElement => {
   return (
       <nav
         id='sidenav-8'
-        className='hidden sm:flex absolute left-0 z-[1035] h-full w-60 -translate-x-full overflow-hidden bg-white shadow-[0_4px_12px_0_rgba(0,0,0,0.07),_0_2px_4px_rgba(0,0,0,0.05)] data-[te-sidenav-hidden="false"]:translate-x-0 dark:bg-zinc-800'
+        className={menuCollapsed? 'opacity-30' : 'opacity-100' + 'left-0 z-[1035] h-full w-60 -translate-x-full overflow-hidden bg-white shadow-[0_4px_12px_0_rgba(0,0,0,0.07),_0_2px_4px_rgba(0,0,0,0.05)] data-[te-sidenav-hidden="false"]:translate-x-0 dark:bg-zinc-800'}
         data-te-sidenav-init
         data-te-sidenav-hidden='false'
         data-te-sidenav-mode='side'
@@ -269,7 +269,7 @@ const Sidebar: FC = () : ReactElement => {
               data-te-collapse-show
             >
               {
-                endpointArray?.map((endpointData, i) => {
+                endpointArray?.map((endpointData: Endpoint, i: number) : ReactElement => {
                   return (
                     <li 
                       className='relative'
