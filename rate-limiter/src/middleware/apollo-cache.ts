@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import { GraphQLError } from 'graphql';
 import { createClient } from 'redis';
 
 interface TokenBucket {
@@ -8,7 +8,7 @@ interface TokenBucket {
   };
 }
 
-const redis = async function (config: any, complexityScore: number, res: Response, next: NextFunction) {
+const redis = async function (config: any, complexityScore: number) {
   const now = Date.now();
   const refillRate = config.refillAmount / config.refillTime
   let requestIP = config.requestContext.contextValue.clientIP
@@ -33,7 +33,7 @@ const redis = async function (config: any, complexityScore: number, res: Respons
   // if the info for the current request is still not found in the cache, then we will throw an error
   if (currRequest === null) {
     await client.disconnect();
-    return next(Error);
+    throw new GraphQLError('Redis Error in apollo-cache.ts');
   }
 
   let parsedRequest = JSON.parse(currRequest)
@@ -52,32 +52,21 @@ const redis = async function (config: any, complexityScore: number, res: Respons
   currRequest = await client.get(requestIP)
   if (currRequest === null) {
     await client.disconnect();
-    return next(Error);
+    throw new GraphQLError('Redis Error in apollo-cache.ts');
   }
   parsedRequest = JSON.parse(currRequest)
   if (complexityScore >= parsedRequest.tokens) {
-    const error = {
-      errors: [
-        {
-          message: `Token limit exceeded`,
-          extensions: {
-            cost: {
-              requestedQueryCost: complexityScore,
-              currentTokensAvailable:  Number(parsedRequest.tokens.toFixed(2)),
-              maximumTokensAvailable: config.complexityLimit,
-            },
-            responseDetails: {
-              status: 429,
-              statusText: 'Too Many Requests',
-            }
-          }
-        }
-      ]
-    }
     console.log('Complexity of this query is too high');
     await client.disconnect();
-    res.status(429).json(error);
-    return next(Error);
+    throw new GraphQLError('Complexity of this query is too high', {
+      extensions: {
+        cost: {
+          requestedQueryCost: complexityScore,
+          currentTokensAvailable:  Number(parsedRequest.tokens.toFixed(2)),
+          maximumTokensAvailable: config.complexityLimit,
+        }
+      },
+    });
   }
   console.log('Tokens before subtraction: ', parsedRequest.tokens)
   parsedRequest.tokens -= complexityScore;

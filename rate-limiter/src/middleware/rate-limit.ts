@@ -571,7 +571,7 @@ const apolloRateLimiter = (config: any) => {
           
             // if the user wants to use redis, a redis client will be created and used as a cache
             if (config.redis === true) {
-              // await apolloCache.redis(config, complexityScore.complexityScore, res, next)
+              await apolloCache.redis(config, complexityScore.complexityScore)
             }
             // if the user does not want to use redis, the cache will be saved in the "tokenBucket" object
             else if (config.redis !== true) {
