@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import fetch from 'node-fetch';
 import { createClient } from 'redis';
 
 interface TokenBucket {
