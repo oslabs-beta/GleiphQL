@@ -75,7 +75,7 @@ const expressEndpointMonitor = function (config: any) {
       if (query.loc) {
         endpointData.queryString = query.loc.source.body
       }
-      console.log('Monitor data OLD: ', endpointData);
+      // console.log('Monitor data OLD: ', endpointData);
       res.locals.gleiphqlData = endpointData
       // try {
       //   const response = await fetch('http://localhost:3000/api/data', {

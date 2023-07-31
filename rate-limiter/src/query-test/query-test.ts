@@ -15,19 +15,19 @@ const app = express();
 const port = process.env.PORT || 4000
 
 //loadSchema can be any public graphql endpoint
-//const spaceXSchema = await loadSchema('https://spacex-production.up.railway.app/', { loaders: [new UrlLoader()] });
+const spaceXSchema = await loadSchema('https://spacex-production.up.railway.app/', { loaders: [new UrlLoader()] });
 const swapiSchema = await loadSchema('https://swapi-graphql.netlify.app/.netlify/functions/index', { loaders: [new UrlLoader()] });
 const countriesSchema = await loadSchema('https://countries.trevorblades.com/graphql', { loaders: [new UrlLoader()] });
 
-//const spaceXTypeInfo = new TypeInfo(spaceXSchema);
+const spaceXTypeInfo = new TypeInfo(spaceXSchema);
 const swapiTypeInfo = new TypeInfo(swapiSchema);
 const countriesTypeInfo = new TypeInfo(countriesSchema);
 
-// const spacex = createYoga({
-//     schema: spaceXSchema,
-//     graphiql: true,
-//     graphqlEndpoint: '/spacex',
-// });
+const spacex = createYoga({
+    schema: spaceXSchema,
+    graphiql: true,
+    graphqlEndpoint: '/spacex',
+});
 const swapi = createYoga({
   schema: swapiSchema,
   graphiql: true,
@@ -49,7 +49,6 @@ interface RateLimitConfig {
   paginationLimit: number,
   schema: GraphQLSchema,
   typeInfo: TypeInfo,
-  monitor?: boolean,
   refillTime: number,
   refillAmount: number,
   redis?: boolean
@@ -65,20 +64,21 @@ const monitorConfig: MonitorConfig = {
   gleiphqlPassword: 'password', // these are not in a dotenv file for example purposes only
 }
 
-// const spacexConfig: rateLimitConfig = {
-//   complexityLimit: 3000,
-//   paginationLimit: 10,
-//   schema: spaceXSchema,
-//   typeInfo: spaceXTypeInfo,
-//   monitor: true,
-// }
+const spacexConfig: RateLimitConfig = {
+  complexityLimit: 3000,
+  paginationLimit: 10,
+  schema: spaceXSchema,
+  typeInfo: spaceXTypeInfo,
+  refillTime: 300000,   // 5 minutes
+  refillAmount: 1000,
+  redis: false
+}
 
 const swapiConfig: RateLimitConfig = {
   complexityLimit: 3000,
   paginationLimit: 10,
   schema: swapiSchema,
   typeInfo: swapiTypeInfo,
-  monitor: true,
   refillTime: 300000,   // 5 minutes
   refillAmount: 1000,
   redis: false
@@ -89,7 +89,6 @@ const countriesConfig: RateLimitConfig = {
   paginationLimit: 10,
   schema: countriesSchema,
   typeInfo: countriesTypeInfo,
-  monitor: true,
   refillTime: 86400000,   // 24 hours
   refillAmount: 3000,
   redis: false
@@ -100,7 +99,6 @@ const pmConfig: RateLimitConfig = {
   paginationLimit: 10,
   schema: pmTEST.builtSchema,
   typeInfo: pmTEST.schemaType,
-  monitor: true,
   refillTime: 300000,   // 5 minutes
   refillAmount: 1000,
   redis: false
@@ -134,12 +132,10 @@ await apolloServer.start();
 //       req.socket.remoteAddress;  
 //     return { clientIP };
 //   },
-//   listen: {port: 5000}
 // });
 // console.log(`🚀 Server ready at ${url}`);
 
-// app.use('/spacex', rateLimiter(spacexConfig), endpointMonitor, spacex);
-app.use('/test', expressMiddleware(apolloServer, {
+app.use('/apollo', expressMiddleware(apolloServer, {
     context: async ({ req }) => {
       const clientIP =
         req.headers['x-forwarded-for'] || // For reverse proxies
@@ -147,6 +143,7 @@ app.use('/test', expressMiddleware(apolloServer, {
       return { clientIP };
     }
 }))
+app.use('/spacex', expressEndpointMonitor(monitorConfig), expressRateLimiter(spacexConfig), spacex);
 app.use('/starwars', expressEndpointMonitor(monitorConfig), expressRateLimiter(swapiConfig), swapi);
 app.use('/countries', expressRateLimiter(countriesConfig), expressEndpointMonitor(monitorConfig), countries);
 app.use('/pmTest', expressRateLimiter(pmConfig), expressEndpointMonitor(monitorConfig), pm);

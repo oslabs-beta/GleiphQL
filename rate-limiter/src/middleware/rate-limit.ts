@@ -451,14 +451,30 @@ class ComplexityAnalysis {
 
 //end of class
 
+// helper function to send data to web-app
+const sendData = async (endpointData: any, complexityScore: any) => {
+  endpointData.complexityScore = complexityScore
+  console.log('Monitor data NEW!: ', endpointData)
+  try {
+    const response = await fetch('http://localhost:3000/api/data', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      }, 
+      body: JSON.stringify(endpointData)
+    });
+    const data = await response.json();
+  }
+  catch {
+    console.log('Unable to save to database')
+  }
+}
+
 const expressRateLimiter = function (config: any) {
   
   let tokenBucket: TokenBucket = {};
   return async (req: Request, res: Response, next: NextFunction) => {
-    if(req.body.query) {
-      // const builtSchema = buildSchema(testSDLPolymorphism)
-      // const schemaType = new TypeInfo(builtSchema);
-      // const parsedAst = parse(testQueryPolymorphism);
+    if(req.body.query && !req.body.query.includes('IntrospectionQuery')) {
       const builtSchema = config.schema
       const parsedAst = parse(req.body.query);
 
@@ -490,21 +506,7 @@ const expressRateLimiter = function (config: any) {
         tokenBucket = expressCache.nonRedis(config, complexityScore.complexityScore, tokenBucket, req)
         if (complexityScore.complexityScore >= tokenBucket[requestIP].tokens) {
           if (res.locals.gleiphqlData) {
-            res.locals.gleiphqlData.complexityScore = complexityScore
-            console.log('Monitor data NEW: ', res.locals.gleiphqlData)
-            try {
-              const response = await fetch('http://localhost:3000/api/data', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                }, 
-                body: JSON.stringify(res.locals.gleiphqlData)
-              });
-              const data = await response.json();
-            }
-            catch {
-              console.log('Unable to save to database')
-            }
+            sendData(res.locals.gleiphqlData, complexityScore)
           }
           const error = {
             errors: [
@@ -532,21 +534,7 @@ const expressRateLimiter = function (config: any) {
         tokenBucket[requestIP].tokens -= complexityScore.complexityScore;
         console.log('Tokens after subtraction: ', tokenBucket[requestIP].tokens)
         if (res.locals.gleiphqlData) {
-          res.locals.gleiphqlData.complexityScore = complexityScore
-          console.log('Monitor data NEW: ', res.locals.gleiphqlData)
-          try {
-            const response = await fetch('http://localhost:3000/api/data', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              }, 
-              body: JSON.stringify(res.locals.gleiphqlData)
-            });
-            const data = await response.json();
-          }
-          catch {
-            console.log('Unable to save to database')
-          }
+          sendData(res.locals.gleiphqlData, complexityScore)
         }
       }
     };
@@ -580,10 +568,6 @@ const apolloRateLimiter = (config: any) => {
             console.log('This is the type complexity', complexityScore.typeComplexity);
             console.log('This is the resolve complexity', complexityScore.resolveComplexity);
             console.log('This is the complexity score:', complexityScore.complexityScore);
-          
-            //returns error if complexity heuristic reads complexity score over limit
-            // res.locals.complexityScore = complexityScore;
-            // res.locals.complexityLimit = config.complexityLimit;
           
             // if the user wants to use redis, a redis client will be created and used as a cache
             if (config.redis === true) {
