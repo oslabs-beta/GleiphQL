@@ -108,7 +108,6 @@ const apolloConfig = {
   complexityLimit: 3000,
   paginationLimit: 10,
   typeInfo: swapiTypeInfo,
-  monitor: true,
   refillTime: 300000,   // 5 minutes
   refillAmount: 1000,
   redis: false,
