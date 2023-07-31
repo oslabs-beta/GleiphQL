@@ -2,7 +2,7 @@ import * as pg from 'pg';
 
 const PG_URI = process.env.PG_URI;
 
-const pool: pg.Pool = new pg.Pool({
+export const pool: pg.Pool = new pg.Pool({
     connectionString: PG_URI,
 });
 

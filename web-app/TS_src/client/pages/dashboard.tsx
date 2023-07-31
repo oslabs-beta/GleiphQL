@@ -7,9 +7,11 @@ import ChartHeader from '../components/ChartHeader';
 import { Navigate } from 'react-router-dom';
 import checkSession from '../helper-functions/checkSession';
 import Sidebar from '../components/Sidebar';
+import streamWS from '../helper-functions/websocket';
+import axios from 'axios';
 
 const Dashboard: React.FC<{}> = () => {
-  const { currEndPoint, isLoggedIn, setIsLoggedIn, setCurrUser, loginToggle, setModalOpen } = useStore();
+  const { currEndPoint, isLoggedIn, setIsLoggedIn, setCurrUser, loginToggle, setModalOpen, connection, setConnection, setEndpointRequests } = useStore();
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -17,6 +19,11 @@ const Dashboard: React.FC<{}> = () => {
     loginToggle(false);
     setModalOpen(false);
   }, []);
+
+  useEffect(() => {
+    if(connection !== null) connection();
+    if(currEndPoint.id) setConnection(streamWS(currEndPoint, setEndpointRequests));
+  }, [currEndPoint]);
 
   if(isLoading) return <div>Loading...</div>;
   return (
@@ -26,7 +33,7 @@ const Dashboard: React.FC<{}> = () => {
       <div>
         <Sidebar />
       </div>
-      { currEndPoint?
+      { currEndPoint.id?
       <main className='flex flex-col place-items-center w-screen sm:pl-12'>
         <ChartHeader />
         <LineChart />

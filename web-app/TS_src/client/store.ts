@@ -60,10 +60,13 @@ interface StoreState {
   // used to track if dashboard sidebar is collapsed or not
   menuCollapsed: boolean;
   setMenuCollapsed: (status: boolean) => void;
+
+  connection:  (() => void) | null;
+  setConnection: (c: () => void) => void; 
 }
 
 
-interface Endpoint {
+export interface Endpoint {
   id: number;
   url: string;
 }
@@ -169,6 +172,10 @@ const useStore = create<StoreState>((set) => ({
     menuCollapsed: status
   })),
 
+  connection: null,
+  setConnection: (c: () => any) => set((state) => ({
+    connection: c
+  }))
 }));
 
 export default useStore;
