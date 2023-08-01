@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { FragmentDefinitionNode, FragmentSpreadNode, buildSchema, isAbstractType, GraphQLInterfaceType, isNonNullType, GraphQLType, GraphQLField, parse, GraphQLList, GraphQLObjectType, GraphQLSchema, TypeInfo, visit, visitWithTypeInfo, StringValueNode, getNamedType, GraphQLNamedType, getEnterLeaveForKind, GraphQLCompositeType, getNullableType, Kind, isListType, DocumentNode, DirectiveLocation, GraphQLUnionType, GraphQLNamedOutputType, getDirectiveValues, isCompositeType, GraphQLOutputType, FragmentsOnCompositeTypesRule, isInterfaceType } from 'graphql';
+import { FragmentDefinitionNode, FragmentSpreadNode, buildSchema, isAbstractType, GraphQLInterfaceType, isNonNullType, GraphQLType, GraphQLField, parse, GraphQLList, GraphQLObjectType, GraphQLSchema, TypeInfo, visit, visitWithTypeInfo, StringValueNode, getNamedType, GraphQLNamedType, getEnterLeaveForKind, GraphQLCompositeType, getNullableType, Kind, isListType, DocumentNode, DirectiveLocation, GraphQLUnionType, GraphQLNamedOutputType, getDirectiveValues, isCompositeType, GraphQLOutputType, FragmentsOnCompositeTypesRule, isInterfaceType, ASTNode } from 'graphql';
 import graphql from 'graphql';
 import cache from './cache.js';
 import { SchemaTextFieldPhonetics } from 'redis';
@@ -270,6 +270,7 @@ class ComplexityAnalysis {
   private currMult: number = 1;
   private complexityScore = 0;
   private typeComplexity = 0;
+  //resolve complexity will soon be defunct
   private resolveComplexity = 0;
   private interfaceStore: any[] = [];
   private unionStore: any[] = [];
@@ -292,50 +293,121 @@ class ComplexityAnalysis {
 
       visit(this.parsedAst, visitWithTypeInfo(schemaType, {
         //use arrow function here within higher-order function in order to allow access to surrounding scope
-        enter: (node) => {
+        enter: (node, key, parent,  path, ancestors) => {
 
           console.log('ENTERING NEW NODE');
+          //casing for fragment definition, need to maintain parentTypeStack, and acknowledge fragDef exists
+          //but otherwise disregard
           if(node.kind === Kind.FRAGMENT_DEFINITION) {
             console.log('this is a fragmentDef:', node)
             this.fragDefs[node.name.value] = node;
             console.log('fragDefs after addition', this.fragDefs);
             this.parentTypeStack.push({isFragDef: true})
+            return;
           }
 
+          //All the things related to a field being nested in something are resolved
           const subUnionType = this.hasUnionAncestor();
           const subInterfaceType = this.hasInterfaceAncestor();
           const subFragType = this.hasFragSpreadAncestor();
           const subList = this.hasListAncestor();
 
           //must create interface casing, grabbing implememting types if fragment spreads are used to query an interface
-
+          //TO-DO
           if(node.kind === Kind.FRAGMENT_SPREAD) {
-            console.log('This is the node:', node.name.value);
-            if(this.fragDefs[node.name.value]) {
-              console.log('There is a corresponding fragment definition');
-              console.log('Fragment def:', this.fragDefs[node.name.value])
-              const selectionSet = this.fragDefs[node.name.value].selectionSet;
-              visit(selectionSet, visitWithTypeInfo(schemaType, {
-                enter: (node) => {
-                  if(node.kind === Kind.FIELD) {
-                    console.log('This is a subnode of a selection set:', node);
-                    const parentType = schemaType.getParentType();
-                    console.log('This is the parentType', parentType);
-                    if(!parentType || !isInterfaceType(parentType)) {
-                      console.log('failed to retrieve parentType in subAST')
-                      return;
-                    }
-                    const fieldDef = parentType.getFields()[node.name.value];
-                    if(isInterfaceType(parentType)) {
-                      const implementingTypes = this.schema.getPossibleTypes(parentType);
-                      console.log('possibleTypes?', implementingTypes);
-                    }
-                    console.log('fieldDef?', fieldDef);
-                    const directives = fieldDef?.astNode?.directives;
-                  }
-                }
-              }))
+            const fragStore = {
+              name: node.name.value,
+              cost: 0
             }
+            const fragName = node.name.value;
+            console.log('This is the node:', fragName);
+            //@ts-ignore
+            let document;
+
+            for(let i = ancestors.length -1; i >= 0; i--) {
+              const ancestor = ancestors[i] as ASTNode;
+              if(ancestor.kind === 'Document') {
+                document = ancestor;
+              }
+            }
+            console.log('doc?', document);
+            const fragDef = document?.definitions.find(def => def.kind === 'FragmentDefinition' && def.name.value === fragName);
+            console.log('fragDef?', fragDef);
+            //@ts-ignore
+            if(!fragDef) return;
+            //@ts-ignore
+            const typeName = fragDef.typeCondition.name.value;
+            const objectType = this.schema.getType(typeName);
+
+            console.log('objectType?', objectType);
+            //@ts-ignore
+            const selectionSet = fragDef.selectionSet
+
+            //What does this do?
+            //We enter the selectionSet of the fragment spread
+            //Upon encountering a fieldNode, we assess the parentType of the specific node in the selectionSet
+            //If said fieldNode is an interface, we then find the implementing types of said interface
+            //What is the difference between what we derive from objectType
+            const fragSpreadCost = this.resolveSelectionSet(selectionSet, objectType, schemaType);
+            console.log('fragSpreadCost?', fragSpreadCost);
+            // visit(selectionSet, visitWithTypeInfo(schemaType, {
+            //   enter: (node) => {
+            //     if(node.kind === Kind.FIELD) {
+            //       const name = node.name.value;
+            //       console.log('subNode of selectionSet', name);
+            //       const parentType = schemaType.getParentType();
+            //       //@ts-ignore
+            //       const currObjDef =  objectType.getFields()[name];
+            //       const fieldDef = parentType && isAbstractType(parentType) ? schemaType.getFieldDef() : parentType?.getFields()[node.name.value];
+            //       if(!fieldDef) return;
+            //       const fieldType = fieldDef.type;
+            //       const namedType = getNamedType(fieldType);
+            //       const isInterface = isInterfaceType(namedType);
+            //       // console.log('fieldDef?', fieldDef)
+            //       //we need to make some sort of call upon encounter of an interface that initiates a private store
+            //       //we then return out the proper costs out of said encapsulated store, then store it in the fragStore of the
+            //       //internal visit function
+            //       if(isInterface) {
+            //         if(namedType) {
+            //           console.log('selectionSet of interface?', node.selectionSet)
+            //           const implementingTypes = this.schema.getPossibleTypes(namedType);
+            //           console.log('implementingTypes?', implementingTypes);
+            //         }
+            //       }
+
+            //       if(!currObjDef) return;
+            //       const directives = this.parseDirectives(currObjDef, 0);
+            //       console.log('directives?', directives);
+            //       fragStore.cost += Number(directives.costDirective);
+            //     }
+            //     console.log('fragStore?', fragStore)
+            //   }
+            // }))
+            // if(this.fragDefs[node.name.value]) {
+            //   console.log('There is a corresponding fragment definition');
+            //   console.log('Fragment def:', this.fragDefs[node.name.value])
+            //   const selectionSet = this.fragDefs[node.name.value].selectionSet;
+            //   visit(selectionSet, visitWithTypeInfo(schemaType, {
+            //     enter: (node) => {
+            //       if(node.kind === Kind.FIELD) {
+            //         console.log('This is a subnode of a selection set:', node);
+            //         const parentType = schemaType.getParentType();
+            //         console.log('This is the parentType', parentType);
+            //         if(!parentType || !isInterfaceType(parentType)) {
+            //           console.log('failed to retrieve parentType in subAST')
+            //           return;
+            //         }
+            //         const fieldDef = parentType.getFields()[node.name.value];
+            //         if(isInterfaceType(parentType)) {
+            //           const implementingTypes = this.schema.getPossibleTypes(parentType);
+            //           console.log('possibleTypes?', implementingTypes);
+            //         }
+            //         console.log('fieldDef?', fieldDef);
+            //         const directives = fieldDef?.astNode?.directives;
+            //       }
+            //     }
+            //   }))
+            // }
             return;
           }
 
@@ -350,6 +422,7 @@ class ComplexityAnalysis {
           let internalPaginationLimit: number | null = null;
           let argumentCosts = 0;
 
+          //we are entering an unnested field, so we reset the current multiplier held in class state
           if (this.parentTypeStack.length === 0) this.currMult = 1;
 
           const parentType = schemaType.getParentType();
@@ -367,6 +440,7 @@ class ComplexityAnalysis {
           const fieldDefArgs = fieldDef.args;
           // console.log('These are relevant fieldArgs', fieldDef.args);
           const fieldType = fieldDef.type;
+          //Graphql sometimes wraps types in strange wrappers, so getNamedType will grab the 'true' field
           const fieldTypeUnion = getNamedType(fieldType);
           const isList = isListType(fieldType) || (isNonNullType(fieldType) && isListType(fieldType.ofType));
           const isUnion = fieldTypeUnion instanceof GraphQLUnionType;
@@ -375,6 +449,8 @@ class ComplexityAnalysis {
           console.log('isUnion?', isUnion);
           console.log('interface?', isInterface);
           console.log('isList?', isList);
+
+          //very specific casing, for short-circuited polymorphism
           if(isInterface) {
             const implementingTypes = this.schema.getPossibleTypes(fieldTypeUnion)
 
@@ -386,6 +462,7 @@ class ComplexityAnalysis {
             }
           }
 
+          //Grab arguments and directives and associated costs for the current field
           const argumentDirectiveCost = this.parseArgumentDirectives(fieldDef);
           const directiveAdjustedBaseVal = this.parseDirectives(fieldDef, baseVal);
 
@@ -415,33 +492,46 @@ class ComplexityAnalysis {
             return;
           }
 
-          if(subUnionType) {
-            // console.log('Field has union ancestor, complexity calculation should have been resolved in resolveUnionTypes of ancestor, aborting traversal')
-            const currMult = this.currMult;
-            // need to push something here to maintain stack integrity
-            this.parentTypeStack.push({fieldDef, isList, fieldDefArgs, currMult, isUnion, isInterface});
-            return;
-          }
+          // if(subUnionType) {
+          //   // console.log('Field has union ancestor, complexity calculation should have been resolved in resolveUnionTypes of ancestor, aborting traversal')
+          //   const currMult = this.currMult;
+          //   // need to push something here to maintain stack integrity
+          //   this.parentTypeStack.push({fieldDef, isList, fieldDefArgs, currMult, isUnion, isInterface});
+          //   return;
+          // }
 
           if(subList.hasListAncestor) {
             // console.log('This node has a list ancestor:', subList)
             this.currMult = subList.ancestorMult;
           }
 
-          if(subInterfaceType.hasInterfaceAncestor) {
+          //compares the current field against the field in each implementing type
+          //each implementing type has a running store for the potentialCost
+          //this tallies the cost of the field on each implementing type
+          if(subInterfaceType.hasInterfaceAncestor || subUnionType.hasUnionAncestor) {
+            let subStoreRef;
+            if(subInterfaceType.hasInterfaceAncestor) subStoreRef = this.interfaceStore;
+            if(subUnionType.hasUnionAncestor) subStoreRef = this.unionStore;
 
-            if(isInterface) {
+            if(!subStoreRef) return;
+
+            if(isInterface || isUnion) {
+              let storeRef;
+              if(isInterface) storeRef = this.interfaceStore;
+              if(isUnion) storeRef = this.unionStore
               if(isList) {
                 this.typeComplexity += baseVal * this.currMult;
                 if(internalPaginationLimit) this.currMult = this.currMult * internalPaginationLimit; else this.currMult = this.currMult * this.config.paginationLimit
               } else {
                 this.typeComplexity += baseVal * this.currMult;
               }
-              for(let i = 0; i < this.interfaceStore.length; i++) {
-                for (const types in this.interfaceStore[i].matchingTypes) {
-                  // console.log('resetting matchingTypes field-by-field', this.interfaceStore[i].matchingTypes);
-                  this.interfaceStore[i].matchingTypes[types] = false;
-                  // console.log('field reset, logging matchingTypes', this.interfaceStore[i].matchingTypes);
+              if(storeRef) {
+                for(let i = 0; i < storeRef.length; i++) {
+                  for (const types in storeRef[i].matchingTypes) {
+                    // console.log('resetting matchingTypes field-by-field', this.interfaceStore[i].matchingTypes);
+                    storeRef[i].matchingTypes[types] = false;
+                    // console.log('field reset, logging matchingTypes', this.interfaceStore[i].matchingTypes);
+                  }
                 }
               }
             }
@@ -449,13 +539,17 @@ class ComplexityAnalysis {
             const implementingTypesArray = [];
             // console.log('This field has an interface as an ancestor, here is fieldType:', fieldType);
             // console.log('Here is fieldTypeUnion:', fieldTypeUnion);
-            const implementingTypes = subInterfaceType.possibleTypes;
+            let implementingTypes;
+            if(subUnionType.hasUnionAncestor) implementingTypes = subUnionType.possibleTypes;
+            if(subInterfaceType.hasInterfaceAncestor) implementingTypes = subInterfaceType.possibleTypes;
             // console.log('Implementing types', implementingTypes);
 
-            for (const type of implementingTypes) {
-              const typeNames = this.interfaceStore.map(types => types.name);
+            if(!implementingTypes) return;
 
-              if(!typeNames.includes(type.name)) this.interfaceStore.push({
+            for (const type of implementingTypes) {
+              const typeNames = subStoreRef.map(types => types.name);
+
+              if(!typeNames.includes(type.name)) subStoreRef.push({
                 name: type.name,
                 potentialCost: 0,
                 matchingTypes: {}
@@ -489,21 +583,21 @@ class ComplexityAnalysis {
                   const argDirectives = this.parseArgumentDirectives(fieldDef);
                   if(directives.costDirective) {
                     // console.log(`This is the potential cost of the field ${node.name.value}, ${directives.costDirective}, name of implementing field is ${type.name}`);
-                    for (let i = 0; i < this.interfaceStore.length; i++) {
-                      if (this.interfaceStore[i].name === type.name && !this.interfaceStore[i].matchingTypes[fieldName]) {
+                    for (let i = 0; i < subStoreRef.length; i++) {
+                      if (subStoreRef[i].name === type.name && !subStoreRef[i].matchingTypes[fieldName]) {
                         // console.log('The name stored in the possibleTypes array matches the name of the field')
                         // console.log('directives?', directives.costDirective);
                         // console.log('currMult?', this.currMult);
-                        this.interfaceStore[i].potentialCost += (Number(directives.costDirective) * this.currMult)
-                        this.interfaceStore[i].matchingTypes[fieldName] = true;
+                        subStoreRef[i].potentialCost += (Number(directives.costDirective) * this.currMult)
+                        subStoreRef[i].matchingTypes[fieldName] = true;
                       }
                     }
                     ///generate casing for fields without explicit cost ie abstract fields nested within other interfaces
                   } else {
-                    for (let i = 0; i < this.interfaceStore.length; i++ ) {
-                      if(this.interfaceStore[i].name === type.name && !this.interfaceStore[i].matchingTypes[fieldName]) {
-                        this.interfaceStore[i].potentialCost += baseVal * this.currMult;
-                        this.interfaceStore[i].matchingTypes[fieldName] = true;
+                    for (let i = 0; i < subStoreRef.length; i++ ) {
+                      if(subStoreRef[i].name === type.name && !subStoreRef[i].matchingTypes[fieldName]) {
+                        subStoreRef[i].potentialCost += baseVal * this.currMult;
+                        subStoreRef[i].matchingTypes[fieldName] = true;
                       }
                     }
                   }
@@ -515,7 +609,7 @@ class ComplexityAnalysis {
               // console.log(this.unionStore[i].name);
               // console.log(this.unionStore[i].potentialCost);
             }
-          } else if(isList === true && isUnion !== true) {
+          } else if(isList === true) {
             // console.log('this is the heldMult', this.currMult);
             const heldMult = this.currMult;
             //resolve the base cost of the listType first
@@ -541,12 +635,12 @@ class ComplexityAnalysis {
 
             this.resolveParentTypeStack(isList, argumentCosts, baseVal);
 
-            } else if (fieldTypeUnion instanceof GraphQLUnionType) {
-              const largestUnion = this.resolveUnionTypes(fieldTypeUnion, internalPaginationLimit, isList)
-              const currMult = largestUnion.containedMult
-              this.typeComplexity += largestUnion.cost;
-              this.parentTypeStack.push({fieldDef, isList, fieldDefArgs, currMult, isUnion, isInterface, implementingFrags});
-              return;
+            // } else if (fieldTypeUnion instanceof GraphQLUnionType) {
+            //   const largestUnion = this.resolveUnionTypes(fieldTypeUnion, internalPaginationLimit, isList)
+            //   const currMult = largestUnion.containedMult
+            //   this.typeComplexity += largestUnion.cost;
+            //   this.parentTypeStack.push({fieldDef, isList, fieldDefArgs, currMult, isUnion, isInterface, implementingFrags});
+            //   return;
 
             } else {
               // console.log(`This is the parentStack of the current GraphQL field type ${node.name.value}`, this.parentTypeStack);
@@ -565,17 +659,26 @@ class ComplexityAnalysis {
             // console.log('current interfaceStore before resolution', this.interfaceStore);
             let largestInterfaceCost: number = -Infinity;
             console.log('interfaceStore?', this.interfaceStore);
+            console.log('unionStore?', this.unionStore);
+            console.log('queriedTypes?', this.queriedTypes);
+            let largestUnion: number = -Infinity;
             for(let i = 0; i < this.interfaceStore.length; i++) {
                if(this.queriedTypes.length === 1 && this.interfaceStore[i].name === this.queriedTypes[0]) {
                 largestInterfaceCost = this.interfaceStore[i].potentialCost;
                 break;
-               }
-               if(this.interfaceStore[i].potentialCost > largestInterfaceCost) largestInterfaceCost = this.interfaceStore[i].potentialCost
+                }
+                if (this.interfaceStore[i].potentialCost > largestInterfaceCost) largestInterfaceCost = this.interfaceStore[i].potentialCost
+            }
+
+            for(let i = 0; i < this.unionStore.length; i++) {
+              if(this.unionStore[i].potentialCost >  largestUnion) largestUnion = this.unionStore[i].potentialCost;
             }
 
             if(largestInterfaceCost >= 0) this.typeComplexity += largestInterfaceCost;
+            if(largestUnion >= 0) this.typeComplexity += largestUnion;
             this.queriedTypes = [];
             this.interfaceStore = [];
+            this.unionStore = [];
             console.log('type complexity post resolution of interface', this.typeComplexity);
             // console.log('current interfaceStore post resolution', this.interfaceStore);
             // console.log('current unionStore', this.unionStore);
@@ -587,6 +690,39 @@ class ComplexityAnalysis {
     this.complexityScore = this.typeComplexity + this.resolveComplexity;
 
     return {complexityScore: this.complexityScore, typeComplexity: this.typeComplexity, resolveComplexity: this.resolveComplexity};
+  }
+
+  resolveSelectionSet(selectionSet: any, objectType: any, schemaType: TypeInfo) {
+    console.log('inside resolveSelectionSet')
+    let cost = 0;
+
+    selectionSet.selections.forEach((selection: any) => {
+      if(selection.kind === Kind.FIELD) {
+        const fieldName = selection.name.value;
+        console.log('name of node?', fieldName);
+        const fieldDef = objectType.getFields()[fieldName];
+        const costDirective = this.parseDirectives(fieldDef, 0);
+        const fieldType = getNamedType(fieldDef.type);
+        console.log('fieldType?', fieldType)
+        const subSelection = selection.selectionSet
+        cost += Number(costDirective.costDirective);
+
+
+        if(subSelection && isInterfaceType(fieldType)) {
+          const store: Record<string, number> = {};
+
+          const implementingTypes = this.schema.getPossibleTypes(fieldType);
+          console.log('implementingTypes?')
+          implementingTypes.forEach(type => {
+            store[type.name] += this.resolveSelectionSet(subSelection, type, schemaType)
+          })
+
+          console.log(store);
+        }
+      }
+    })
+
+    return cost;
   }
 
   resolveParentTypeStack(isList: boolean, argumentCosts: number, baseVal: number) {
@@ -780,15 +916,6 @@ class ComplexityAnalysis {
     return {costDirective: baseVal, paginationLimit: listLimit}
   }
 
-  hasUnionAncestor() {
-    let hasUnionAncestor = false;
-
-    for(let i = this.parentTypeStack.length-1; i >= 0; i--) {
-      if(this.parentTypeStack[i].isUnion) hasUnionAncestor = true;
-    }
-
-    return hasUnionAncestor;
-  }
 
   hasFragSpreadAncestor() {
     let hasFragSpreadAncestor = false;
@@ -798,6 +925,29 @@ class ComplexityAnalysis {
     }
 
     return hasFragSpreadAncestor;
+  }
+
+
+  hasUnionAncestor() {
+    let hasUnionAncestor = false;
+    let ancestorType!: GraphQLOutputType;
+    let possibleTypes!: readonly GraphQLObjectType<any, any>[]
+
+    for(let i = this.parentTypeStack.length-1; i >= 0; i--) {
+      if(this.parentTypeStack[i].isUnion) {
+        hasUnionAncestor = true;
+        ancestorType = this.parentTypeStack[i].fieldDef.type;
+        break;
+      }
+    }
+
+    const ancestorUnionType = getNamedType(ancestorType);
+
+    if(ancestorUnionType instanceof GraphQLUnionType) {
+      possibleTypes = this.schema.getPossibleTypes(ancestorUnionType);
+    }
+
+    return {hasUnionAncestor, ancestorUnionType, possibleTypes};
   }
 
   hasInterfaceAncestor() {
@@ -837,6 +987,7 @@ class ComplexityAnalysis {
 
     return {hasListAncestor: hasListAncestor, ancestorMult: mostRecentAncestorMult};
   }
+
 }
 
 //end of class
@@ -881,6 +1032,26 @@ query {
 }
 `
 
+const testQuery7 = `
+query {
+  content {
+    id
+    title
+    ... on Post {
+      related {
+        content {
+          id
+          title
+        }
+      }
+    }
+    ... on Image {
+      uri
+    }
+  }
+}
+`
+
 const testSDLPolymorphism2 = `
 directive @cost(value: Int) on FIELD_DEFINITION | ARGUMENT_DEFINITION
 directive @paginationLimit(value: Int) on FIELD_DEFINITION
@@ -910,11 +1081,138 @@ type Image implements Content {
   related: Related
 }
 
+union UnionContent = Post | Image
+
 type Query {
   content: [Content] @paginationLimit(value: 10)
   posts: [Post] @cost(value: 3) @paginationLimit(value: 10)
   images: [Image] @cost(value: 5) @paginationLimit(value: 10)
   related: [Related] @paginationLimit(value: 10)
+  unionContent: [UnionContent] @paginationLimit(value: 10)
+}
+`
+
+//internal costs seem to be correct based on modified specification
+//but related guard seems to be breaking
+//implementing band-aid fix is possible here, but may be forced to resolve interfaces separately
+//if a chain of forced resolution interfaces is called like ...on Post into ...on Image in the same nested
+//structure, current band-aid implementations will break
+const testQueryPolymorphism5 = `
+query {
+  posts {
+    id
+    title
+    related {
+      content {
+        ... on Post {
+          id
+          title
+          related {
+            content {
+              ... on Post {
+                id
+                title
+                related {
+                  content {
+                    ... on Post {
+                      id
+                      title
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  images {
+    id
+    title
+    related {
+      content {
+        ... on Image {
+          id
+          title
+          related {
+            content {
+              ... on Image {
+                id
+                title
+                related {
+                  content {
+                    ... on Image {
+                      id
+                      title
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+`
+
+const testQuery6 = `query TestQuery1 {
+  unionContent {
+    ... on Post {
+      id
+      title
+      related {
+        content {
+          id
+          title
+        }
+      }
+    }
+    ... on Image {
+      id
+      title
+      uri
+    }
+  }
+}`
+
+const testQuery8 = `
+query {
+  unionContent {
+    ... on Post {
+      id
+      title
+    }
+    ... on Image {
+      id
+      title
+    }
+  }
+}
+
+`
+
+const testQuery9 = `
+query {
+  unionContent {
+    ... on Post {
+      id
+      title
+      related {
+        content {
+          id
+          title
+        }
+      }
+    }
+    ... on Image {
+      id
+      title
+      uri
+    }
+  }
 }
 `
 
@@ -925,7 +1223,7 @@ const rateLimiter = function (config: any) {
     if(req.body.query) {
 
       const builtSchema = buildSchema(testSDLPolymorphism2)
-      const parsedAst = parse(testQueryPolymorphism2);
+      const parsedAst = parse(testQueryPolymorphism4);
 
       let requestIP = req.ip
 

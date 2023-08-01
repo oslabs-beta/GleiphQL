@@ -45,7 +45,7 @@ const redis = async function (config: any, complexityScore: number, req: Request
     parsedRequest.tokens + tokensToAdd,
     config.complexityLimit
   );
-  
+
   parsedRequest.lastRefillTime = now;
   await client.set(requestIP, JSON.stringify(parsedRequest))
 
@@ -83,7 +83,7 @@ const redis = async function (config: any, complexityScore: number, req: Request
   parsedRequest.tokens -= complexityScore;
   console.log('Tokens after subtraction: ', parsedRequest.tokens)
   await client.set(requestIP, JSON.stringify(parsedRequest))
-  
+
   // disconnect from the redis client
   await client.disconnect();
 }
