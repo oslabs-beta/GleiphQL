@@ -37,6 +37,10 @@ export interface UserResponse extends UserInfo {
   signedIn?: boolean;
 }
 
+export interface verifiedUserObj extends UserInfo {
+  signedIn: boolean;
+}
+
 export interface Endpoint {
   endpoint_id: number;
   url: string;
@@ -52,17 +56,22 @@ export interface EndpointRequest {
   query_depth: number;
 }
 
+export interface ProfileCardProps {
+  id?: string;
+  imageSrc: string;
+  memberName: string;
+  githubLink: string;
+  linkedinLink: string;
+  memberBio: string;
+}
+
 export interface ErrorObject {
   log: string;
   status: number;
   message: { err: string };
 }
 
-export interface verifiedUserObj {
-  signedIn: boolean;
-  userId: number | undefined;
-  userEmail: string;
-}
+
 
 export type SetNumAndStrFx = (num: number, str: string) => void;
 
