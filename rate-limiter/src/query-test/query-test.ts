@@ -75,7 +75,7 @@ const spacexConfig: RateLimitConfig = {
 }
 
 const swapiConfig: RateLimitConfig = {
-  complexityLimit: 30000,
+  complexityLimit: 3000,
   paginationLimit: 10,
   schema: swapiSchema,
   typeInfo: swapiTypeInfo,
