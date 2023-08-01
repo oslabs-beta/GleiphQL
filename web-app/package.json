@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "scripts": {
-    "dev": "concurrently \"cd ./TS_src/client && vite\" \"cd ./TS_src/server && nodemon server.ts\"  \"cd ./TS_src/server && nodemon websocketServer.ts\" \"npm run watch:css\"",
+    "dev": "concurrently \"cd ./TS_src/client && vite\" \"cd ./TS_src/server && nodemon server.ts\" \"npm run watch:css\"",
     "build": "concurrently \"tsc\" \"cd ./TS_src/client && vite build\"",
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",

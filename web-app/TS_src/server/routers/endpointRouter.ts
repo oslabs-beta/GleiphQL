@@ -16,7 +16,7 @@ endpointRouter.get('/:userId', sessionController.authenticated, endpointControll
 });
 
 // deletint an endpoint specified by id and returning the remaining endpoints
-endpointRouter.delete('/:endpointId', sessionController.authenticated, endpointController.deleteEndpoint, dataController.deleteData, endpointController.retrieveEndpoints, (req: Request, res: Response) => {
+endpointRouter.delete('/:endpointId', sessionController.authenticated, dataController.deleteData, endpointController.deleteEndpoint, endpointController.retrieveEndpoints, (req: Request, res: Response) => {
   res.status(200).json(res.locals.endpoints);
 })
 

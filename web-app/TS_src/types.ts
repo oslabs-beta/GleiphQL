@@ -1,3 +1,5 @@
+import { Request, Response, NextFunction} from 'express';
+
 export interface UserInfo {
   userId: number;
   userEmail: string;
@@ -30,6 +32,12 @@ export interface ErrorObject {
   message: { err: string };
 }
 
+export interface verifiedUserObj {
+  signedIn: boolean;
+  userId: number | undefined;
+  userEmail: string;
+}
+
 export type SetNumAndStrFx = (num: number, str: string) => void;
 
 export type SetStatusFx = (status: boolean) => void;
@@ -41,3 +49,5 @@ export type SetEndpointRequests = (endpointRequests: EndpointRequest[]) => void;
 export type Connection = (() => void) | null;
 
 export type SetConnection = (connection: Connection) => void;
+
+export type AsyncMiddleWare = (req: Request, res: Response, next: NextFunction) => Promise<void>;

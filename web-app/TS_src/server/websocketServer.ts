@@ -7,7 +7,7 @@ const wssDataController : WebSocketServer = new WebSocketServer({port: 8080});
 
 console.log(`in wssData controller, should be listening on 8080, ${wssDataController}`);
 
-wssDataController.on('connection', async function connection(ws: WebSocket, req: Request) {
+wssDataController.on('connection', async function connection(ws, req) {
   console.log('a websocket connection established on port 8080');
   const endpointId: number = Number(req.url?.substring(1));
 

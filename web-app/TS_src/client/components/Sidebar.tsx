@@ -60,7 +60,7 @@ const Sidebar: FC = () : ReactElement => {
 
   // saving the new endpoint
   const saveEndpoint = async () : Promise<void> => {
-    const queryArr: Endpoint[] = (await axios.post(`/api/endpoint/${currUser.userId}`, {url: addedURL, description: addedDescription})).data;
+    const queryArr: Endpoint[] = (await axios.post(`/api/endpoint/${currUser.userId}`, { url: addedURL, description: addedDescription})).data;
     setEndpointArray(queryArr);
     if(!currEndpoint.endpoint_id) setCurrEndpoint(queryArr[0].endpoint_id, queryArr[0].url);
     setAddedDescription('');
@@ -80,7 +80,7 @@ const Sidebar: FC = () : ReactElement => {
         }
       } catch(err: unknown) {
         if(err instanceof Error) console.log(err.message);
-        else console.log('unknown error');
+        else console.log('an error in obtaining the endpoints');
       }
     };
     fetchData();
