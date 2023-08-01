@@ -2,8 +2,8 @@ import { Request, Response, NextFunction } from 'express';
 import { parse, visit, FieldNode, ObjectTypeDefinitionNode, Kind, DocumentNode } from 'graphql';
 import fetch from 'node-fetch';
 
-const endpointMonitor = function (config: any) {
-  return async (req: Request, res: Response, next: NextFunction) => {
+const expressEndpointMonitor = function (config: any) {
+  return async (req: Request, res: Response, next: NextFunction) => {    
     if (req.body.query) {
       const query = parse(req.body.query);
       const endpointData = {
@@ -75,28 +75,105 @@ const endpointMonitor = function (config: any) {
       if (query.loc) {
         endpointData.queryString = query.loc.source.body
       }
-      console.log('Monitor data: ', endpointData);
-      try {
-        const response = await fetch('http://localhost:3000/api/data', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          }, 
-          body: JSON.stringify(endpointData)
-        });
-        const data = await response.json();
-      }
-      catch {
-        console.log('Unable to save to database')
-      }
-  
-      if(res.locals.complexityScore >= res.locals.complexityLimit) {
-        console.log(`Complexity score of ${res.locals.complexityScore} exceeded ${res.locals.complexityLimit}`);
-        return next(Error);
-      }
+      res.locals.gleiphqlData = endpointData
     }
     next()
   }
 }
 
-export default endpointMonitor
+const apolloEndpointMonitor = (config: any) => {
+  return {
+    async requestDidStart(requestContext: any) {
+      return {
+        async willSendResponse(requestContext: any) {
+          if (requestContext.operationName !== 'IntrospectionQuery') {
+            // console.log(requestContext)
+            const query = requestContext.document
+            const endpointData = {
+              depth: 0,
+              ip: '',
+              url: '',
+              timestamp: '',
+              objectTypes: {},
+              queryString: '',
+              complexityScore: '',
+              email: '',
+              password: '',
+            }
+      
+            // function to calulate query depth
+            const calculateQueryDepth = (selections: any): number => {
+              let maxDepth = 0;
+              for (const selection of selections) {
+                if (selection.selectionSet) {
+                  const currentDepth = calculateQueryDepth(selection.selectionSet.selections);
+                  maxDepth = Math.max(maxDepth, currentDepth + 1);
+                }
+              }
+              return maxDepth;
+            };
+      
+            // function to find all object types
+            const extractObjectTypes = (query: DocumentNode): string[] => {
+              const objectTypes: string[] = [];
+            
+              visit(query, {
+                Field: {
+                  enter(node: FieldNode) {
+                    if (node.selectionSet) {
+                      const parentType = node.name.value;
+                      objectTypes.push(parentType);
+                    }
+                  },
+                }
+              });
+            
+              return objectTypes;
+            }; 
+
+
+            if (query.definitions.length > 0 && query.definitions[0].kind === Kind.OPERATION_DEFINITION) {
+              const operation = query.definitions[0];
+              
+              // Ensure the operation has a selectionSet
+              if (operation.selectionSet) {
+                const depth = calculateQueryDepth(query.definitions[0].selectionSet.selections);
+                endpointData.depth = depth
+              }
+            }
+
+            endpointData.ip = requestContext.contextValue.clientIP
+            if (endpointData.ip.includes('::ffff:')) {
+              endpointData.ip = endpointData.ip.replace('::ffff:', '');
+            }
+            endpointData.url = requestContext.request.http.headers.get('referer')
+            endpointData.complexityScore = requestContext.contextValue.complexityScore
+            endpointData.timestamp = Date()
+            endpointData.objectTypes = extractObjectTypes(query)
+            endpointData.email = config.gliephqlUsername
+            endpointData.password = config.gleiphqlPassword
+            if (query.loc) {
+              endpointData.queryString = query.loc.source.body
+            }
+            console.log('endpoint=', endpointData)
+            try {
+              const response = await fetch('http://localhost:3000/api/data', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                }, 
+                body: JSON.stringify(endpointData)
+              });
+              const data = await response.json();
+            }
+            catch {
+              console.log('Unable to save to database')
+            }
+          }
+        }
+      };
+    }
+  }
+};
+
+export  { expressEndpointMonitor, apolloEndpointMonitor }
