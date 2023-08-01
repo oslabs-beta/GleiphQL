@@ -3,7 +3,7 @@ import { Request, Response, NextFunction } from 'express';
 import * as bcrypt from 'bcryptjs';
 import { verifiedUserObj, AsyncMiddleWare } from '../../types';
 
-interface User {
+interface UserCredentials {
   user_id: number;
   email: string;
   password: string;
@@ -18,13 +18,13 @@ const SALT_WORK_FACTOR: number = 10;
 
 
 // look up user in Users table by email
-const searchUser = async (email: string) : Promise<User | null> => {
+const searchUser = async (email: string) : Promise<UserCredentials | null> => {
   const sqlCommand: string = `
     SELECT * FROM users WHERE email = $1;
   `;
   const values: string[] = [ email ];
   try {
-    const result: User[] = (await db.query(sqlCommand, values)).rows;
+    const result: UserCredentials[] = (await db.query(sqlCommand, values)).rows;
     return result[0];
   } catch(err: unknown) {
     console.log('error in searchUser: error in searching user in the database');
@@ -36,7 +36,7 @@ const searchUser = async (email: string) : Promise<User | null> => {
 export const verifyUser =  async (email: string, password: string) : Promise<verifiedUserObj> => {
   let signedIn: boolean = false;
   let userId;
-  const result: User | null = await searchUser(email);
+  const result: UserCredentials | null = await searchUser(email);
   if(result) {
     const matched: boolean = await bcrypt.compare(password, result.password);
     if(matched) {
@@ -61,7 +61,7 @@ const userController : UserController = {
       message: { error: 'Did not receive necessary inputs to check if a user exists' }
     });
     try {
-      const result: User | null = await searchUser(email);
+      const result: UserCredentials | null = await searchUser(email);
       if(result) res.locals.userExists = true;
       else res.locals.userExists = false;
     } catch(err: unknown) {
@@ -88,7 +88,7 @@ const userController : UserController = {
         // hash password
         const hashedPW: string = await bcrypt.hash(password, SALT_WORK_FACTOR);
         const values: string[] = [ email, hashedPW ];
-        const result: User[] = (await db.query(sqlCommand, values)).rows;
+        const result: UserCredentials[] = (await db.query(sqlCommand, values)).rows;
         res.locals.userCreated = true;
         res.locals.userId = result[0].user_id;
       } catch (err: unknown) {

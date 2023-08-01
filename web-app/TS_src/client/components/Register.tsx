@@ -4,16 +4,7 @@ import { FiX } from 'react-icons/fi';
 import '../stylesheets/index.css';
 import axios from 'axios';
 import notify from '../helper-functions/notify';
-import {
-  SetStatusFx,
-  UserResponse
-} from '../../types';
-
-interface PartialStore {
-  loginToggle: SetStatusFx;
-  registerToggle: SetStatusFx;
-  setModalOpen: SetStatusFx;
-}
+import { UserResponse, PartialStore } from '../../types';
 
 const Register: FC = () : ReactElement => {
   const { 

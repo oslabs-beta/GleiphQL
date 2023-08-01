@@ -5,12 +5,7 @@ import useStore from '../store';
 import axios from 'axios';
 import Modal from './Modal';
 import { Link } from 'react-scroll';
-import {
-  SetStatusFx,
-  UserInfo,
-  SetNumAndStrFx,
-  Connection
-} from '../../types';
+import { PartialStore } from '../../types';
 
 interface Content {
   name: string;
@@ -22,18 +17,6 @@ const navigation: Content[] = [
   { name: 'get-started', offset: 30 },
   { name: 'meet-team', offset: 30 },
 ]
-
-interface PartialStore {
-  loginToggle: SetStatusFx;
-  currUser: UserInfo;
-  isLoggedIn: boolean;
-  setIsLoggedIn: SetStatusFx;
-  setCurrUser: SetNumAndStrFx;
-  setCurrEndpoint: SetNumAndStrFx;
-  modalOpen: boolean;
-  setModalOpen: SetStatusFx;
-  connection: Connection;
-}
 
 const Navbar: FC = () : ReactElement => {
   const { 

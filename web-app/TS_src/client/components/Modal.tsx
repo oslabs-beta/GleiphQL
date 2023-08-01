@@ -2,15 +2,11 @@ import { FC, ReactElement, MouseEvent } from 'react'
 import Login from './Login';
 import Register from './Register';
 import useStore from '../store';
+import { PartialStore } from '../../types';
 
 interface ModalProps {
   open: boolean;
   onClose: () => void;
-}
-
-interface PartialStore {
-  showLogin: boolean,
-  showRegistration: boolean
 }
 
 const Modal: FC<ModalProps> = ({ open, onClose } : ModalProps) : ReactElement | null => {

@@ -1,5 +1,31 @@
 import { Request, Response, NextFunction} from 'express';
 
+export interface PartialStore {
+  modalOpen?: boolean;
+  setModalOpen?: SetStatusFx;
+
+  currUser?: UserInfo;
+  setCurrUser?: SetNumAndStrFx;
+
+  showLogin?: boolean;
+  loginToggle?: SetStatusFx;
+
+  isLoggedIn?: boolean;
+  setIsLoggedIn?: SetStatusFx;
+
+  showRegistration?: boolean;
+  registerToggle?: SetStatusFx;
+
+  currEndpoint?: Endpoint;
+  setCurrEndpoint?: SetNumAndStrFx;
+
+  endpointRequests?: EndpointRequest[];
+  setEndpointRequests?: SetEndpointRequests;
+
+  connection?: Connection;
+  setConnection?: SetConnection;
+}
+
 export interface UserInfo {
   userId: number;
   userEmail: string;

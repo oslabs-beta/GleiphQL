@@ -6,19 +6,10 @@ import axios from 'axios';
 import checkSession from '../helper-functions/checkSession';
 import notify from '../helper-functions/notify';
 import {
-  SetStatusFx,
-  SetNumAndStrFx,
-  UserResponse
+  UserResponse,
+  PartialStore
 } from '../../types';
 
-interface PartialStore {
-  loginToggle: SetStatusFx;
-  registerToggle: SetStatusFx;
-  isLoggedIn: boolean;
-  setIsLoggedIn: SetStatusFx;
-  setCurrUser: SetNumAndStrFx;
-  setModalOpen: SetStatusFx;
-}
 
 const Login: FC = () : ReactElement => {
   const { 

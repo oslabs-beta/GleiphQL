@@ -1,12 +1,14 @@
 import { EndpointRequest } from '../../types';
 
 type ValType = 'complexity_score' | 'query_depth'; // for use with getValue helper function
+
 interface DataSet {
   label: string;
   data: number[];
   borderColor: string;
   backgroundColor: string;
 }
+
 interface ChartData {
   labels: string[];
   datasets: DataSet[];

@@ -1,10 +1,6 @@
 import { FC, ReactElement }  from 'react';
 import useStore from '../store';
-import { EndpointRequest } from '../../types';
-
-interface PartialStore {
-  endpointRequests: EndpointRequest[];
-}
+import { PartialStore } from '../../types';
 
 
 const ChartHeader: FC = () : ReactElement => {

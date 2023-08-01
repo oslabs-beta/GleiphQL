@@ -4,10 +4,8 @@ import useStore from '../store';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { 
   Endpoint, 
-  UserInfo, 
   SetStatusFx,
-  Connection,
-  SetNumAndStrFx
+  PartialStore
 } from '../../types';
 
 interface ConfirmationModalProps {
@@ -15,13 +13,6 @@ interface ConfirmationModalProps {
   setOpen: SetStatusFx;
   cancelButtonRef: React.RefObject<HTMLButtonElement>;
   setEndpointArray: (endpoints: Endpoint[]) => void;
-}
-
-interface PartialStore {
-  currEndpoint: Endpoint;
-  setCurrEndpoint: SetNumAndStrFx;
-  currUser: UserInfo;
-  connection: Connection;
 }
 
 export default function ConfirmationModal({open, setOpen, cancelButtonRef, setEndpointArray}: ConfirmationModalProps) : ReactElement {

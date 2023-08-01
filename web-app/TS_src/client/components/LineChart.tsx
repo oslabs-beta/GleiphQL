@@ -3,11 +3,7 @@ import { Line } from 'react-chartjs-2';
 import configChartData from '../helper-functions/dashboard-helpers';
 import useStore from '../store';
 import 'chart.js/auto';
-import { EndpointRequest, SetStrValueFx } from '../../types';
-
-interface PartialStore {
-  endpointRequests: EndpointRequest[];
-}
+import { SetStrValueFx, PartialStore } from '../../types';
 
 const LineChart: FC = () : ReactElement => {
   const { endpointRequests } : PartialStore = useStore();

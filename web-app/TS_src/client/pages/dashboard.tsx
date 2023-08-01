@@ -8,26 +8,9 @@ import { Navigate } from 'react-router-dom';
 import checkSession from '../helper-functions/checkSession';
 import Sidebar from '../components/Sidebar';
 import streamWS from '../helper-functions/websocket';
-import {
-  SetStatusFx,
-  SetNumAndStrFx,
-  SetConnection,
-  SetEndpointRequests,
-  Endpoint,
-  Connection
-} from '../../types';
+import { PartialStore } from '../../types';
 
-interface PartialStore {
-  currEndpoint: Endpoint;
-  isLoggedIn: boolean;
-  setIsLoggedIn: SetStatusFx;
-  setCurrUser: SetNumAndStrFx;
-  loginToggle: SetStatusFx;
-  setModalOpen: SetStatusFx;
-  connection: Connection;
-  setConnection: SetConnection;
-  setEndpointRequests: SetEndpointRequests;
-}
+
 const Dashboard: FC = () : ReactElement => {
   const { 
     currEndpoint, 
