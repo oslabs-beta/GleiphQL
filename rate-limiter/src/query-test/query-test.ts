@@ -54,7 +54,7 @@ interface MonitorConfig {
 
 const monitorConfig: MonitorConfig = {
   gliephqlUsername: 'andrew@gmail.com', // these are not in a dotenv file for example purposes only
-  gleiphqlPassword: 'password', // these are not in a dotenv file for example purposes only
+  gleiphqlPassword: 'password1', // these are not in a dotenv file for example purposes only
 }
 
 // const spacexConfig: rateLimitConfig = {
@@ -66,7 +66,7 @@ const monitorConfig: MonitorConfig = {
 // }
 
 const swapiConfig: RateLimitConfig = {
-  complexityLimit: 3000,
+  complexityLimit: 30000,
   paginationLimit: 10,
   schema: swapiSchema,
   typeInfo: swapiTypeInfo,
