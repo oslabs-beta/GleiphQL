@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { FragmentDefinitionNode, FragmentSpreadNode, buildSchema, isAbstractType, GraphQLInterfaceType, isNonNullType, GraphQLType, GraphQLField, parse, GraphQLList, GraphQLObjectType, GraphQLSchema, TypeInfo, visit, visitWithTypeInfo, StringValueNode, getNamedType, GraphQLNamedType, getEnterLeaveForKind, GraphQLCompositeType, getNullableType, Kind, isListType, DocumentNode, DirectiveLocation, GraphQLUnionType, GraphQLNamedOutputType, getDirectiveValues, isCompositeType, GraphQLOutputType, FragmentsOnCompositeTypesRule, isInterfaceType, ASTNode } from 'graphql';
+import { FragmentDefinitionNode, FragmentSpreadNode, buildSchema, isAbstractType, GraphQLInterfaceType, isNonNullType, GraphQLType, GraphQLField, parse, GraphQLList, GraphQLObjectType, GraphQLSchema, TypeInfo, visit, visitWithTypeInfo, StringValueNode, getNamedType, GraphQLNamedType, getEnterLeaveForKind, GraphQLCompositeType, getNullableType, Kind, isListType, DocumentNode, DirectiveLocation, GraphQLUnionType, GraphQLNamedOutputType, getDirectiveValues, isCompositeType, GraphQLOutputType, FragmentsOnCompositeTypesRule, isInterfaceType, ASTNode, isObjectType } from 'graphql';
 import graphql from 'graphql';
 import cache from './cache.js';
 import { SchemaTextFieldPhonetics } from 'redis';
@@ -330,16 +330,16 @@ class ComplexityAnalysis {
                 document = ancestor;
               }
             }
-            console.log('doc?', document);
+            // console.log('doc?', document);
             const fragDef = document?.definitions.find(def => def.kind === 'FragmentDefinition' && def.name.value === fragName);
-            console.log('fragDef?', fragDef);
+            // console.log('fragDef?', fragDef);
             //@ts-ignore
             if(!fragDef) return;
             //@ts-ignore
             const typeName = fragDef.typeCondition.name.value;
             const objectType = this.schema.getType(typeName);
 
-            console.log('objectType?', objectType);
+            // console.log('objectType?', objectType);
             //@ts-ignore
             const selectionSet = fragDef.selectionSet
 
@@ -350,64 +350,6 @@ class ComplexityAnalysis {
             //What is the difference between what we derive from objectType
             const fragSpreadCost = this.resolveSelectionSet(selectionSet, objectType, schemaType);
             console.log('fragSpreadCost?', fragSpreadCost);
-            // visit(selectionSet, visitWithTypeInfo(schemaType, {
-            //   enter: (node) => {
-            //     if(node.kind === Kind.FIELD) {
-            //       const name = node.name.value;
-            //       console.log('subNode of selectionSet', name);
-            //       const parentType = schemaType.getParentType();
-            //       //@ts-ignore
-            //       const currObjDef =  objectType.getFields()[name];
-            //       const fieldDef = parentType && isAbstractType(parentType) ? schemaType.getFieldDef() : parentType?.getFields()[node.name.value];
-            //       if(!fieldDef) return;
-            //       const fieldType = fieldDef.type;
-            //       const namedType = getNamedType(fieldType);
-            //       const isInterface = isInterfaceType(namedType);
-            //       // console.log('fieldDef?', fieldDef)
-            //       //we need to make some sort of call upon encounter of an interface that initiates a private store
-            //       //we then return out the proper costs out of said encapsulated store, then store it in the fragStore of the
-            //       //internal visit function
-            //       if(isInterface) {
-            //         if(namedType) {
-            //           console.log('selectionSet of interface?', node.selectionSet)
-            //           const implementingTypes = this.schema.getPossibleTypes(namedType);
-            //           console.log('implementingTypes?', implementingTypes);
-            //         }
-            //       }
-
-            //       if(!currObjDef) return;
-            //       const directives = this.parseDirectives(currObjDef, 0);
-            //       console.log('directives?', directives);
-            //       fragStore.cost += Number(directives.costDirective);
-            //     }
-            //     console.log('fragStore?', fragStore)
-            //   }
-            // }))
-            // if(this.fragDefs[node.name.value]) {
-            //   console.log('There is a corresponding fragment definition');
-            //   console.log('Fragment def:', this.fragDefs[node.name.value])
-            //   const selectionSet = this.fragDefs[node.name.value].selectionSet;
-            //   visit(selectionSet, visitWithTypeInfo(schemaType, {
-            //     enter: (node) => {
-            //       if(node.kind === Kind.FIELD) {
-            //         console.log('This is a subnode of a selection set:', node);
-            //         const parentType = schemaType.getParentType();
-            //         console.log('This is the parentType', parentType);
-            //         if(!parentType || !isInterfaceType(parentType)) {
-            //           console.log('failed to retrieve parentType in subAST')
-            //           return;
-            //         }
-            //         const fieldDef = parentType.getFields()[node.name.value];
-            //         if(isInterfaceType(parentType)) {
-            //           const implementingTypes = this.schema.getPossibleTypes(parentType);
-            //           console.log('possibleTypes?', implementingTypes);
-            //         }
-            //         console.log('fieldDef?', fieldDef);
-            //         const directives = fieldDef?.astNode?.directives;
-            //       }
-            //     }
-            //   }))
-            // }
             return;
           }
 
@@ -698,26 +640,33 @@ class ComplexityAnalysis {
 
     selectionSet.selections.forEach((selection: any) => {
       if(selection.kind === Kind.FIELD) {
+        let internalPaginationLimit = this.config.paginationLimit;
         const fieldName = selection.name.value;
         console.log('name of node?', fieldName);
         const fieldDef = objectType.getFields()[fieldName];
         const costDirective = this.parseDirectives(fieldDef, 0);
-        const fieldType = getNamedType(fieldDef.type);
-        console.log('fieldType?', fieldType)
+        const argumentCosts = this.parseArgumentDirectives(fieldDef);
+        const fieldType = fieldDef.type;
+        const nullableType = getNullableType(fieldDef.type);
+        const unwrappedType = getNamedType(fieldDef.type);
+        // console.log('fieldType?', fieldType)
         const subSelection = selection.selectionSet
         cost += Number(costDirective.costDirective);
 
 
-        if(subSelection && isInterfaceType(fieldType)) {
+        if(subSelection && (isInterfaceType(unwrappedType) || isObjectType(unwrappedType))) {
+          const types = isInterfaceType(unwrappedType) ? this.schema.getPossibleTypes(unwrappedType) : [unwrappedType];
           const store: Record<string, number> = {};
 
-          const implementingTypes = this.schema.getPossibleTypes(fieldType);
-          console.log('implementingTypes?')
-          implementingTypes.forEach(type => {
+          console.log('implementingTypes?', types)
+          types.forEach(type => {
+            store[type.name] = store[type.name] || 0;
             store[type.name] += this.resolveSelectionSet(subSelection, type, schemaType)
           })
 
-          console.log(store);
+          console.log('internal store?', store);
+          const maxInterface = Object.values(store).reduce((a, b) => Math.max(a, b));
+          cost += maxInterface;
         }
       }
     })
