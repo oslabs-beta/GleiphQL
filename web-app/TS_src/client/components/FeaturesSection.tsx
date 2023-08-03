@@ -29,6 +29,9 @@ const FeaturesSection: FC = () : ReactElement => {
   
   // function to toggle the visibility of a features's GIF:
   const toggleGifVisibility = (index: number) : void => {
+    if(window.innerWidth < 1020) {
+      
+    }
     setFeatures((prevFeatures: Feature[]) : Feature[] => {
       const updatedFeatures: Feature[] = [...prevFeatures];
 
@@ -51,14 +54,14 @@ const FeaturesSection: FC = () : ReactElement => {
       <Element name='features'>
         <section id='features'>
           <div className='featuresSection-bg min-h-screen flex flex-col justify-center items-center px-5 py-10'>
-            <h2 className='text-5xl font-extrabold'>Features</h2>
+            <h2 className='text-5xl font-extrabold mt-8'>Features</h2>
           <div>
 
             <div className='container mx-auto'>
-              <div className='flex flex-wrap items-center'>
+              <div className='flex flex-col lg:flex-row items-center mt-4'>
 
                   {/* Start of the image container */}
-                  <section className='w-10/12 md:w-6/12 lg:w-12/12 px-12 md:px-4 mr-auto ml-auto'>
+                  <section className='w-full sm:w-8/12 px-12 md:px-4 mr-auto ml-auto'>
                     <div className='flex min-w-0 bg-white-200 w-full mb-6 shadow-lg rounded-lg'>
                       {/* Use conditional rendering to show the proper GIF*/}
                       {features[0].isVisible ? (
@@ -83,11 +86,11 @@ const FeaturesSection: FC = () : ReactElement => {
                   </section>
 
                   {/* start of features content */}
-                  <section className='w-full md:w-6/12 px-4'>
-                    <ul className='flex flex-wrap'>
+                  <section className='w-full lg:w-6/12 px-4'>
+                    <ul className='flex flex-col lg:flex-row'>
 
                       {/* start of left features column */}
-                      <div className='w-full md:w-6/12'>
+                      <div className='w-full lg:w-6/12'>
 
                         {/* start of first feature's section */}
                         <li className='h-1/2 flex flex-col mt-4'>
@@ -131,7 +134,7 @@ const FeaturesSection: FC = () : ReactElement => {
                       </div>
 
                       {/* start of far right column for 'pages' & 'Documentation' */}
-                      <div className='w-full md:w-6/12'>
+                      <div className='w-full lg:w-6/12'>
                         <li className='h-1/2 flex flex-col min-w-0 mt-4'>
                           <div className='px-4 py-5 flex-auto'>
                             <div className='p-3 text-center inline-flex items-center justify-center w-12 h-12 mb-5 shadow-lg rounded-full bg-white'>

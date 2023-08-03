@@ -19,24 +19,24 @@ const InstructionSection: FC = () : ReactElement => {
   return (
     <>
       <Element name='get-started'>
-        <section id='get-started' className='min-h-screen p-8 text-center flex flex-col justify-evenly items-center md:flex-row'>
+        <section id='get-started' className='min-h-screen p-8 text-center flex flex-col justify-evenly items-center lg:flex-row'>
           <div className='md:w-1/2'>
             <h2 className='text-5xl font-extrabold p-2'>Get Started Easily</h2>
-            <p>
+            <p className='mb-8'>
               Ready to revolutionize your GraphQL endpoint?
               Take the first step towards a faster, smarter,
               and more secure API infrastructure.
             </p>
+            <p>
             <a
               id='moreInfo-btn'
               href='https://github.com/oslabs-beta/GleiphQL' 
               target='_blank' 
+              className='rounded-md border text-white bg-blue-950 hover:bg-blue-900 font-semibold p-4 m-4 w-32 '
             >
-              <button 
-                className='rounded-md border text-white bg-blue-950 hover:bg-blue-900 font-semibold p-2 m-4 w-32'
-                
-              >More Info</button>
+              More Info
             </a>
+            </p>
           </div>
           <div>
             <dl className='grid place-items-center md:w-1/2'>
