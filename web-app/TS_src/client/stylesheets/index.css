@@ -46,20 +46,6 @@ body {
   font: 800 18px/1.5 exo, ubuntu, "segoe ui", helvetica, arial, sans-serif;
 }
 
-.splashpage {
-  color: #000000;
-  text-align: center;
-  background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAIAAACRXR/mAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAIGNIUk0AAHolAACAgwAA+f8AAIDpAAB1MAAA6mAAADqYAAAXb5JfxUYAAABnSURBVHja7M5RDYAwDEXRDgmvEocnlrQS2SwUFST9uEfBGWs9c97nbGtDcquqiKhOImLs/UpuzVzWEi1atGjRokWLFi1atGjRokWLFi1atGjRokWLFi1af7Ukz8xWp8z8AAAA//8DAJ4LoEAAlL1nAAAAAElFTkSuQmCC') repeat 0 0;
-  -webkit-animation: bg-scrolling-reverse .92s infinite; 
-  -moz-animation:    bg-scrolling-reverse .92s infinite; 
-  -o-animation:      bg-scrolling-reverse .92s infinite; 
-  animation:         bg-scrolling-reverse .92s infinite; 
-  -webkit-animation-timing-function: linear;
-  -moz-animation-timing-function:    linear;
-  -o-animation-timing-function:      linear;
-  animation-timing-function:         linear;
-}
-
 h1 {
   font-size: 70px;
   line-height: 1.5;
@@ -74,6 +60,20 @@ h2 {
 h3 {
   font-size: 45px;
   line-height: 1.5;
+}
+
+.splashpage {
+  color: #000000;
+  text-align: center;
+  background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAIAAACRXR/mAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAIGNIUk0AAHolAACAgwAA+f8AAIDpAAB1MAAA6mAAADqYAAAXb5JfxUYAAABnSURBVHja7M5RDYAwDEXRDgmvEocnlrQS2SwUFST9uEfBGWs9c97nbGtDcquqiKhOImLs/UpuzVzWEi1atGjRokWLFi1atGjRokWLFi1atGjRokWLFi1af7Ukz8xWp8z8AAAA//8DAJ4LoEAAlL1nAAAAAElFTkSuQmCC') repeat 0 0;
+  -webkit-animation: bg-scrolling-reverse .92s infinite; 
+  -moz-animation:    bg-scrolling-reverse .92s infinite; 
+  -o-animation:      bg-scrolling-reverse .92s infinite; 
+  animation:         bg-scrolling-reverse .92s infinite; 
+  -webkit-animation-timing-function: linear;
+  -moz-animation-timing-function:    linear;
+  -o-animation-timing-function:      linear;
+  animation-timing-function:         linear;
 }
 
 /*  ~~ Start of component: Login  ~~  */
@@ -188,6 +188,7 @@ h3 {
 
 /*  ~~ Start of component: Navbar  ~~   */
 /* Transparent border for the active Link element */
+
 .nav-active {
   position: relative;
   border-bottom: 2px solid transparent;
@@ -206,9 +207,3 @@ h3 {
 }
 
 /*    ~~ End of component: Navbar   ~~   */
-
-
-
-/*  ~~ Start of component: ----  ~~   */
-
-/*    ~~ End of component: ----   ~~   */

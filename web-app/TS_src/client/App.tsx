@@ -1,10 +1,10 @@
+import { FC, ReactElement }from 'react';
 import SplashPage from './pages/SplashPage';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 
 
-function App() {
-
+const App: FC = () : ReactElement => {
   return (
     <div className='flex flex-col min-h-screen splashpage'>
       <Navbar />

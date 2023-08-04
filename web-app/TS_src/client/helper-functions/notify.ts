@@ -1,6 +1,7 @@
 import { toast } from 'react-toastify';
 
-const notify = (msg: string, type?: string) => {
+// alerting notifications by types
+const notify = (msg: string, type?: string) : void => {
   switch(type) { 
     case 'success':
       toast.success(msg);
