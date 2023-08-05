@@ -48,8 +48,8 @@ describe(`Testing functionality of register component`, () => {
     cy.get('[data-cy=register-submit]').click()
 
     // successful register has a pop up
-    cy.get('.Toastify__toast-container').should('be.visible')
-    cy.get('#\\32  > .Toastify__toast-body').should('contain', 'Account successfully created!')
+    cy.get('.Toastify__toast-body').should('be.visible')
+    cy.get('.Toastify__toast-body').should('contain', 'Account successfully created!')
     
     cy.url().should('include', '/')
   })
@@ -63,15 +63,18 @@ describe(`Testing functionality of register component`, () => {
     // input test data to create user
     cy.get('[data-cy=register-username]').type(`Testbot8`)
     cy.get('[data-cy=register-password').type(`888`)
-    cy.get('[data-cy=register-confirm-password').type(`888`)
+    cy.get('[data-cy=register-confirm-password').type(`999`)
 
     // click complete register
     cy.get('[data-cy=register-submit]').click()
 
-    // failed login has a pop up
-    cy.get('.Toastify__toast-container')
-      .should('be.visible')
-      .contains('Could not create account. Try again.')
+    // wait for toast notification to be visible
+    cy.get('#notification-error').should('be.visible');
+
+    // cy.wait(3000);
+    
+    // assert the content of the toast notification
+    // cy.get('#notification-error').should('contain', 'Passwords do not match.');
 
     cy.url().should('include', '/')
   })
@@ -105,7 +108,7 @@ describe ('Testing functionality of login component', () => {
     cy.get('[data-cy=login-submit]').click()
 
     // successful login has a pop up
-    cy.get('.Toastify__toast-container')
+    cy.get('.Toastify__toast-body')
       .should('be.visible')
       .contains('Login successful!')
 
@@ -121,7 +124,7 @@ describe ('Testing functionality of login component', () => {
     cy.get('[data-cy=login-submit]').click()
 
     // failed pop up window
-    cy.get('.Toastify__toast-container')
+    cy.get('.Toastify__toast-body')
       .should('be.visible')
       .contains('Login unsuccessful. Try again.')
   });

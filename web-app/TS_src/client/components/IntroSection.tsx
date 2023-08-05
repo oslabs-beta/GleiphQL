@@ -1,8 +1,8 @@
-import React from 'react';
+import { FC, ReactElement } from 'react';
 import { Element } from 'react-scroll';
 
 
-const IntroSection: React.FC<{}> = () => {
+const IntroSection: FC = () : ReactElement => {
 
   return (
     <>
@@ -23,7 +23,7 @@ const IntroSection: React.FC<{}> = () => {
             </button>
           </div>
           <div className='w-full md:w-1/2'>
-            <img className='object-center m-auto' src='../assets/webapp.png' alt='screenshot of dashboard' width='800px'/>
+            <img className='object-center m-auto' src='../public/images/webapp.png' alt='screenshot of dashboard' width='800px'/>
           </div>
         </section>
       </Element>

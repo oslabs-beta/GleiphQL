@@ -1,32 +1,49 @@
 import db from '../models/dbModel';
 import { Request, Response, NextFunction } from 'express';
 import * as bcrypt from 'bcryptjs';
+import { verifiedUserObj, AsyncMiddleWare } from '../../types';
 
-const SALT_WORK_FACTOR = 10;
-
-const searchUser = async (email: string) => {
-  const sqlCommand: string = `
-  SELECT * FROM users WHERE email = $1;
-  `;
-  const values: string[] = [ email ];
-  let result;
-  try {
-    result = await db.query(sqlCommand, values);
-  } catch(err: any) {
-    console.log('error in searchUser: error in searching user in the database')
-  }
-  return result;
+interface UserCredentials {
+  user_id: number;
+  email: string;
+  password: string;
 }
 
-export const verifyUser =  async (email: string, password: string) => {
+interface UserController {
+  checkUserExists: AsyncMiddleWare;
+  register: AsyncMiddleWare;
+  deleteUser: AsyncMiddleWare;
+}
+
+
+const SALT_WORK_FACTOR: number = 10;
+
+
+// look up user in Users table by email
+const searchUser = async (email: string) : Promise<UserCredentials | null> => {
+  const sqlCommand: string = `
+    SELECT * FROM users WHERE email = $1;
+  `;
+  const values: string[] = [ email ];
+  try {
+    const result: UserCredentials[] = (await db.query(sqlCommand, values)).rows;
+    return result[0];
+  } catch(err: unknown) {
+    console.log('error in searchUser: error in searching user in the database');
+  }
+  return null;
+}
+
+// verify user credentials
+export const verifyUser =  async (email: string, password: string) : Promise<verifiedUserObj> => {
   let signedIn: boolean = false;
-  let userId;
-  const result = await searchUser(email);
-  if(result && result.rows[0]) {
-    const matched: boolean = await bcrypt.compare(password, result.rows[0].password);
+  let userId: number = 0;
+  const result: UserCredentials | null = await searchUser(email);
+  if(result) {
+    const matched: boolean = await bcrypt.compare(password, result.password);
     if(matched) {
       signedIn = true;
-      userId = result.rows[0].user_id;
+      userId = result.user_id;
     }
   }
   return {
@@ -36,8 +53,9 @@ export const verifyUser =  async (email: string, password: string) => {
   };
 };
 
-const userController = {
-  checkUserExists: async (req: Request, res: Response, next: NextFunction) => {
+const userController : UserController = {
+  // check if user exists
+  checkUserExists: async (req: Request, res: Response, next: NextFunction) : Promise<void> => {
     const { email, password } = req.body;
     if (!email || !password) return next({
       log: 'Error in userController.checkUserExists: not given all necessary inputs',
@@ -45,20 +63,21 @@ const userController = {
       message: { error: 'Did not receive necessary inputs to check if a user exists' }
     });
     try {
-      const result = await searchUser(email);
-      if(result && result.rows[0]) res.locals.userExists = true;
+      const result: UserCredentials | null = await searchUser(email);
+      if(result) res.locals.userExists = true;
       else res.locals.userExists = false;
-    } catch(err: any) {
+    } catch(err: unknown) {
       return next({
-        log: 'Error in userController.userExists: could not check if a user already exists',
+        log: 'Error in userController.userExists: ' + err,
         status: 400,
-        message: { error: err.message }
+        message: { error: 'Could not check if user already exists' }
       });
     }
     return next();
   },
-  register: async (req: Request, res: Response, next: NextFunction) => {
-    console.log(res.locals.userExists);
+  // register a new user account
+  register: async (req: Request, res: Response, next: NextFunction) : Promise<void> => {
+    // before adding a new account, check if a user with the credentials already exist
     if(res.locals.userExists) res.locals.userCreated = false;
     else {
       const { email, password } = req.body;
@@ -68,22 +87,23 @@ const userController = {
         RETURNING *;
       `;
       try {
+        // hash password
         const hashedPW: string = await bcrypt.hash(password, SALT_WORK_FACTOR);
         const values: string[] = [ email, hashedPW ];
-        const result: any = await db.query(sqlCommand, values);
+        const result: UserCredentials[] = (await db.query(sqlCommand, values)).rows;
         res.locals.userCreated = true;
-        res.locals.userId = result.rows[0].user_id;
-      } catch (err: any) {
+        res.locals.userId = result[0].user_id;
+      } catch (err: unknown) {
         return next({
-          log: 'Error in userController.register: could not add a new user',
+          log: 'Error in userController.register: ' + err,
           status: 400,
-          message: { error: err.message }
+          message: { error: 'Could not successfully add a new user' }
         });
       }
     }
     return next();
   },
-  deleteUser: async (req: Request, res: Response, next: NextFunction) => {
+  deleteUser: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const { email, password } = req.body;
     if (!email || !password) {
       return next({
@@ -97,7 +117,7 @@ const userController = {
       // Verify the user's credentials before proceeding with deletion
       const user = await verifyUser(email, password);
       if (!user.signedIn) {
-        return ({
+        return next ({
           log: 'Error in userController.deleteUser: invalid credentials',
           status: 401, 
           message: { error: 'Invalid credentials. Cannot delete user.' },
@@ -111,14 +131,14 @@ const userController = {
       await db.query(sqlCommand, values);
 
       res.locals.deleted = true;
-    } catch (err: any) {
-      return next({
+      return next(); // Resolve the Promise with a 'void'
+    } catch (err: unknown) {
+      return Promise.reject({
         log: 'Error in userController.deleteUser: could not delete user',
         status: 500,
-        message: { error: err.message },
+        message: { error: 'Could not delete user' },
       });
     }
-    return next();
   } 
 };
 

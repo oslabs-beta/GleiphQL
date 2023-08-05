@@ -5,20 +5,18 @@ import sessionController from '../controllers/sessionController';
 
 const accountRouter: Router = Router();
 
-accountRouter.post('/login', passport.authenticate('local'), (req: Request, res: Response) => {
+accountRouter.post('/login', passport.authenticate('local'), (req: Request, res: Response) : void => {
   res.status(200).send(req.user);
 });
 
-
-accountRouter.post('/register', userController.checkUserExists, userController.register, (req: Request, res: Response) => {
-  const response = {
+accountRouter.post('/register', userController.checkUserExists, userController.register, (req: Request, res: Response) : void => {
+  res.status(200).json({
     userExists: res.locals.userExists,
     userCreated: res.locals.userCreated,
-  }
-  res.status(200).json(response);
-});
+  });
+})
 
-accountRouter.post('/logout', sessionController.endSession, (req: Request, res: Response) => {
+accountRouter.post('/logout', sessionController.endSession, (req: Request, res: Response) : void => {
   res.status(200).send({
     signedIn: res.locals.signedIn
   })
