@@ -1,36 +1,65 @@
-import React, { useState , useEffect } from 'react';
+import { FC, ReactElement, useState , useEffect } from 'react';
 import useStore from '../store';
 import Navbar from '../components/Navbar';
 import RequestTable from '../components/RequestTable';
-import Sidebar from '../components/Sidebar'
 import LineChart from '../components/LineChart';
 import ChartHeader from '../components/ChartHeader';
 import { Navigate } from 'react-router-dom';
 import checkSession from '../helper-functions/checkSession';
+import Sidebar from '../components/Sidebar';
+import streamWS from '../helper-functions/websocket';
+import { PartialStore } from '../../types';
 
-const Dashboard: React.FC<{}> = () => {
-  const { currEndPoint, isLoggedIn, setIsLoggedIn, setCurrUser} = useStore();
-  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
+const Dashboard: FC = () : ReactElement => {
+  const { 
+    currEndpoint, 
+    isLoggedIn, 
+    setIsLoggedIn, 
+    setCurrUser, 
+    loginToggle, 
+    setModalOpen, 
+    connection, 
+    setConnection, 
+    setEndpointRequests 
+  } : PartialStore = useStore();
+
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  // checking if there is an active session
+  useEffect(() : void => {
     checkSession(setIsLoggedIn, setCurrUser, setIsLoading);
+    loginToggle(false);
+    setModalOpen(false);
   }, []);
+
+  // establish connection with WebSocket Server for current endpoint
+  useEffect(() : void => {
+    // end previous connection if any
+    if(connection !== null) connection();
+    if(currEndpoint.endpoint_id) setConnection(streamWS(currEndpoint, setEndpointRequests));
+  }, [currEndpoint]);
 
   if(isLoading) return <div>Loading...</div>;
   return (
-    <div className='m1-4'>
-      {!isLoggedIn && <Navigate to="/" replace={true} />}
+    <div className='flex flex-col'>
+      {!isLoggedIn && <Navigate to='/' replace={true} />}
       <Navbar />
-      <div className='flex flex-col place-items-center sm:place-items-start xl:flex-row'>
+      <div>
         <Sidebar />
-        { currEndPoint.id? 
-        <main className='flex flex-col place-items-center w-3/4 mr-2.5'>
+      </div>
+      <main className='flex flex-col place-items-center w-screen sm:pl-12'>
+      { currEndpoint.endpoint_id? 
+        <>
           <ChartHeader />
           <LineChart />
           <RequestTable />
-        </main> : null
-        }
-      </div>
+        </> : 
+        <div className='mt-8 flex flex-col place-items-center w-screen sm:pl-12'>
+          Add an endpoint
+        </div>
+      }
+      </main> 
     </div>
   );
 }

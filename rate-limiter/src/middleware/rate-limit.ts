@@ -1,8 +1,50 @@
 import { Request, Response, NextFunction } from 'express';
-import { FragmentDefinitionNode, FragmentSpreadNode, buildSchema, isAbstractType, GraphQLInterfaceType, isNonNullType, GraphQLType, GraphQLField, parse, GraphQLList, GraphQLObjectType, GraphQLSchema, TypeInfo, visit, visitWithTypeInfo, StringValueNode, getNamedType, GraphQLNamedType, getEnterLeaveForKind, GraphQLCompositeType, getNullableType, Kind, isListType, DocumentNode, DirectiveLocation, GraphQLUnionType, GraphQLNamedOutputType, getDirectiveValues, isCompositeType, GraphQLOutputType, FragmentsOnCompositeTypesRule, isInterfaceType, ASTNode, isObjectType, isUnionType, DefinitionNode, OperationDefinitionNode } from 'graphql';
+import {
+  buildSchema,
+  isAbstractType,
+  GraphQLInterfaceType,
+  isNonNullType,
+  GraphQLType,
+  GraphQLField,
+  parse,
+  GraphQLList,
+  GraphQLObjectType,
+  GraphQLSchema,
+  TypeInfo,
+  visit,
+  visitWithTypeInfo,
+  StringValueNode,
+  getNamedType,
+  GraphQLNamedType,
+  getEnterLeaveForKind,
+  GraphQLCompositeType,
+  getNullableType,
+  Kind,
+  isListType,
+  DocumentNode,
+  DirectiveLocation,
+  GraphQLUnionType,
+  GraphQLNamedOutputType,
+  getDirectiveValues,
+  isCompositeType,
+  GraphQLError,
+  FragmentDefinitionNode,
+  isInterfaceType,
+  isUnionType,
+  DefinitionNode,
+  OperationDefinitionNode,
+  isObjectType,
+} from 'graphql';
 import graphql from 'graphql';
-import cache from './cache.js';
-import { SchemaTextFieldPhonetics } from 'redis';
+import fetch from 'node-fetch';
+import expressCache from './express-cache.js';
+import apolloCache from './apollo-cache.js';
+
+//To-dos
+
+//Resolve Relay convention breaking analysis <= check later
+//Resolve argument calls nested in list casing => should be resolved
+//Do some work with variables
 
 //relevant interfaces
 interface TokenBucket {
@@ -53,6 +95,7 @@ class ComplexityAnalysis {
 
           if(node.kind === Kind.DOCUMENT) {
           console.log('ENTERING DOCUMENT NODE');
+          console.log('DOCUMENT NODE', node);
           //casing for fragment definition, need to maintain parentTypeStack, and acknowledge fragDef exists
           //but otherwise disregard
 
@@ -158,7 +201,7 @@ class ComplexityAnalysis {
         const unwrappedType = getNamedType(fieldType);
         // console.log('fieldType?', fieldType)
         const subSelection = selection.selectionSet
-        cost += Number(costDirective.costDirective) * mult;
+        costDirective.costDirective ? cost += Number(costDirective.costDirective) * mult : cost += mult;
         // console.log('type of argCosts', typeof argumentCosts);
 
         let newMult = mult;
@@ -264,13 +307,31 @@ class ComplexityAnalysis {
 //end of class
 
 
-const rateLimiter = function (config: any) {
+
+// helper function to send data to web-app
+const sendData = async (endpointData: any) => {
+  console.log('Monitor data: ', endpointData)
+  try {
+    const response = await fetch('http://localhost:3000/api/data', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(endpointData)
+    });
+    const data = await response.json();
+  }
+  catch {
+    console.log('Unable to save to database')
+  }
+}
+
+const expressRateLimiter = function (config: any) {
 
   let tokenBucket: TokenBucket = {};
   return async (req: Request, res: Response, next: NextFunction) => {
-    if(req.body.query) {
-
-      const builtSchema = buildSchema(config.schema)
+    if(req.body.query && !req.body.query.includes('IntrospectionQuery')) {
+      const builtSchema = config.schema
       const parsedAst = parse(req.body.query);
 
       let requestIP = req.ip
@@ -293,32 +354,36 @@ const rateLimiter = function (config: any) {
 
       // if the user wants to use redis, a redis client will be created and used as a cache
       if (config.redis === true) {
-        await cache.redis(config, complexityScore.complexityScore, req, res, next)
+        await expressCache.redis(config, complexityScore.complexityScore, req, res, next)
       }
       // if the user does not want to use redis, the cache will be saved in the "tokenBucket" object
       else if (config.redis !== true) {
-        tokenBucket = cache.nonRedis(config, complexityScore.complexityScore, tokenBucket, req)
-        const error = {
-          errors: [
-            {
-              message: `Token limit exceeded`,
-              extensions: {
-                cost: {
-                  requestedQueryCost: complexityScore.complexityScore,
-                  currentTokensAvailable:  Number(tokenBucket[requestIP].tokens.toFixed(2)),
-                  maximumTokensAvailable: config.complexityLimit,
-                },
-                responseDetails: {
-                  status: 429,
-                  statusText: "Too Many Requests",
+        tokenBucket = expressCache.nonRedis(config, complexityScore.complexityScore, tokenBucket, req)
+        if (complexityScore.complexityScore >= tokenBucket[requestIP].tokens) {
+          if (res.locals.gleiphqlData) {
+            res.locals.gleiphqlData.blocked = true
+            res.locals.gleiphqlData.complexityLimit = config.complexityLimit
+            res.locals.gleiphqlData.complexityScore = complexityScore
+            sendData(res.locals.gleiphqlData)
+          }
+          const error = {
+            errors: [
+              {
+                message: `Token limit exceeded`,
+                extensions: {
+                  cost: {
+                    requestedQueryCost: complexityScore.complexityScore,
+                    currentTokensAvailable:  Number(tokenBucket[requestIP].tokens.toFixed(2)),
+                    maximumTokensAvailable: config.complexityLimit,
+                  },
+                  responseDetails: {
+                    status: 429,
+                    statusText: 'Too Many Requests',
+                  }
                 }
               }
-            }
-          ]
-        }
-
-        if (complexityScore.complexityScore >= tokenBucket[requestIP].tokens) {
-
+            ]
+          }
           console.log('Complexity of this query is too high');
           res.status(429).json(error);
           return next(Error);
@@ -326,10 +391,82 @@ const rateLimiter = function (config: any) {
         console.log('Tokens before subtraction: ', tokenBucket[requestIP].tokens)
         tokenBucket[requestIP].tokens -= complexityScore.complexityScore;
         console.log('Tokens after subtraction: ', tokenBucket[requestIP].tokens)
+        if (res.locals.gleiphqlData) {
+          res.locals.gleiphqlData.complexityLimit = config.complexityLimit
+          res.locals.gleiphqlData.complexityScore = complexityScore
+          sendData(res.locals.gleiphqlData)
+        }
       }
-
     };
   return next();
   }
 }
-export default rateLimiter;
+
+const apolloRateLimiter = (config: any) => {
+
+  let tokenBucket: TokenBucket = {};
+  return {
+    async requestDidStart(requestContext: any) {
+      return {
+        async didResolveOperation(requestContext: any) {
+          if (requestContext.operationName !== 'IntrospectionQuery') {
+            console.log('Validation started!');
+            const builtSchema = requestContext.schema
+            const parsedAst = requestContext.document
+            config.requestContext = requestContext
+            let requestIP = requestContext.contextValue.clientIP
+
+            // fixes format of ip addresses
+            if (requestIP.includes('::ffff:')) {
+              requestIP = requestIP.replace('::ffff:', '');
+            }
+
+            const analysis = new ComplexityAnalysis(builtSchema, parsedAst, config);
+
+            const complexityScore = analysis.traverseAST();
+            requestContext.contextValue.complexityScore = complexityScore
+            requestContext.contextValue.complexityLimit = config.complexityLimit
+            console.log('This is the type complexity', complexityScore.typeComplexity);
+            console.log('This is the complexity score:', complexityScore.complexityScore);
+
+            // if the user wants to use redis, a redis client will be created and used as a cache
+            if (config.redis === true) {
+              await apolloCache.redis(config, complexityScore.complexityScore, requestContext)
+            }
+            // if the user does not want to use redis, the cache will be saved in the "tokenBucket" object
+            else if (config.redis !== true) {
+              tokenBucket = apolloCache.nonRedis(config, complexityScore.complexityScore, tokenBucket)
+
+              if (complexityScore.complexityScore >= tokenBucket[requestIP].tokens) {
+                requestContext.contextValue.blocked = true
+                console.log('Complexity of this query is too high');
+                throw new GraphQLError('Complexity of this query is too high', {
+                  extensions: {
+                    cost: {
+                      requestedQueryCost: complexityScore.complexityScore,
+                      currentTokensAvailable:  Number(tokenBucket[requestIP].tokens.toFixed(2)),
+                      maximumTokensAvailable: config.complexityLimit,
+                    }
+                  },
+                });
+
+              }
+              console.log('Tokens before subtraction: ', tokenBucket[requestIP].tokens)
+              tokenBucket[requestIP].tokens -= complexityScore.complexityScore;
+              console.log('Tokens after subtraction: ', tokenBucket[requestIP].tokens)
+            }
+          }
+        },
+      };
+    },
+  }
+};
+
+const gleiphqlContext = async ({ req }: { req: Request }) => {
+  const clientIP =
+    req.headers['x-forwarded-for'] || // For reverse proxies
+    req.socket.remoteAddress;
+  return { clientIP };
+}
+
+export { expressRateLimiter, apolloRateLimiter, gleiphqlContext }

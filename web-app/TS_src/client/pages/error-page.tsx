@@ -1,21 +1,10 @@
-import { useRouteError } from "react-router-dom";
+import { ReactElement } from 'react';
 
-interface ErrorType {
-  statusText?: string;
-  message?: string;
-}
-
-export default function ErrorPage() {
-  const error = useRouteError() as ErrorType;
-  console.error(error);
-
+export default function ErrorPage() : ReactElement {
   return (
-    <div id='error-page'>
-      <h1>Opps!</h1>
-      <p>Sorry, we're experiencing an unexpected error.</p>
-      <p>
-        <i>{`This is current status: ${error.statusText}` || `This is current message: ${error.message}`}</i>
-      </p>
-    </div>
+    <main className='flex flex-col place-items-center'>
+      <h1 className='text-8xl text-blue-950 m-24'>Oops!</h1>
+      <p className='m-2'>Sorry, we're experiencing an unexpected error.</p>
+    </main>
   )
 }

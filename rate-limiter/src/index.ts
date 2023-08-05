@@ -1,10 +1,4 @@
-// Once middleware is complete, import and export the middleware from this file
-import endpointMonitor from "./middleware/monitoring.js";
-import rateLimiter from "./middleware/rate-limit.js";
+import { expressEndpointMonitor, apolloEndpointMonitor } from './middleware/monitoring.js';
+import { expressRateLimiter, apolloRateLimiter, gleiphqlContext }from './middleware/rate-limit.js';
 
-const gleiphQL = {
-  endpointMonitor,
-  rateLimiter
-}
-
-export default gleiphQL
+export { expressEndpointMonitor, expressRateLimiter, apolloRateLimiter, apolloEndpointMonitor, gleiphqlContext }
