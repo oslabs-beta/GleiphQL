@@ -1,17 +1,19 @@
-import React from 'react';
+import { FC, ReactElement } from 'react';
 import notify from '../helper-functions/notify';
 import { Element } from 'react-scroll';
 
 
-const InstructionSection: React.FC<{}> = () => {
-  const copyText = async (elementId : string) => {
-    let text = document.getElementById(elementId)?.innerText;
+const InstructionSection: FC = () : ReactElement => {
+
+  // to copy npm install scripts upon user's click
+  const copyText = async (elementId : string) : Promise<void> => {
+    let text: string | undefined = document.getElementById(elementId)?.innerText;
     try {
-      // @ts-ignore
-      await navigator.clipboard.writeText(text);
-      notify('Copied!')
-    } catch (err: any) {
-      console.log(err.message);
+      if(text) await navigator.clipboard.writeText(text);
+      notify('Copied!');
+    } catch (err: unknown) {
+      if(err instanceof Error) console.log(err.message);
+      else console.log('unknown error');
     }
   }
   return (
@@ -19,7 +21,7 @@ const InstructionSection: React.FC<{}> = () => {
       <Element name='get-started'>
         <section id='get-started' className='min-h-screen p-8 text-center flex flex-col justify-evenly items-center md:flex-row'>
           <div className='md:w-1/2'>
-            <h2 className='text-2xl font-extrabold p-2'>Get Started Easily</h2>
+            <h2 className='text-5xl font-extrabold p-2'>Get Started Easily</h2>
             <p>
               Ready to revolutionize your GraphQL endpoint?
               Take the first step towards a faster, smarter,
@@ -27,17 +29,15 @@ const InstructionSection: React.FC<{}> = () => {
             </p>
             <a
               id='moreInfo-btn'
-              href='https://github.com/oslabs-beta/graphql-rate-limiter' 
+              href='https://github.com/oslabs-beta/GleiphQL' 
               target='_blank' 
-              data-expected-url='https://github.com/oslabs-beta/GleiphQL'>
+            >
               <button 
                 className='rounded-md border text-white bg-blue-950 hover:bg-blue-900 font-semibold p-2 m-4 w-32'
                 
               >More Info</button>
             </a>
           </div>
-
-          {/* Wrapped dl elements in a div so that we can apply centering for text content */}
           <div>
             <dl className='grid place-items-center md:w-1/2'>
               <dt className='p-2'>npm: </dt>
@@ -48,7 +48,7 @@ const InstructionSection: React.FC<{}> = () => {
                 <button 
                   id='npmCopy-btn'
                   className='border-none w-fit pr-2' 
-                  onClick={() => copyText('npm')}>
+                  onClick={() : Promise<void> => copyText('npm')}>
                   <span className='material-symbols-outlined'>content_copy</span>
                 </button>
               </dd>
@@ -60,8 +60,8 @@ const InstructionSection: React.FC<{}> = () => {
                 <button
                   id='yarnCopy-btn'
                   className='border-none w-fit pr-2' 
-                  onClick={() => copyText('yarn')}>
-                  <span className="material-symbols-outlined">content_copy</span>
+                  onClick={() : Promise<void> => copyText('yarn')}>
+                  <span className='material-symbols-outlined'>content_copy</span>
                 </button>
               </dd>
             </dl>

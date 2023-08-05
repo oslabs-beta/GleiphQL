@@ -1,38 +1,50 @@
-import { Fragment, useRef, useState } from 'react'
+import { ReactElement, Fragment } from 'react'
 import { Dialog, Transition } from '@headlessui/react'
 import useStore from '../store';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import { 
+  Endpoint, 
+  SetStatusFx,
+  PartialStore
+} from '../../types';
 
 interface ConfirmationModalProps {
   open: boolean;
-  setOpen: (value: boolean) => void;
+  setOpen: SetStatusFx;
   cancelButtonRef: React.RefObject<HTMLButtonElement>;
-  setEndpointArray: (value: any) => void;
+  setEndpointArray: (endpoints: Endpoint[]) => void;
 }
 
-export default function ConfirmationModal({open, setOpen, cancelButtonRef, setEndpointArray}: ConfirmationModalProps) {
+export default function ConfirmationModal({open, setOpen, cancelButtonRef, setEndpointArray}: ConfirmationModalProps) : ReactElement {
   
-  const {  
-    currEndPoint,
-    currUser, 
-  } = useStore();
+  const { currEndpoint, setCurrEndpoint, currUser, connection } : PartialStore = useStore();
 
-  const deleteEndpoint = async () => {
-    const response = await fetch(`/api/endpoint/${currEndPoint.id}`, {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({userId: currUser.userId})
-    });
-    const newQueryArr = await response.json();
-    setEndpointArray(newQueryArr);
-    setOpen(false);
+  // delete selected endpoint in database for user and update sidebar with the remaining endpoints
+  const deleteEndpoint = async () : Promise<void> => {
+    // end WebSocket connection for the current endpoint
+    if(connection) connection();
+    try {
+      const response: Response = await fetch(`/api/endpoint/${currEndpoint.endpoint_id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({userId: currUser.userId})
+      });
+      const newQueryArr: Endpoint[] = await response.json();
+      setEndpointArray(newQueryArr);
+      if(!newQueryArr.length) setCurrEndpoint(0, '');
+      else setCurrEndpoint(newQueryArr[0].endpoint_id, newQueryArr[0].url);
+      setOpen(false);
+    } catch(err: unknown) {
+      if(err instanceof Error) console.log(err.message);
+      else console.log('unknown error');
+    }
   }
 
   return (
     <Transition.Root show={open} as={Fragment}>
-      <Dialog as='div' className='relative z-10' initialFocus={cancelButtonRef} onClose={setOpen}>
+      <Dialog as='div' className='relative z-[1040]' initialFocus={cancelButtonRef} onClose={setOpen}>
         <Transition.Child
           as={Fragment}
           enter='ease-out duration-300'
@@ -45,7 +57,7 @@ export default function ConfirmationModal({open, setOpen, cancelButtonRef, setEn
           <div className='fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity' />
         </Transition.Child>
 
-        <div className='fixed inset-0 z-10 overflow-y-auto'>
+        <div className='fixed inset-0 z-[1040] overflow-y-auto'>
           <div className='flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0'>
             <Transition.Child
               as={Fragment}
@@ -63,7 +75,7 @@ export default function ConfirmationModal({open, setOpen, cancelButtonRef, setEn
                       <WarningAmberIcon className='h-6 w-6 text-red-600' aria-hidden='true' />
                     </div>
                     <div className='mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left'>
-                      <Dialog.Title as='h3' className='text-base font-semibold leading-6 text-gray-900'>
+                      <Dialog.Title as='h2' className='text-base font-semibold leading-6 text-gray-900'>
                         Delete endpoint
                       </Dialog.Title>
                       <div className='mt-2'>
@@ -86,7 +98,7 @@ export default function ConfirmationModal({open, setOpen, cancelButtonRef, setEn
                   <button
                     type='button'
                     className='mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto'
-                    onClick={() => setOpen(false)}
+                    onClick={() : void => setOpen(false)}
                     ref={cancelButtonRef}
                   >
                     Cancel

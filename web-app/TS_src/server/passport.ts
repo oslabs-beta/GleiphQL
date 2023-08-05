@@ -1,20 +1,21 @@
-import { Strategy } from 'passport-local';
+import passportLocal from 'passport-local';
 import { verifyUser } from './controllers/userController';
+import passport from 'passport';
+import { verifiedUserObj } from '../types';
 
+const LocalStrategy = passportLocal.Strategy;
 
-const authUser = async (email: string, password: string, done: Function) => {
-  try {
-    const result = await verifyUser(email, password);
-    const authenticatedUser = result.signedIn? { signedIn: result.signedIn, userId: result.userId, userEmail: email } : false;
-    return done(null, authenticatedUser);
-  } catch(err) {
-    done(err);
-  }
-};
-
-export default function (passport : any) {
-  passport.use('local', new Strategy({
+export default function (p: typeof passport) : void {
+  p.use('local', new LocalStrategy({
     usernameField: 'email'
-  }, authUser));
+  }, async (email, password, done) => {
+    try {
+      const result: verifiedUserObj = await verifyUser(email, password);
+      const authenticatedUser: verifiedUserObj | boolean  = result.signedIn? { signedIn: result.signedIn, userId: result.userId, userEmail: email } : false;
+      return done(null, authenticatedUser);
+    } catch(err: unknown) {
+      return done(err);
+    }
+  }));
 }
 

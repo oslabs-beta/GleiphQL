@@ -1,8 +1,16 @@
 import db from '../models/dbModel';
 import { Request, Response, NextFunction } from 'express';
+import { Endpoint, AsyncMiddleWare } from '../../types';
 
-const endpointController = {
-  addEndpoint: async (req: Request, res: Response, next: NextFunction) => {
+interface EndpointController {
+  addEndpoint: AsyncMiddleWare;
+  retrieveEndpoints: AsyncMiddleWare;
+  deleteEndpoint: AsyncMiddleWare;
+}
+
+const endpointController : EndpointController = {
+  // add a new endpoint
+  addEndpoint: async (req: Request, res: Response, next: NextFunction) : Promise<void> => {
     const userId: number = Number(req.params.userId);
     const { url, description } = req.body;
     if(url === undefined || description === undefined) return next({
@@ -11,69 +19,59 @@ const endpointController = {
       message: { error: 'Did not receive necessary inputs to add endpoint for the user' }
     });
     const sqlCommand: string = `
-    INSERT INTO endpoints (owner_id, url, description)
-    VALUES ($1, $2, $3)
-    RETURNING *;
+      INSERT INTO endpoints (owner_id, url, description)
+      VALUES ($1, $2, $3)
+      RETURNING *;
     `;
     const values: Array<string|number> = [ userId, url, description ];
     try {
-      const result = await db.query(sqlCommand, values);
-      res.locals.addedEndpoint = result.rows[0];
-    } catch(err: any) {
+      const result: Endpoint[] = (await db.query(sqlCommand, values)).rows;
+      res.locals.addedEndpoint = result[0];
+    } catch(err: unknown) {
       return next({
-        log: 'Error in endpointController.addEndpoint: could not add endpoint for the user in database',
+        log: 'Error in endpointController.addEndpoint: ' + err,
         status: 400,
-        message: { error: err.message }
+        message: { error: 'Could not add endpoint for the user in the Endpoint table' }
       });
     }
     return next();
   },
-  retrieveEndpoints: async (req: Request, res: Response, next: NextFunction) => {
-    console.log('In retrieve endpoints');
-    const userId: number = Number(req.params.userId);
+  // getting all endpoints for a given user
+  retrieveEndpoints: async (req: Request, res: Response, next: NextFunction) : Promise<void> => {
+    let userId: number = Number(req.params.userId);
+    if(!userId) {
+      userId = req.body.userId;
+    }
     const sqlCommand: string = `
-    SELECT * FROM endpoints WHERE owner_id = $1;
+      SELECT * FROM endpoints WHERE owner_id = $1;
     `;
     const values: number[] = [ userId ];
     try {
-      const result = await db.query(sqlCommand, values);
-      res.locals.endpoints = result.rows;
-    } catch(err: any) {
+      const result: Endpoint[] = (await db.query(sqlCommand, values)).rows;
+      res.locals.endpoints = result;
+    } catch(err: unknown) {
       return next({
-        log: 'Error in endpointController.retrieveEndpoints: could not retrieve endpoints for the user from the database',
+        log: 'Error in endpointController.retrieveEndpoints: ' + err,
         status: 400,
-        message: { error: err.message }
+        message: { error: 'Could not retrieve endpoints for the user' }
       });
     }
     return next();
   },
-  deleteEndpoint: async (req: Request, res: Response, next: NextFunction) => {
+  // delete endpoint for a given endpoint id
+  deleteEndpoint: async (req: Request, res: Response, next: NextFunction) : Promise<void> => {
     const endpointId: number = Number(req.params.endpointId);
-    const { userId } = req.body;
-    const sqlCommand1: string = `
-    DELETE FROM endpoints WHERE endpoint_id = $1`;
-    const values1: number[] = [ endpointId ];
+    const sqlCommand: string = `
+      DELETE FROM endpoints WHERE endpoint_id = $1;
+    `;
+    const values: number[] = [ endpointId ];
     try {
-      await db.query(sqlCommand1, values1);
+      await db.query(sqlCommand, values);
     } catch (err: any) {
       return next({
-        log: 'Error in endpointController.deleteEndpoint: could not delete endpoints from the database',
+        log: 'Error in endpointController.deleteEndpoint: ' + err,
         status: 400,
-        message: { error: err.message }
-      });
-    }
-
-    const sqlCommand2: string = `
-      SELECT * FROM endpoints WHERE owner_id = $1;`;
-    const values2: number[] = [ userId ];
-    try {
-      const result = await db.query(sqlCommand2, values2);
-      res.locals.endpoints = result.rows;
-    } catch (err: any) {
-      return next({
-        log: 'Error in endpointController.deleteEndpoint: could not retrieve endpoints for the user from the database',
-        status: 400,
-        message: { error: err.message }
+        message: { error: 'Could not delete endpoint from the Endpoint table for the given endpoint id' }
       });
     }
     return next();
