@@ -14,6 +14,8 @@ const expressEndpointMonitor = function (config: any) {
         objectTypes: {},
         queryString: '',
         complexityScore: '',
+        blocked: false,
+        complexityLimit: '',
         email: '',
         password: '',
       }
@@ -97,6 +99,8 @@ const apolloEndpointMonitor = (config: any) => {
               objectTypes: {},
               queryString: '',
               complexityScore: '',
+              blocked: false,
+              complexityLimit: '',
               email: '',
               password: '',
             }
@@ -146,6 +150,8 @@ const apolloEndpointMonitor = (config: any) => {
             if (endpointData.ip.includes('::ffff:')) {
               endpointData.ip = endpointData.ip.replace('::ffff:', '');
             }
+            if (requestContext.contextValue.blocked) endpointData.blocked = requestContext.contextValue.blocked
+            endpointData.complexityLimit = requestContext.contextValue.complexityLimit
             endpointData.url = requestContext.request.http.headers.get('referer')
             endpointData.complexityScore = requestContext.contextValue.complexityScore
             endpointData.timestamp = Date()

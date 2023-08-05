@@ -452,9 +452,8 @@ class ComplexityAnalysis {
 //end of class
 
 // helper function to send data to web-app
-const sendData = async (endpointData: any, complexityScore: any) => {
-  endpointData.complexityScore = complexityScore
-  console.log('Monitor data NEW!: ', endpointData)
+const sendData = async (endpointData: any) => {
+  console.log('Monitor data: ', endpointData)
   try {
     const response = await fetch('http://localhost:3000/api/data', {
       method: 'POST',
@@ -506,7 +505,10 @@ const expressRateLimiter = function (config: any) {
         tokenBucket = expressCache.nonRedis(config, complexityScore.complexityScore, tokenBucket, req)
         if (complexityScore.complexityScore >= tokenBucket[requestIP].tokens) {
           if (res.locals.gleiphqlData) {
-            sendData(res.locals.gleiphqlData, complexityScore)
+            res.locals.gleiphqlData.blocked = true
+            res.locals.gleiphqlData.complexityLimit = config.complexityLimit
+            res.locals.gleiphqlData.complexityScore = complexityScore
+            sendData(res.locals.gleiphqlData)
           }
           const error = {
             errors: [
@@ -534,7 +536,9 @@ const expressRateLimiter = function (config: any) {
         tokenBucket[requestIP].tokens -= complexityScore.complexityScore;
         console.log('Tokens after subtraction: ', tokenBucket[requestIP].tokens)
         if (res.locals.gleiphqlData) {
-          sendData(res.locals.gleiphqlData, complexityScore)
+          res.locals.gleiphqlData.complexityLimit = config.complexityLimit
+          res.locals.gleiphqlData.complexityScore = complexityScore
+          sendData(res.locals.gleiphqlData)
         }
       }
     };
@@ -565,19 +569,21 @@ const apolloRateLimiter = (config: any) => {
           
             const complexityScore = analysis.traverseAST();
             requestContext.contextValue.complexityScore = complexityScore
+            requestContext.contextValue.complexityLimit = config.complexityLimit
             console.log('This is the type complexity', complexityScore.typeComplexity);
             console.log('This is the resolve complexity', complexityScore.resolveComplexity);
             console.log('This is the complexity score:', complexityScore.complexityScore);
           
             // if the user wants to use redis, a redis client will be created and used as a cache
             if (config.redis === true) {
-              await apolloCache.redis(config, complexityScore.complexityScore)
+              await apolloCache.redis(config, complexityScore.complexityScore, requestContext)
             }
             // if the user does not want to use redis, the cache will be saved in the "tokenBucket" object
             else if (config.redis !== true) {
               tokenBucket = apolloCache.nonRedis(config, complexityScore.complexityScore, tokenBucket)
           
               if (complexityScore.complexityScore >= tokenBucket[requestIP].tokens) {
+                requestContext.contextValue.blocked = true
                 console.log('Complexity of this query is too high');
                 throw new GraphQLError('Complexity of this query is too high', {
                   extensions: {
@@ -601,4 +607,11 @@ const apolloRateLimiter = (config: any) => {
   }
 };
 
-export { expressRateLimiter, apolloRateLimiter }
+const gleiphqlContext = async ({ req }: { req: Request }) => {
+  const clientIP =
+    req.headers['x-forwarded-for'] || // For reverse proxies
+    req.socket.remoteAddress;  
+  return { clientIP };
+}
+
+export { expressRateLimiter, apolloRateLimiter, gleiphqlContext }
