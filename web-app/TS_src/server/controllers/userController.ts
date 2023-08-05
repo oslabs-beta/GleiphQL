@@ -35,7 +35,7 @@ const searchUser = async (email: string) : Promise<UserCredentials | null> => {
 // verify user credentials
 export const verifyUser =  async (email: string, password: string) : Promise<verifiedUserObj> => {
   let signedIn: boolean = false;
-  let userId;
+  let userId = 0;
   const result: UserCredentials | null = await searchUser(email);
   if(result) {
     const matched: boolean = await bcrypt.compare(password, result.password);
