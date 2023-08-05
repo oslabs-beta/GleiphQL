@@ -21,7 +21,7 @@ const findEndpointId = async (url: string, userID: string) => {
 
 const dataController = {
   addData: async (req: Request, res: Response, next: NextFunction) => {
-    const { depth, ip, url, timestamp, objectTypes, queryString, complexityScore, email, password } = req.body;
+    const { depth, ip, url, timestamp, objectTypes, queryString, complexityScore, complexityLimit, blocked, email, password } = req.body;
     if(depth === undefined || 
       ip === '' || 
       url === '' || 
@@ -52,11 +52,11 @@ const dataController = {
     });
     const sqlCommand: string = `
     INSERT INTO requests
-    (endpoint_id, ip_address, timestamp, object_types, query_string, complexity_score, query_depth)
-    VALUES ($1, $2, $3, $4, $5, $6, $7)
+    (endpoint_id, ip_address, timestamp, object_types, query_string, complexity_score, query_depth, complexity_limit, blocked)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
     RETURNING *;
     `;
-    const values = [ endpointId, ip, timestamp, {objectTypes: objectTypes}, queryString, complexityScore.complexityScore, depth ];
+    const values = [ endpointId, ip, timestamp, {objectTypes: objectTypes}, queryString, complexityScore.complexityScore, depth, complexityLimit, blocked ];
     try {
       const result = await db.query(sqlCommand, values);
       res.locals.addedRequest = result.rows[0];
