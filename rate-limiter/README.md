@@ -1,5 +1,5 @@
 # GraphQL Endpoint Monitor
-The GraphQL Endpoint Monitor is a package designed to log and monitor traffic metrics for a GraphQL endpoint. The package is available as an Express Middlware or as a plugin for Apollo server. It sends the collected data to a web application for visualization. This package is intended to be used alongside the expressRateLimiter middleware, with the expressRateLimiter middleware placed after the expressEndpointMonitor middleware in the middleware chain.
+The GraphQL Endpoint Monitor is a package designed to log and monitor traffic metrics for a GraphQL endpoint. The package is available as an Express Middlware or as a plugin for Apollo server. It sends the collected data to our [web application](gleiphql.com) for visualization. This package is intended to be used alongside our rate limiter package.
 
 ## Metrics Collected
 The `expressEndpointMonitor` middleware and `apolloEndpointMonitor` plugin collects the following metrics for each GraphQL request:
