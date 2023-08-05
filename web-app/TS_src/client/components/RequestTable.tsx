@@ -6,7 +6,6 @@ import { EndpointRequest, PartialStore } from '../../types';
 
 const RequestTable : FC = () : ReactElement => {
   const { endpointRequests } : PartialStore = useStore();
-  console.log('test', endpointRequests)
 
   return (
     <section className='my-12 rounded-lg border border-slate-100 border-1 overflow-hidden w-3/4'>
