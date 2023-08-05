@@ -78,7 +78,7 @@ Usage:
 ```
 import express from 'express';
 import { apolloRateLimiter, apolloEndpointMonitor, gleiphqlContext } from 'gleiphql';
-import { createHandler } from 'graphql-http/lib/use/express';
+import { startStandaloneServer } from '@apollo/server/standalone';
 
 
 // Configuration for the expressEndpointMonitor middleware.
