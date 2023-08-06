@@ -75,7 +75,6 @@ const expressEndpointMonitor = function (config: MonitorConfig) : (req: Request,
       endpointData.complexityScore = res.locals.complexityScore;
       endpointData.timestamp = Date();
       endpointData.objectTypes = extractObjectTypes(query);
-      endpointData.complexityLimit = res.locals.complexityLimit;
       endpointData.email = config.gliephqlUsername;
       endpointData.password = config.gleiphqlPassword;
       if (query.loc) {
