@@ -1,6 +1,6 @@
 import { EndpointRequest } from '../../types';
 
-type ValType = 'complexity_score' | 'query_depth'; // for use with getValue helper function
+type ValType = 'complexity_score' | 'query_depth' | 'complexity_limit'; // for use with getValue helper function
 
 interface DataSet {
   label: string;
@@ -19,7 +19,7 @@ const createXAxisPoint = (endpointRequest: EndpointRequest): string => {
   const rawDate: string = endpointRequest.timestamp;
   const formattedDate: string = new Date(rawDate).toISOString().split('T')[0];
   return formattedDate;
-}
+};
 
 const configChartData = (interval: string, dataType: string, endpointRequests: EndpointRequest[]) => {
   const today: Date = new Date();
@@ -84,7 +84,7 @@ const configChartData = (interval: string, dataType: string, endpointRequests: E
           borderColor: 'rgb(53, 162, 235)',
           backgroundColor: 'rgba(53, 162, 235, 0.5)',
         }
-      ]
+      ];
     } else { // last 7 days or last 30 days
       datasets = [
         {
@@ -95,7 +95,7 @@ const configChartData = (interval: string, dataType: string, endpointRequests: E
               const rawDate: string = endpointRequests[i].timestamp;
               const formattedDate: string = new Date(rawDate).toISOString().split('T')[0];
               if (formattedDate === date) {
-                intervalRequests ++;
+                intervalRequests++;
               }
             }
             return intervalRequests;
@@ -103,7 +103,7 @@ const configChartData = (interval: string, dataType: string, endpointRequests: E
           borderColor: 'rgb(53, 162, 235)',
           backgroundColor: 'rgba(53, 162, 235, 0.5)',
         }
-      ]
+      ];
     }
 
     chartData.labels = timeInterval;
@@ -122,65 +122,29 @@ const configChartData = (interval: string, dataType: string, endpointRequests: E
     }
 
     // Use the timeInterval array to map the data points for the chart 
-    if (interval === 'Last 10 Requests') {
-      datasets = [
-        {
-          label: 'Complexity Scores',
-          data: timeInterval.reverse().map((date: string, i: number) : number => {
-            return getValue(i, 'complexity_score');
-          }).reverse(),
-          borderColor: 'rgb(53, 162, 235)',
-          backgroundColor: 'rgba(53, 162, 235, 0.5)',
-        },
-        {
-          label: 'Complexity Limit',
-          data: timeInterval.map((date: string) : number => {
-            return 5000;
-          }),
-          borderColor: 'rgb(255, 99, 132)',
-          backgroundColor: 'rgba(255, 99, 132, 0.5)',
-        },
-      ]
-    } else if (interval === 'Last 30 Requests') {
-      datasets = [
-        {
-          label: 'Total API Requests',
-          data: timeInterval.reverse().map((time: string, i: number) : number => {
-            return getValue(i, 'complexity_score');
-          }).reverse(),
-          borderColor: 'rgb(53, 162, 235)',
-          backgroundColor: 'rgba(53, 162, 235, 0.5)',
-        },
-        {
-          label: 'Complexity Limit',
-          data: timeInterval.map((date: string) : number => {
-            return 5000;
-          }),
-          borderColor: 'rgb(255, 99, 132)',
-          backgroundColor: 'rgba(255, 99, 132, 0.5)',
-        },
-      ]
-    } else {
-      datasets = [
-        {
-          label: 'Total API Requests',
-          data: timeInterval.reverse().map((date: string, i: number) : number => {
-            return getValue(i, 'complexity_score');
-          }).reverse(),
-          borderColor: 'rgb(53, 162, 235)',
-          backgroundColor: 'rgba(53, 162, 235, 0.5)',
-        },
-        {
-          label: 'Complexity Limit',
-          data: timeInterval.map((date: string) : number => {
-            return 5000;
-          }),
-          borderColor: 'rgb(255, 99, 132)',
-          backgroundColor: 'rgba(255, 99, 132, 0.5)',
-        },
-      ]
-    }
 
+    const reverseTimeInterval: string[] = timeInterval.reverse();
+
+    
+    datasets = [
+      {
+        label: 'Complexity Scores',
+        data: reverseTimeInterval.map((date: string, i: number) : number => {
+          return getValue(i, 'complexity_score');
+        }).reverse(),
+        borderColor: 'rgb(53, 162, 235)',
+        backgroundColor: 'rgba(53, 162, 235, 0.5)',
+      },
+      {
+        label: 'Complexity Limit',
+        data: reverseTimeInterval.map((date: string, i: number) : number => {
+          return getValue(i, 'complexity_limit');
+        }).reverse(),
+        borderColor: 'rgb(255, 99, 132)',
+        backgroundColor: 'rgba(255, 99, 132, 0.5)',
+      },
+    ];
+  
     chartData.labels = timeInterval;
     chartData.datasets = datasets;
     return chartData;
@@ -197,42 +161,19 @@ const configChartData = (interval: string, dataType: string, endpointRequests: E
     }
 
     // Use the timeInterval array to map the data points for the chart 
-    if (interval === 'Last 10 Requests') {
-      datasets = [
-        {
-          label: 'Complexity Scores',
-          data: timeInterval.reverse().map((time: string, i: number) : number => {
-            return getValue(i, 'query_depth');
-          }).reverse(),
-          borderColor: 'rgb(53, 162, 235)',
-          backgroundColor: 'rgba(53, 162, 235, 0.5)',
-        }
-      ]
-    }
-    if (interval === 'Last 30 Requests') {
-      datasets = [
-        {
-          label: 'Total API Requests',
-          data: timeInterval.reverse().map((date: string, i: number) : number => {
-            return getValue(i, 'query_depth');
-          }).reverse(),
-          borderColor: 'rgb(53, 162, 235)',
-          backgroundColor: 'rgba(53, 162, 235, 0.5)',
-        }
-      ]
-    }
-    if (interval === 'Last 100 Requests') {
-      datasets = [
-        {
-          label: 'Total API Requests',
-          data: timeInterval.reverse().map((date: string, i: number) : number => {
-            return getValue(i, 'query_depth');
-          }).reverse(),
-          borderColor: 'rgb(53, 162, 235)',
-          backgroundColor: 'rgba(53, 162, 235, 0.5)',
-        }
-      ]
-    }
+
+    const reverseTimeInterval: string[] = timeInterval.reverse();
+
+    datasets = [
+      {
+        label: 'Complexity Scores',
+        data: reverseTimeInterval.map((time: string, i: number) : number => {
+          return getValue(i, 'query_depth');
+        }).reverse(),
+        borderColor: 'rgb(53, 162, 235)',
+        backgroundColor: 'rgba(53, 162, 235, 0.5)',
+      }
+    ];
 
     chartData.labels = timeInterval;
     chartData.datasets = datasets;

@@ -8,6 +8,7 @@ import cookieParser from 'cookie-parser';
 import db, { pool } from './models/dbModel';
 import { ErrorObject, EndpointRequest } from '../types';
 import { WebSocket, WebSocketServer } from 'ws';
+import helmet from 'helmet';
 
 
 import express, {
@@ -25,13 +26,29 @@ import endpointRouter from './routers/endpointRouter';
 import sessionRouter from './routers/sessionRouter';
 
 
-const PORT = 3500;
+const PORT = process.env.PORT || 3500;
 
 const app: Express = express();
 
+// app.use('trust proxy', 1);
+// app.disable('x-powered-by');
+app.use(helmet());
+
 app.use(express.json());
-app.use(cors());
 app.use(express.urlencoded({ extended: true }));
+
+app.use(cors({
+  origin: [
+    'http://localhost:8080',
+    'http://localhost:3000',
+  ],
+  methods: [
+    'GET',
+    'POST',
+    'DELETE'
+  ],
+  credentials: true,
+}));
 
 app.use(session({
   store: new (require('connect-pg-simple')(session))({
@@ -39,9 +56,13 @@ app.use(session({
     tableName: 'sessions'
   }),
   secret: process.env.SESSION_SECRET || 'secret',
-  resave: false ,
-  saveUninitialized: false,
-  cookie: { maxAge: 24 * 60 * 60 * 1000 }
+  name: 'sessionId',
+  // cookie: { 
+  //   secure: true,
+  //   httpOnly: true
+  // },
+  resave: false,
+  saveUninitialized: true,
 }))
 
 app.use(cookieParser(process.env.SESSION_SECRET));
@@ -85,17 +106,15 @@ app.listen(PORT, () : void =>
 );
 
 // websocket server
-const wssDataController : WebSocketServer = new WebSocketServer({port: 8080});
+const wssDataController : WebSocketServer = new WebSocketServer({port: 8080}); // port 443
 
 console.log(`in wssData controller, should be listening on 8080, ${wssDataController}`);
 
 wssDataController.on('connection', async function connection(ws: WebSocket, req: Request) {
-  console.log('A websocket connection established on port 8080');
   const endpointId: number = Number(req.url?.substring(1));
 
   // query to the database for graphql query data on the endpoint that established connection with ws server
   const query = async () : Promise<void> => {
-    console.log('connection id:', endpointId);
     const sqlCommand: string = `
       SELECT * FROM requests WHERE endpoint_id = $1 ORDER BY to_timestamp(timestamp, 'Dy Mon DD YYYY HH24:MI:SS') DESC;
     `;
@@ -112,7 +131,6 @@ wssDataController.on('connection', async function connection(ws: WebSocket, req:
   const interval = setInterval(query, 3000); // for continous update from database
 
   ws.on('close', () : void => {
-    console.log('clearing current interval:', interval)
     clearInterval(interval);
   })
 

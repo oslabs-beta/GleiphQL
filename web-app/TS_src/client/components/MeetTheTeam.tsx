@@ -46,7 +46,7 @@ const MeetTheTeam: FC = () : ReactElement => {
   return (
     <>
       <Element name='meet-team'>
-        <section id='meet-team' className='meetTheTeam-bg min-h-screen flex flex-col justify-center items-center p-10'>
+        <section id='meet-team' className='meetTheTeam-bg min-h-screen flex flex-col justify-center items-center p-10 mb-8'>
           <h2 className='text-5xl font-extrabold border-black border-b-2 border-x-0 border-t-0'>Meet the Team</h2>
           <div className='flex flex-wrap justify-center'>
             {

@@ -1,26 +1,20 @@
 import { Request, Response, NextFunction } from 'express';
 import fetch from 'node-fetch';
-import { createClient } from 'redis';
+import { createClient, RedisClientType } from 'redis';
+import { TokenBucket } from '../types';
 
-interface TokenBucket {
-  [key: string]: {
-    tokens: number;
-    lastRefillTime: number;
-  };
-}
-
-const redis = async function (config: any, complexityScore: number, req: Request, res: Response, next: NextFunction) {
-  const now = Date.now();
-  const refillRate = config.refillAmount / config.refillTime
-  let requestIP = req.ip
+const redis = async function (config: any, complexityScore: number, req: Request, res: Response, next: NextFunction) : Promise<void> {
+  const now: number = Date.now();
+  const refillRate: number = config.refillAmount / config.refillTime;
+  let requestIP: string = req.ip;
   // fixes format of ip addresses
   if (requestIP.includes('::ffff:')) {
     requestIP = requestIP.replace('::ffff:', '');
   }
 
-  const client = createClient();
+  const client: RedisClientType = createClient();
   await client.connect();
-  let currRequest = await client.get(requestIP)
+  let currRequest: string | null = await client.get(requestIP);
 
   // if the info for the current request is not found in the cache, then an entry will be created for it
   if (currRequest === null) {
@@ -28,7 +22,7 @@ const redis = async function (config: any, complexityScore: number, req: Request
       tokens: config.complexityLimit,
       lastRefillTime: now,
     }))
-    currRequest = await client.get(requestIP)
+    currRequest = await client.get(requestIP);
   }
 
   // if the info for the current request is still not found in the cache, then we will throw an error
@@ -37,9 +31,12 @@ const redis = async function (config: any, complexityScore: number, req: Request
     return next(Error);
   }
 
-  let parsedRequest = JSON.parse(currRequest)
-  const timeElapsed = now - parsedRequest.lastRefillTime;
-  const tokensToAdd = timeElapsed * refillRate; // decimals
+  let parsedRequest: {
+    tokens: number,
+    lastRefillTime: number
+  } = JSON.parse(currRequest);
+  const timeElapsed: number = now - parsedRequest.lastRefillTime;
+  const tokensToAdd: number = timeElapsed * refillRate; // decimals
   // const tokensToAdd = Math.floor(timeElapsed2 * refillRate); // no decimals
 
   parsedRequest.tokens = Math.min(
@@ -48,29 +45,28 @@ const redis = async function (config: any, complexityScore: number, req: Request
   );
   
   parsedRequest.lastRefillTime = now;
-  await client.set(requestIP, JSON.stringify(parsedRequest))
+  await client.set(requestIP, JSON.stringify(parsedRequest));
 
-  currRequest = await client.get(requestIP)
+  currRequest = await client.get(requestIP);
   if (currRequest === null) {
     await client.disconnect();
     return next(Error);
   }
-  parsedRequest = JSON.parse(currRequest)
+  parsedRequest = JSON.parse(currRequest);
   if (complexityScore >= parsedRequest.tokens) {
     if (res.locals.gleiphqlData) {
-      res.locals.gleiphqlData.complexityScore = complexityScore
+      res.locals.gleiphqlData.complexityScore = complexityScore;
       try {
-        const response = await fetch('http://localhost:3000/api/data', {
+        await fetch('http://localhost:3000/api/data', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           }, 
           body: JSON.stringify(res.locals.gleiphqlData)
         });
-        const data = await response.json();
       }
-      catch {
-        console.log('Unable to save to database')
+      catch (err: unknown) {
+        console.log('Unable to save to database');
       }
     }
     const error = {
@@ -96,35 +92,34 @@ const redis = async function (config: any, complexityScore: number, req: Request
     res.status(429).json(error);
     return next(Error);
   }
-  console.log('Tokens before subtraction: ', parsedRequest.tokens)
+  console.log('Tokens before subtraction: ', parsedRequest.tokens);
   parsedRequest.tokens -= complexityScore;
-  console.log('Tokens after subtraction: ', parsedRequest.tokens)
+  console.log('Tokens after subtraction: ', parsedRequest.tokens);
   if (res.locals.gleiphqlData) {
-    res.locals.gleiphqlData.complexityScore = complexityScore
+    res.locals.gleiphqlData.complexityScore = complexityScore;
     try {
-      const response = await fetch('http://localhost:3000/api/data', {
+      await fetch('http://localhost:3000/api/data', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         }, 
         body: JSON.stringify(res.locals.gleiphqlData)
       });
-      const data = await response.json();
     }
-    catch {
-      console.log('Unable to save to database')
+    catch (err: unknown) {
+      console.log('Unable to save to database');
     }
   }
-  await client.set(requestIP, JSON.stringify(parsedRequest))
+  await client.set(requestIP, JSON.stringify(parsedRequest));
   
   // disconnect from the redis client
   await client.disconnect();
 }
 
-const nonRedis = function (config: any, complexityScore: number, tokenBucket: TokenBucket, req: Request) {
-  const now = Date.now();
-  const refillRate = config.refillAmount / config.refillTime
-  let requestIP = req.ip
+const nonRedis = function (config: any, complexityScore: number, tokenBucket: TokenBucket, req: Request) : TokenBucket {
+  const now: number = Date.now();
+  const refillRate: number = config.refillAmount / config.refillTime;
+  let requestIP: string = req.ip;
   // fixes format of ip addresses
   if (requestIP.includes('::ffff:')) {
     requestIP = requestIP.replace('::ffff:', '');
@@ -137,8 +132,8 @@ const nonRedis = function (config: any, complexityScore: number, tokenBucket: To
       lastRefillTime: now,
     }
   }
-  const timeElapsed = now - tokenBucket[requestIP].lastRefillTime;
-  const tokensToAdd = timeElapsed * refillRate; // decimals
+  const timeElapsed: number = now - tokenBucket[requestIP].lastRefillTime;
+  const tokensToAdd: number = timeElapsed * refillRate; // decimals
   // const tokensToAdd = Math.floor(timeElapsed * refillRate); // no decimals
 
   tokenBucket[requestIP].tokens = Math.min(
@@ -147,12 +142,12 @@ const nonRedis = function (config: any, complexityScore: number, tokenBucket: To
   );
   tokenBucket[requestIP].lastRefillTime = now;
 
-  return tokenBucket
+  return tokenBucket;
 }
 
 const expressCache = {
   redis,
   nonRedis
-}
+};
 
-export default expressCache
+export default expressCache;
