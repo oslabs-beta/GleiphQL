@@ -133,7 +133,7 @@ const userController : UserController = {
       res.locals.deleted = true;
       return next(); // Resolve the Promise with a 'void'
     } catch (err: unknown) {
-      return Promise.reject({
+      return next({
         log: 'Error in userController.deleteUser: could not delete user',
         status: 500,
         message: { error: 'Could not delete user' },
