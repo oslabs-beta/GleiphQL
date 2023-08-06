@@ -24,27 +24,27 @@ export interface PartialStore {
 
   connection?: Connection;
   setConnection?: SetConnection;
-}
+};
 
 export interface UserInfo {
   userId: number;
   userEmail: string;
-}
+};
 
 export interface UserResponse extends UserInfo {
   userExists?: boolean;
   userCreated?: boolean;
   signedIn?: boolean;
-}
+};
 
 export interface verifiedUserObj extends UserInfo {
   signedIn: boolean;
-}
+};
 
 export interface Endpoint {
   endpoint_id: number;
   url: string;
-}
+};
 
 export interface EndpointRequest {
   endpoint_id: number;
@@ -54,7 +54,9 @@ export interface EndpointRequest {
   query_string: string;
   complexity_score: number;
   query_depth: number;
-}
+  blocked: boolean;
+  complexity_limit: number;
+};
 
 export interface ProfileCardProps {
   id?: string;
@@ -63,13 +65,13 @@ export interface ProfileCardProps {
   githubLink: string;
   linkedinLink: string;
   memberBio: string;
-}
+};
 
 export interface ErrorObject {
   log: string;
   status: number;
   message: { err: string };
-}
+};
 
 
 

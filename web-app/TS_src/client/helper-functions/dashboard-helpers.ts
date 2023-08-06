@@ -19,7 +19,17 @@ const createXAxisPoint = (endpointRequest: EndpointRequest): string => {
   const rawDate: string = endpointRequest.timestamp;
   const formattedDate: string = new Date(rawDate).toISOString().split('T')[0];
   return formattedDate;
-}
+};
+
+// calculates the largest complexity limit on the endpoint
+const getComplexityLimit = (endpointRequests: EndpointRequest[]): number => {
+  let maxLimit: number = 0;
+  for(const endpointRequest of endpointRequests) {
+    const currComplexity = endpointRequest.complexity_limit;
+    if(currComplexity > maxLimit) maxLimit = currComplexity;
+  }
+  return maxLimit;
+};
 
 const configChartData = (interval: string, dataType: string, endpointRequests: EndpointRequest[]) => {
   const today: Date = new Date();
@@ -121,6 +131,8 @@ const configChartData = (interval: string, dataType: string, endpointRequests: E
       ) timeInterval.push(createXAxisPoint(endpointRequests[i]));
     }
 
+    const complexityLimit: number = getComplexityLimit(endpointRequests);
+
     // Use the timeInterval array to map the data points for the chart 
     if (interval === 'Last 10 Requests') {
       datasets = [
@@ -135,7 +147,7 @@ const configChartData = (interval: string, dataType: string, endpointRequests: E
         {
           label: 'Complexity Limit',
           data: timeInterval.map((date: string) : number => {
-            return 5000;
+            return complexityLimit;
           }),
           borderColor: 'rgb(255, 99, 132)',
           backgroundColor: 'rgba(255, 99, 132, 0.5)',
@@ -154,7 +166,7 @@ const configChartData = (interval: string, dataType: string, endpointRequests: E
         {
           label: 'Complexity Limit',
           data: timeInterval.map((date: string) : number => {
-            return 5000;
+            return complexityLimit;
           }),
           borderColor: 'rgb(255, 99, 132)',
           backgroundColor: 'rgba(255, 99, 132, 0.5)',
@@ -173,7 +185,7 @@ const configChartData = (interval: string, dataType: string, endpointRequests: E
         {
           label: 'Complexity Limit',
           data: timeInterval.map((date: string) : number => {
-            return 5000;
+            return complexityLimit;
           }),
           borderColor: 'rgb(255, 99, 132)',
           backgroundColor: 'rgba(255, 99, 132, 0.5)',

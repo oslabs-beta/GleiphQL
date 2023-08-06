@@ -3,16 +3,16 @@ config();
 import express from 'express';
 import { loadSchema } from '@graphql-tools/load';
 import { UrlLoader } from '@graphql-tools/url-loader';
-import { GraphQLSchemaWithContext, createYoga } from 'graphql-yoga';
-import { TypeInfo, GraphQLSchema, GraphQLError } from 'graphql'
-import { ApolloServer } from '@apollo/server'
+import { createYoga } from 'graphql-yoga';
+import { ApolloServer, BaseContext } from '@apollo/server';
 import { startStandaloneServer } from '@apollo/server/standalone';
 import pmTEST from './pm-test.js';
 import { expressMiddleware } from '@apollo/server/express4';
 import { expressRateLimiter, expressEndpointMonitor, apolloRateLimiter, apolloEndpointMonitor, gleiphqlContext } from '../index.js';
+import { MonitorConfig, RateLimitConfig, ApolloConfig} from '../types';
 
 const app = express();
-const port = process.env.PORT || 4000
+const port = process.env.PORT || 4000;
 
 //loadSchema can be any public graphql endpoint
 const spaceXSchema = await loadSchema('https://spacex-production.up.railway.app/', { loaders: [new UrlLoader()] });
@@ -40,27 +40,7 @@ const pm = createYoga({
   graphqlEndpoint: '/pmTest',
 });
 
-interface RateLimitConfig {
-  complexityLimit: number,
-  paginationLimit: number,
-  schema: GraphQLSchema,
-  refillTime: number,
-  refillAmount: number,
-  redis?: boolean
-}
 
-interface ApolloConfig {
-  complexityLimit: number,
-  paginationLimit: number,
-  refillTime: number,
-  refillAmount: number,
-  redis?: boolean
-}
-
-interface MonitorConfig {
-  gliephqlUsername: string,
-  gleiphqlPassword: string,
-}
 
 const monitorConfig: MonitorConfig = {
   gliephqlUsername: 'andrew@gmail.com', // these are not in a dotenv file for example purposes only
@@ -114,7 +94,7 @@ const apolloConfig: ApolloConfig = {
 app.use(express.json());
 
 
-const apolloServer = new ApolloServer({
+const apolloServer: ApolloServer<BaseContext> = new ApolloServer({
   schema: swapiSchema,
   plugins: [
     apolloRateLimiter(apolloConfig),
