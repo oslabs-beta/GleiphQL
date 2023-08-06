@@ -25,7 +25,7 @@ import endpointRouter from './routers/endpointRouter';
 import sessionRouter from './routers/sessionRouter';
 
 
-const PORT = 3500;
+const PORT = process.env.PORT || 3500;
 
 const app: Express = express();
 

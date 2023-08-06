@@ -76,17 +76,6 @@ h3 {
   animation-timing-function:         linear;
 }
 
-/*  ~~ Start of component: FeatureSection  ~~   */
-/* Transparent border for the active Link element */
-
-.featureAnchor {
-  pointer-events: none;
-    @media all and (max-width: 1020px) {
-        pointer-events: all;
-    }
-}
-
-/*    ~~ End of component: FeatureSection  ~~   */
 
 /*  ~~ Start of component: Login  ~~  */
 .LoginContainer {

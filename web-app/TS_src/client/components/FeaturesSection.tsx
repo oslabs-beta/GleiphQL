@@ -29,9 +29,7 @@ const FeaturesSection: FC = () : ReactElement => {
   
   // function to toggle the visibility of a features's GIF:
   const toggleGifVisibility = (index: number) : void => {
-    if(window.innerWidth < 1020) {
-      
-    }
+    if(window.innerWidth < 1020) document.getElementById('features')?.scrollIntoView();
     setFeatures((prevFeatures: Feature[]) : Feature[] => {
       const updatedFeatures: Feature[] = [...prevFeatures];
 
@@ -61,7 +59,7 @@ const FeaturesSection: FC = () : ReactElement => {
               <div className='flex flex-col lg:flex-row items-center mt-4'>
 
                   {/* Start of the image container */}
-                  <section className='w-full sm:w-8/12 px-12 md:px-4 mr-auto ml-auto'>
+                  <section className='w-full sm:w-6/12 px-12 md:px-4 mr-auto ml-auto'>
                     <div className='flex min-w-0 bg-white-200 w-full mb-6 shadow-lg rounded-lg'>
                       {/* Use conditional rendering to show the proper GIF*/}
                       {features[0].isVisible ? (
@@ -180,7 +178,6 @@ const FeaturesSection: FC = () : ReactElement => {
                 </div>
               </div>
             </div>
-
           </div>
         </section>
       </Element>
