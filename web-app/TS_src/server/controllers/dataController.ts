@@ -32,7 +32,7 @@ const findEndpointId = async (url: string, userID: number) : Promise<number | nu
 const dataController : DataController = {
   // add a new row to the Requests table for an endpoint
   addData: async (req: Request, res: Response, next: NextFunction) : Promise<void> =>  {
-    const { depth, ip, url, timestamp, objectTypes, queryString, complexityScore, email, password } = req.body;
+    const { depth, ip, url, timestamp, objectTypes, queryString, complexityScore, complexityLimit, blocked, email, password } = req.body;
     if(depth === undefined || 
       ip === '' || 
       url === '' || 
@@ -40,6 +40,8 @@ const dataController : DataController = {
       objectTypes === undefined || 
       queryString === undefined || 
       complexityScore === undefined ||
+      complexityLimit === '' ||
+      blocked === undefined ||
       email === undefined ||
       password === undefined
     ) return next({
@@ -70,11 +72,11 @@ const dataController : DataController = {
     // adding graphql query data as new row to Requests table
     const sqlCommand: string = `
       INSERT INTO requests
-      (endpoint_id, ip_address, timestamp, object_types, query_string, complexity_score, query_depth)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      (endpoint_id, ip_address, timestamp, object_types, query_string, complexity_score, query_depth, complexity_limit, blocked)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
       RETURNING *;
     `;
-    const values: Array<any> = [ endpointId, ip, timestamp, {objectTypes: objectTypes}, queryString, complexityScore.complexityScore, depth ];
+    const values: Array<any> = [ endpointId, ip, timestamp, {objectTypes: objectTypes}, queryString, complexityScore.complexityScore, depth, complexityLimit, blocked ];
     try {
       const result: EndpointRequest[] = (await db.query(sqlCommand, values)).rows;
       res.locals.addedRequest = result[0];

@@ -8,7 +8,7 @@ interface TokenBucket {
   };
 }
 
-const redis = async function (config: any, complexityScore: number) {
+const redis = async function (config: any, complexityScore: number, requestContext: any) {
   const now = Date.now();
   const refillRate = config.refillAmount / config.refillTime
   let requestIP = config.requestContext.contextValue.clientIP
@@ -45,7 +45,7 @@ const redis = async function (config: any, complexityScore: number) {
     parsedRequest.tokens + tokensToAdd,
     config.complexityLimit
   );
-  
+
   parsedRequest.lastRefillTime = now;
   await client.set(requestIP, JSON.stringify(parsedRequest))
 
@@ -56,6 +56,7 @@ const redis = async function (config: any, complexityScore: number) {
   }
   parsedRequest = JSON.parse(currRequest)
   if (complexityScore >= parsedRequest.tokens) {
+    requestContext.contextValue.blocked = true
     console.log('Complexity of this query is too high');
     await client.disconnect();
     throw new GraphQLError('Complexity of this query is too high', {
@@ -72,7 +73,7 @@ const redis = async function (config: any, complexityScore: number) {
   parsedRequest.tokens -= complexityScore;
   console.log('Tokens after subtraction: ', parsedRequest.tokens)
   await client.set(requestIP, JSON.stringify(parsedRequest))
-  
+
   // disconnect from the redis client
   await client.disconnect();
 }
