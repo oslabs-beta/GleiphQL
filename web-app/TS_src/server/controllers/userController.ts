@@ -12,7 +12,9 @@ interface UserCredentials {
 interface UserController {
   checkUserExists: AsyncMiddleWare;
   register: AsyncMiddleWare;
+  deleteUser: AsyncMiddleWare;
 }
+
 
 const SALT_WORK_FACTOR: number = 10;
 
@@ -101,6 +103,43 @@ const userController : UserController = {
     }
     return next();
   },
+  deleteUser: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return next({
+        log: 'Error in userController.deleteUser: not given all necessary inputs',
+        status: 400,
+        message: { error: 'Did not receive necessary inputs to delete a user' },
+      });
+    }
+
+    try {
+      // Verify the user's credentials before proceeding with deletion
+      const user: verifiedUserObj = await verifyUser(email, password);
+      if (!user.signedIn) {
+        return next ({
+          log: 'Error in userController.deleteUser: invalid credentials',
+          status: 401, 
+          message: { error: 'Invalid credentials. Cannot delete user.' },
+        });
+      }
+      // Perform the account deletion in database
+      const sqlCommand: string = `
+        DELETE FROM users WHERE email = $1;  
+      `;
+      const values: string[] = [email];
+      await db.query(sqlCommand, values);
+
+      res.locals.deleted = true;
+      return next(); // Resolve the Promise with a 'void'
+    } catch (err: unknown) {
+      return next({
+        log: 'Error in userController.deleteUser: could not delete user',
+        status: 500,
+        message: { error: 'Could not delete user' },
+      });
+    }
+  } 
 };
 
 export default userController;

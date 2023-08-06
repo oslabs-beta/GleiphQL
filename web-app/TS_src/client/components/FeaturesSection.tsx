@@ -52,7 +52,7 @@ const FeaturesSection: FC = () : ReactElement => {
       <Element name='features'>
         <section id='features'>
           <div className='featuresSection-bg min-h-screen flex flex-col justify-center items-center px-5 py-10'>
-            <h2 className='text-5xl font-extrabold mt-8'>Features</h2>
+            <h2 data-cy='features-title' className='text-5xl font-extrabold'>Features</h2>
           <div>
 
             <div className='container mx-auto'>
@@ -63,7 +63,11 @@ const FeaturesSection: FC = () : ReactElement => {
                     <div className='flex min-w-0 bg-white-200 w-full mb-6 shadow-lg rounded-lg'>
                       {/* Use conditional rendering to show the proper GIF*/}
                       {features[0].isVisible ? (
-                        <img alt='...' src={features[0].gifUrl} className='w-full h-auto align-middle rounded-lg' />
+                        <img
+                          data-cy='gif-display'
+                          alt='...' 
+                          src={features[0].gifUrl} 
+                          className='w-full h-auto align-middle rounded-lg' />
                       ) : (
                         <>
                           {features.slice(1).map((feature, index) => {
@@ -72,7 +76,11 @@ const FeaturesSection: FC = () : ReactElement => {
                               // checkif the current feature is not the default one (index 0) and its isVisible property is true
                               // if both conditions are true, render the GIF for this feature
                               return (
-                                <img key={index} alt='...' src={feature.gifUrl} className='w-full h-auto align-middle rounded-lg' />
+                                <img
+                                  data-cy='gif-display'
+                                  key={index} 
+                                  alt='...' 
+                                  src={feature.gifUrl} className='w-full h-auto align-middle rounded-lg' />
                               );
                             }
                             // if no conditions are met
@@ -96,11 +104,19 @@ const FeaturesSection: FC = () : ReactElement => {
                             <div className='p-3 text-center inline-flex items-center justify-center w-12 h-12 mb-5 shadow-lg rounded-full bg-white'>
                               <FcLandscape size={48}/>
                             </div>
-                            <h3 className='text-xl mb-1 font-semibold'>Complexity Analysis</h3>
-                            <p className='mb-4'>
+                            <h3
+                              data-cy='feat-1-title'
+                              className='text-xl mb-1 font-semibold'
+                              >
+                                Complexity Analysis
+                            </h3>
+                            <p
+                              data-cy='feat-1-body'
+                              className='mb-4'>
                             Dynamically calculate the resource requirements of each query, providing you with invaluable insights into its impact on your system.
                             </p>
-                            <button 
+                            <button
+                              data-cy='feat-1-btn'
                               className='m-2 p-2 rounded-md bg-sky-900 shadow-lg shadow-sky-500/50 hover:shadow-sky-500/40 hover:bg-sky-600 text-white'
                               // asigning the button to toggle the GIF index at input number
                               onClick={() : void => toggleGifVisibility(1)}
@@ -114,13 +130,18 @@ const FeaturesSection: FC = () : ReactElement => {
                             <div className='p-3 text-center inline-flex items-center justify-center w-12 h-12 mb-5 shadow-lg rounded-full bg-white'>
                               <FcMoneyTransfer size={48}/>
                             </div>
-                            <h3 className='text-xl mb-1 font-semibold'>
+                            <h3
+                              data-cy='feat-2-title'
+                              className='text-xl mb-1 font-semibold'>
                               Rate Limiting
                             </h3>
-                            <p className='mb-4'>
+                            <p
+                              data-cy='feat-2-body'
+                              className='mb-4'>
                               Control and regulate incoming requests, ensuring fair and efficient resource allocation while safeguarding against abusive usage patterns.
                             </p>
-                            <button 
+                            <button
+                              data-cy='feat-2-btn'
                               className='m-2 p-2 rounded-md bg-sky-900 shadow-lg shadow-sky-500/50 hover:shadow-sky-500/40 hover:bg-sky-600 text-white'
                               // asigning the button to toggle the GIF index at input number
                               onClick={() => toggleGifVisibility(2)}
@@ -138,11 +159,18 @@ const FeaturesSection: FC = () : ReactElement => {
                             <div className='p-3 text-center inline-flex items-center justify-center w-12 h-12 mb-5 shadow-lg rounded-full bg-white'>
                               <FcPaid size={48}/>
                             </div>
-                            <h3 className='text-xl mb-1 font-semibold'>Monitoring</h3>
-                            <p className='mb-4'>
+                            <h3
+                              data-cy='feat-3-title'
+                              className='text-xl mb-1 font-semibold'>
+                                Monitoring
+                            </h3>
+                            <p
+                              data-cy='feat-3-body'
+                              className='mb-4'>
                               Gain deep visibility into your API's usage patterns, track response times, monitor error rates, and optimize your system's performance.
                             </p>
-                            <button 
+                            <button
+                              data-cy='feat-3-btn'
                               className='m-2 p-2 rounded-md bg-sky-900 shadow-lg shadow-sky-500/50 hover:shadow-sky-500/40 hover:bg-sky-600 text-white'
                               // asigning the button to toggle the GIF index at input number
                               onClick={() : void => toggleGifVisibility(3)}
@@ -156,12 +184,19 @@ const FeaturesSection: FC = () : ReactElement => {
                             <div className='p-3 text-center inline-flex items-center justify-center w-12 h-12 mb-5 shadow-lg rounded-full bg-white'>
                               <FcBullish size={48}/>
                             </div>
-                            <h3 className='text-xl mb-1 font-semibold'>Documentation</h3>
-                            <p className='mb-4'>
+                            <h3
+                              data-cy='feat-4-title'
+                              className='text-xl mb-1 font-semibold'>
+                                Documentation
+                            </h3>
+                            <p
+                              data-cy='feat-4-body'
+                              className='mb-4'>
                               Built by developers for developers. Our comprehensive documentation makes it easy
                               to work with GleiphQL!
                             </p>
-                            <button 
+                            <button
+                              data-cy='feat-4-btn'
                               className='m-2 p-2 rounded-md bg-sky-900 shadow-lg shadow-sky-500/50 hover:shadow-sky-500/40 hover:bg-sky-600 text-white'
                               // asigning the button to toggle the GIF index at input number
                               onClick={() : void => toggleGifVisibility(4)}
