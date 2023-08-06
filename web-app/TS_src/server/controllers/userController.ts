@@ -115,7 +115,7 @@ const userController : UserController = {
 
     try {
       // Verify the user's credentials before proceeding with deletion
-      const user = await verifyUser(email, password);
+      const user: verifiedUserObj = await verifyUser(email, password);
       if (!user.signedIn) {
         return next ({
           log: 'Error in userController.deleteUser: invalid credentials',
