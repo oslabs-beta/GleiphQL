@@ -6,13 +6,26 @@ import GitHubButton from 'react-github-btn'
 const Footer: FC = () : ReactElement => {
   return (
     <footer className='h-1/2 screen flex flex-col items-center justify-end p-4'>
-      <h2 className='underline-offset-8 text-5xl font-extrabold'>Want to Contribute? </h2>
-      <p className='text-xl'>Join us and help developers secure and monitor their GraphQL endpoints.</p>
+      <h2
+        data-cy='footer-title'
+        className='underline-offset-8 text-5xl font-extrabold'>
+          Want to Contribute? 
+      </h2>
+      <p
+        data-cy='footer-body'
+        className='text-xl'>
+          Join us and help developers secure and monitor their GraphQL endpoints.
+      </p>
       <p className='flex flex-row justify-center desktop:p-10 desktop:m-10  my-5'>
-        <a href='https://github.com/oslabs-beta/graphql-rate-limiter' target='_blank' rel='noopener noreferrer' className='mr-4'>
+        <a
+          data-cy='github-btn'
+          href='https://github.com/oslabs-beta/GleiphQL' 
+          target='_blank' rel='noopener noreferrer' className='mr-4'>
           <FaGithub size={64} />
         </a>
-        <a href='https://www.youtube.com/watch?v=dQw4w9WgXcQ' target='_blank' rel='noopener referrer' className='ml-4'>
+        <a
+          data-cy='linkedIn-btn'
+          href='https://www.youtube.com/watch?v=dQw4w9WgXcQ' target='_blank' rel='noopener referrer' className='ml-4'>
           <FaLinkedin size={64} />
         </a>
       </p>

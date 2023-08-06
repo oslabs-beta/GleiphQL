@@ -104,7 +104,9 @@ const Navbar: FC = () : ReactElement => {
                   </span>
                   { isLoggedIn? 
                     <button className='rounded-md border bg-white text-blue-950 hover:bg-slate-200 font-semibold p-1 w-20' onClick={logOut}>LOGOUT</button> : 
-                    <button className='rounded-md border bg-white text-blue-950 hover:bg-slate-200 font-semibold p-1 w-20' onClick={() : void => {
+                    <button
+                      data-cy='login-btn'
+                      className='rounded-md border bg-white text-blue-950 hover:bg-slate-200 font-semibold p-1 w-20' onClick={() : void => {
                       setModalOpen(true)
                       loginToggle(true)
                     }}>LOGIN</button>

@@ -20,6 +20,12 @@ accountRouter.post('/logout', sessionController.endSession, (req: Request, res: 
   res.status(200).send({
     signedIn: res.locals.signedIn
   })
+});
+
+
+accountRouter.delete('/deleteUser', userController.deleteUser, (req: Request, res: Response) => {
+  res.status(200).send(res.locals.delete);
 })
+
 
 export default accountRouter;
