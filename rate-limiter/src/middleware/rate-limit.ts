@@ -45,6 +45,7 @@ import apolloCache from './apollo-cache.js';
 //Resolve Relay convention breaking analysis <= check later
 //Resolve argument calls nested in list casing => should be resolved
 //Do some work with variables
+//Take into account @skip directives
 
 //relevant interfaces
 interface TokenBucket {
@@ -74,11 +75,13 @@ class ComplexityAnalysis {
   private currMult: number = 1;
   private complexityScore = 0;
   private typeComplexity = 0;
+  private variables: any = {};
 
-  constructor(schema: GraphQLSchema, parsedAst: DocumentNode, config: any) {
+  constructor(schema: GraphQLSchema, parsedAst: DocumentNode, config: any, variables: any) {
     this.config = config;
     this.parsedAst = parsedAst;
     this.schema = schema
+    this.variables = variables;
   }
 
   traverseAST () {
@@ -192,6 +195,32 @@ class ComplexityAnalysis {
 
       if(selection.kind === Kind.FIELD) {
         const fieldName = selection.name.value;
+
+        //This correctly retrieves values for cost argument, just need to case so that it only runs
+        //if the variable is actually populated then otherwise does other stuff, also probably
+        //move to helper function
+        if(selection.directives.length) {
+          for (let i = 0; i < selection.directives.length; i++) {
+            console.log('IN NODE DIRECTIVES FOR LOOP')
+            const directive = selection.directives[i];
+            if(directive.name.value === 'cost') {
+              const directiveArguments = directive.arguments;
+              console.log('NODE DIRECTIVE ARGUMENTS', directive.arguments);
+              if(directiveArguments.length) {
+                if(directiveArguments[0].value.kind === 'Variable') {
+                  const variable = directiveArguments[0].value.name.value;
+                  console.log('VARIABLE NAME?', variable);
+                  if(this.variables[variable]) {
+                    console.log('VARIABLE VALUE????', this.variables, this.variables[variable]);
+                    cost += Number(this.variables[variable]);
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        
         console.log('name of node?', fieldName);
         const fieldDef = objectType.getFields()[fieldName];
         const costDirective = this.parseDirectives(fieldDef, 0);
@@ -288,11 +317,26 @@ class ComplexityAnalysis {
       const costPaginationDirectives: PaginationDirectives[] = directives[i].arguments?.map((arg: any) => ({
         name: directives[i].name.value,
         value: arg.value
-      }))
+      }) ?? [])
 
       costPaginationDirectives.forEach((directives: PaginationDirectives) => {
-        if(directives.name === 'cost' && directives.value) baseVal = directives.value.value;
-        if(directives.name === 'paginationLimit' && directives.value) listLimit = directives.value.value;
+        if (directives.name === 'cost') {
+          if(directives.value) {
+            console.log('DIRECTIVE HAS VALUE', directives.value);
+          }
+          if (directives.value && directives.value.value.kind === 'Variable') {
+            console.log('VARIABLE?', directives.value.value);
+            if (this.variables[directives.value.value]) baseVal = this.variables[directives.value.value];
+          }
+          else if (directives.value) baseVal = directives.value.value;
+        }
+        if (directives.name === 'paginationLimit' && directives.value) {
+          if (directives.value && directives.value.value.kind === 'Variable') {
+            console.log('VARIABLE?', directives.value.value);
+            if (this.variables[directives.value.value]) listLimit = this.variables[directives.value.value];
+          }
+          else if (directives.value) listLimit = directives.value.value;
+        }
       })
     }
 
@@ -305,8 +349,6 @@ class ComplexityAnalysis {
 }
 
 //end of class
-
-
 
 // helper function to send data to web-app
 const sendData = async (endpointData: any) => {
@@ -330,9 +372,69 @@ const expressRateLimiter = function (config: any) {
 
   let tokenBucket: TokenBucket = {};
   return async (req: Request, res: Response, next: NextFunction) => {
-    if(req.body.query && !req.body.query.includes('IntrospectionQuery')) {
-      const builtSchema = config.schema
-      const parsedAst = parse(req.body.query);
+    if(req.body.query) {
+      const builtSchema = buildSchema(`
+      directive @cost(value: Int) on FIELD_DEFINITION | ARGUMENT_DEFINITION
+      directive @paginationLimit(value: Int) on FIELD_DEFINITION
+
+      type Related {
+        content: [Content!]!
+      }
+
+      interface Content {
+        id: ID!
+        title: String!
+        related: Related
+      }
+
+      type Post implements Content {
+        id: ID! @cost(value: 3)
+        title: String! @cost(value: 4)
+        body: String! @cost(value: 10)
+        tags: [String!]! @cost(value: 5)
+        related: Related
+      }
+
+      type Image implements Content {
+        id: ID! @cost(value: 5)
+        title: String! @cost(value: 6)
+        uri: String! @cost(value: 2)
+        related: Related
+      }
+
+      union UnionContent = Post | Image
+
+      type Query {
+        content: [Content] @paginationLimit(value: 10)
+        posts: [Post] @cost(value: 3) @paginationLimit(value: 10)
+        images: [Image] @cost(value: 5) @paginationLimit(value: 10)
+        related: [Related] @paginationLimit(value: 10)
+        unionContent: [UnionContent] @paginationLimit(value: 10)
+      }
+      `)
+      const parsedAst = parse(`
+      query GetPosts($costValue: Int, $paginationLimitValue: Int) {
+        posts @cost(value: $costValue) @paginationLimit(value: $paginationLimitValue) {
+          id
+          title
+          body
+          tags
+          related {
+            content {
+              id
+              title
+            }
+          }
+        }
+      }
+      `);
+
+      let variables;
+      if(req.body.variables) variables = req.body.variables;
+      variables = {
+        "costValue": 3,
+        "paginationLimitValue": 10
+      }
 
       let requestIP = req.ip
 
@@ -341,7 +443,7 @@ const expressRateLimiter = function (config: any) {
         requestIP = requestIP.replace('::ffff:', '');
       }
 
-      const analysis = new ComplexityAnalysis(builtSchema, parsedAst, config);
+      const analysis = new ComplexityAnalysis(builtSchema, parsedAst, config, variables);
 
       const complexityScore = analysis.traverseAST();
 
@@ -411,6 +513,7 @@ const apolloRateLimiter = (config: any) => {
         async didResolveOperation(requestContext: any) {
           if (requestContext.operationName !== 'IntrospectionQuery') {
             console.log('Validation started!');
+            const variables = requestContext.variables;
             const builtSchema = requestContext.schema
             const parsedAst = requestContext.document
             config.requestContext = requestContext
@@ -421,7 +524,7 @@ const apolloRateLimiter = (config: any) => {
               requestIP = requestIP.replace('::ffff:', '');
             }
 
-            const analysis = new ComplexityAnalysis(builtSchema, parsedAst, config);
+            const analysis = new ComplexityAnalysis(builtSchema, parsedAst, config, variables);
 
             const complexityScore = analysis.traverseAST();
             requestContext.contextValue.complexityScore = complexityScore
