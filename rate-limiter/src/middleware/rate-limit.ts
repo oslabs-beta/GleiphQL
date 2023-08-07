@@ -75,7 +75,7 @@ class ComplexityAnalysis {
   private currMult: number = 1;
   private complexityScore = 0;
   private typeComplexity = 0;
-  private variables: any = {};
+  private variables: any;
 
   constructor(schema: GraphQLSchema, parsedAst: DocumentNode, config: any, variables: any) {
     this.config = config;
@@ -195,46 +195,38 @@ class ComplexityAnalysis {
 
       if(selection.kind === Kind.FIELD) {
         const fieldName = selection.name.value;
+        let directiveVariables: Record<string, number | boolean> | undefined;
+        let variable: boolean = false;
 
-        //This correctly retrieves values for cost argument, just need to case so that it only runs
-        //if the variable is actually populated then otherwise does other stuff, also probably
-        //move to helper function
-        if(selection.directives.length) {
-          for (let i = 0; i < selection.directives.length; i++) {
-            console.log('IN NODE DIRECTIVES FOR LOOP')
-            const directive = selection.directives[i];
-            if(directive.name.value === 'cost') {
-              const directiveArguments = directive.arguments;
-              console.log('NODE DIRECTIVE ARGUMENTS', directive.arguments);
-              if(directiveArguments.length) {
-                if(directiveArguments[0].value.kind === 'Variable') {
-                  const variable = directiveArguments[0].value.name.value;
-                  console.log('VARIABLE NAME?', variable);
-                  if(this.variables[variable]) {
-                    console.log('VARIABLE VALUE????', this.variables, this.variables[variable]);
-                    cost += Number(this.variables[variable]);
-                  }
-                }
-              }
-            }
-          }
-        }
+        // This correctly retrieves values for cost argument, just need to case so that it only runs
+        // if the variable is actually populated then otherwise does other stuff, also probably
+        // move to helper function
+        if(this.variables) directiveVariables = this.retrieveDirectiveVariables(selection);
 
-        
         console.log('name of node?', fieldName);
+        console.log('DIRECTIVEVARIABLES?', directiveVariables);
+        let newMult = mult;
+
         const fieldDef = objectType.getFields()[fieldName];
-        const costDirective = this.parseDirectives(fieldDef, 0);
-        const argumentCosts = this.parseArgumentDirectives(fieldDef);
         const fieldType = fieldDef.type;
         const nullableType = getNullableType(fieldType);
         const unwrappedType = getNamedType(fieldType);
-        // console.log('fieldType?', fieldType)
         const subSelection = selection.selectionSet
-        costDirective.costDirective ? cost += Number(costDirective.costDirective) * mult : cost += mult;
-        // console.log('type of argCosts', typeof argumentCosts);
 
-        let newMult = mult;
-        if(isListType(nullableType)) costDirective.paginationLimit ? newMult *= costDirective.paginationLimit : newMult *= this.config.paginationLimit
+        if(directiveVariables) {
+          directiveVariables.cost ? cost += Number(directiveVariables.cost) * mult : cost += mult;
+          if(directiveVariables.paginationLimit) if(isListType(nullableType)) directiveVariables.paginationLimit ? newMult *= Number(directiveVariables.paginationLimit) : newMult *= this.config.paginationLimit
+          variable = true;
+        }
+        // console.log('fieldType?', fieldType)
+        const costDirective = this.parseDirectives(fieldDef, 0);
+        const argumentCosts = this.parseArgumentDirectives(fieldDef);
+
+        if(!variable) {
+          costDirective.costDirective ? cost += Number(costDirective.costDirective) * mult : cost += mult;
+          // console.log('type of argCosts', typeof argumentCosts);
+          if(isListType(nullableType)) costDirective.paginationLimit ? newMult *= costDirective.paginationLimit : newMult *= this.config.paginationLimit
+        }
 
         if(subSelection && (isInterfaceType(unwrappedType) || isObjectType(unwrappedType)) || isUnionType(unwrappedType)) {
           const types = isInterfaceType(unwrappedType) || isUnionType(unwrappedType) ? this.schema.getPossibleTypes(unwrappedType) : [unwrappedType];
@@ -263,6 +255,43 @@ class ComplexityAnalysis {
     if(Object.values(fragStore).length) cost += Object.values(fragStore).reduce((a, b) => Math.max(a, b));
 
     return cost;
+  }
+
+  private retrieveDirectiveVariables(selection: any) {
+    const allowedDirectives = ['cost', 'paginationLimit', 'skip', 'include'];
+    let variables: Record<string, number | boolean> = {};
+
+    if(!selection.directives.length) return;
+
+    for (let i = 0; i < selection.directives.length; i++) {
+      console.log('IN NODE DIRECTIVES FOR LOOP')
+      const directive = selection.directives[i];
+      const directiveName = directive.name.value;
+
+      if(!allowedDirectives.includes(directiveName)) continue;
+
+      const directiveArguments = directive.arguments;
+      // console.log('NODE DIRECTIVE ARGUMENTS', directiveArguments);
+
+      if(!directiveArguments.length) continue;
+      if(directiveArguments[0].value.kind !== 'Variable') continue;
+
+      const variable = directiveArguments[0].value.name.value;
+      console.log('VARIABLE NAME?', variable);
+      if(!this.variables[variable]) {
+        console.log('There is no association in the variable object with for the variable:', variable);
+        continue;
+      }
+
+      console.log('VARIABLE????', this.variables, 'VARIABLE VALUE????', this.variables[variable]);
+
+      if(directiveName === 'cost') variables[directiveName] = this.variables[variable];
+      if(directiveName === 'paginationLimit') variables[directiveName] = this.variables[variable];
+      if(directiveName === 'skip') variables[directiveName] = this.variables[variable];
+      if(directiveName === 'include') variables[directiveName] = this.variables[variable];
+    }
+
+    return variables;
   }
 
   private parseArgumentDirectives(fieldDef: GraphQLField<unknown, unknown, any>) {
