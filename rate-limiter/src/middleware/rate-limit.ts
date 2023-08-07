@@ -76,6 +76,8 @@ class ComplexityAnalysis {
   private complexityScore = 0;
   private typeComplexity = 0;
   private variables: any;
+  private slicingArgs: string[] = ['limit', 'first', 'last']
+  private allowedDirectives: string[] = ['skip', 'include']
 
   constructor(schema: GraphQLSchema, parsedAst: DocumentNode, config: any, variables: any) {
     this.config = config;
@@ -195,16 +197,18 @@ class ComplexityAnalysis {
 
       if(selection.kind === Kind.FIELD) {
         const fieldName = selection.name.value;
-        let directiveVariables: Record<string, number | boolean> | undefined;
-        let variable: boolean = false;
+        let checkSkip: Record<string, number | boolean> | undefined;
+        let skip: boolean = false;
 
         // This correctly retrieves values for cost argument, just need to case so that it only runs
         // if the variable is actually populated then otherwise does other stuff, also probably
         // move to helper function
-        if(this.variables) directiveVariables = this.retrieveDirectiveVariables(selection);
+        if(this.variables) {
+          checkSkip = this.checkSkip(selection);
+        }
 
         console.log('name of node?', fieldName);
-        console.log('DIRECTIVEVARIABLES?', directiveVariables);
+        console.log('CHECK SKIP?', checkSkip);
         let newMult = mult;
 
         const fieldDef = objectType.getFields()[fieldName];
@@ -212,21 +216,26 @@ class ComplexityAnalysis {
         const nullableType = getNullableType(fieldType);
         const unwrappedType = getNamedType(fieldType);
         const subSelection = selection.selectionSet
+        const slicingArguments = this.parseSlicingArguments(selection)
+        let argCosts;
 
-        if(directiveVariables) {
-          directiveVariables.cost ? cost += Number(directiveVariables.cost) * mult : cost += mult;
-          if(directiveVariables.paginationLimit) if(isListType(nullableType)) directiveVariables.paginationLimit ? newMult *= Number(directiveVariables.paginationLimit) : newMult *= this.config.paginationLimit
-          variable = true;
+        if(slicingArguments && slicingArguments.length) {
+          argCosts = this.parseArgumentDirectives(fieldDef, slicingArguments)
         }
+
+        if(checkSkip && (checkSkip.skip === true || checkSkip.include === false)) skip = true;
         // console.log('fieldType?', fieldType)
         const costDirective = this.parseDirectives(fieldDef, 0);
-        const argumentCosts = this.parseArgumentDirectives(fieldDef);
+        if(argCosts && argCosts.length) cost += Number(argCosts[0].directiveValue) * mult
 
-        if(!variable) {
-          costDirective.costDirective ? cost += Number(costDirective.costDirective) * mult : cost += mult;
-          // console.log('type of argCosts', typeof argumentCosts);
-          if(isListType(nullableType)) costDirective.paginationLimit ? newMult *= costDirective.paginationLimit : newMult *= this.config.paginationLimit
-        }
+        console.log('SKIP???', skip)
+
+        if(skip === false) costDirective.costDirective ? cost += Number(costDirective.costDirective) * mult : cost += mult;
+        // console.log('type of argCosts', typeof argumentCosts);
+        if(isListType(nullableType)) costDirective.paginationLimit ? newMult *= costDirective.paginationLimit : newMult *= this.config.paginationLimit
+        if(isListType(nullableType) && slicingArguments.length) slicingArguments[0].argumentValue ? newMult = mult * slicingArguments[0].argumentValue : newMult = newMult;
+        console.log('newMult?', newMult)
+
 
         if(subSelection && (isInterfaceType(unwrappedType) || isObjectType(unwrappedType)) || isUnionType(unwrappedType)) {
           const types = isInterfaceType(unwrappedType) || isUnionType(unwrappedType) ? this.schema.getPossibleTypes(unwrappedType) : [unwrappedType];
@@ -257,8 +266,7 @@ class ComplexityAnalysis {
     return cost;
   }
 
-  private retrieveDirectiveVariables(selection: any) {
-    const allowedDirectives = ['cost', 'paginationLimit', 'skip', 'include'];
+  private checkSkip(selection: any) {
     let variables: Record<string, number | boolean> = {};
 
     if(!selection.directives.length) return;
@@ -268,7 +276,7 @@ class ComplexityAnalysis {
       const directive = selection.directives[i];
       const directiveName = directive.name.value;
 
-      if(!allowedDirectives.includes(directiveName)) continue;
+      if(!this.allowedDirectives.includes(directiveName)) continue;
 
       const directiveArguments = directive.arguments;
       // console.log('NODE DIRECTIVE ARGUMENTS', directiveArguments);
@@ -278,23 +286,51 @@ class ComplexityAnalysis {
 
       const variable = directiveArguments[0].value.name.value;
       console.log('VARIABLE NAME?', variable);
-      if(!this.variables[variable]) {
+      console.log('VARIABLE STORE?', this.variables)
+      if(this.variables[variable] === undefined) {
         console.log('There is no association in the variable object with for the variable:', variable);
         continue;
       }
 
       console.log('VARIABLE????', this.variables, 'VARIABLE VALUE????', this.variables[variable]);
 
-      if(directiveName === 'cost') variables[directiveName] = this.variables[variable];
-      if(directiveName === 'paginationLimit') variables[directiveName] = this.variables[variable];
       if(directiveName === 'skip') variables[directiveName] = this.variables[variable];
       if(directiveName === 'include') variables[directiveName] = this.variables[variable];
     }
 
+    console.log('FINAL VARIABLES DETECTED?', variables)
     return variables;
   }
 
-  private parseArgumentDirectives(fieldDef: GraphQLField<unknown, unknown, any>) {
+  private parseSlicingArguments(selection: any) {
+    // console.log('SELECTION?', selection)
+    if(!selection.arguments) return;
+
+    const argumentDirectives = selection.arguments.flatMap((arg: any) => {
+      const argName = arg.name.value;
+      let argValue = arg.value.value;
+      if(arg.value.kind === 'Variable') {
+        console.log('variable argument detected:', arg.value);
+        if(this.variables) argValue = this.variables[arg.value.name.value]
+      }
+      return {
+        argumentName: argName,
+        argumentValue: argValue
+      };
+    })
+
+    console.log('ARGVARDIRECTIVES???', argumentDirectives)
+
+    return argumentDirectives.filter((arg: any) => {
+      if(!this.slicingArgs.includes(arg.argumentName)) {
+        console.log('not a slicing arg')
+        return;
+      }
+      return arg;
+    })
+  }
+
+  private parseArgumentDirectives(fieldDef: GraphQLField<unknown, unknown, any>, args: any[]) {
     if(!fieldDef.astNode?.arguments) return
 
     //since the directive costs within directives placed in arguments are deeply nested, we have to use flatMap to efficiently extract them
@@ -309,8 +345,8 @@ class ComplexityAnalysis {
         }));
       });
       console.log('argumentDirectives', argumentDirectives);
-      const argumentCosts = argumentDirectives.filter((directive: any) => directive.directiveName === 'cost');
-      // console.log('arg costs', argumentCosts);
+      const argumentCosts = argumentDirectives.filter((directive: any, index) => (directive.directiveName === 'cost' && args[index].argumentName === directive.argName));
+      console.log('arg costs', argumentCosts);
       return argumentCosts;
   }
 
@@ -337,6 +373,7 @@ class ComplexityAnalysis {
     return directives;
   }
 
+
   private getCostDirectives(directives: DirectivesInfo[], baseVal: number) {
     if(!directives.length) return
 
@@ -346,26 +383,11 @@ class ComplexityAnalysis {
       const costPaginationDirectives: PaginationDirectives[] = directives[i].arguments?.map((arg: any) => ({
         name: directives[i].name.value,
         value: arg.value
-      }) ?? [])
+      }))
 
       costPaginationDirectives.forEach((directives: PaginationDirectives) => {
-        if (directives.name === 'cost') {
-          if(directives.value) {
-            console.log('DIRECTIVE HAS VALUE', directives.value);
-          }
-          if (directives.value && directives.value.value.kind === 'Variable') {
-            console.log('VARIABLE?', directives.value.value);
-            if (this.variables[directives.value.value]) baseVal = this.variables[directives.value.value];
-          }
-          else if (directives.value) baseVal = directives.value.value;
-        }
-        if (directives.name === 'paginationLimit' && directives.value) {
-          if (directives.value && directives.value.value.kind === 'Variable') {
-            console.log('VARIABLE?', directives.value.value);
-            if (this.variables[directives.value.value]) listLimit = this.variables[directives.value.value];
-          }
-          else if (directives.value) listLimit = directives.value.value;
-        }
+        if(directives.name === 'cost' && directives.value) baseVal = directives.value.value;
+        if(directives.name === 'paginationLimit' && directives.value) listLimit = directives.value.value;
       })
     }
 
@@ -402,68 +424,14 @@ const expressRateLimiter = function (config: any) {
   let tokenBucket: TokenBucket = {};
   return async (req: Request, res: Response, next: NextFunction) => {
     if(req.body.query) {
-      const builtSchema = buildSchema(`
-      directive @cost(value: Int) on FIELD_DEFINITION | ARGUMENT_DEFINITION
-      directive @paginationLimit(value: Int) on FIELD_DEFINITION
-
-      type Related {
-        content: [Content!]!
-      }
-
-      interface Content {
-        id: ID!
-        title: String!
-        related: Related
-      }
-
-      type Post implements Content {
-        id: ID! @cost(value: 3)
-        title: String! @cost(value: 4)
-        body: String! @cost(value: 10)
-        tags: [String!]! @cost(value: 5)
-        related: Related
-      }
-
-      type Image implements Content {
-        id: ID! @cost(value: 5)
-        title: String! @cost(value: 6)
-        uri: String! @cost(value: 2)
-        related: Related
-      }
-
-      union UnionContent = Post | Image
-
-      type Query {
-        content: [Content] @paginationLimit(value: 10)
-        posts: [Post] @cost(value: 3) @paginationLimit(value: 10)
-        images: [Image] @cost(value: 5) @paginationLimit(value: 10)
-        related: [Related] @paginationLimit(value: 10)
-        unionContent: [UnionContent] @paginationLimit(value: 10)
-      }
-      `)
-      const parsedAst = parse(`
-      query GetPosts($costValue: Int, $paginationLimitValue: Int) {
-        posts @cost(value: $costValue) @paginationLimit(value: $paginationLimitValue) {
-          id
-          title
-          body
-          tags
-          related {
-            content {
-              id
-              title
-            }
-          }
-        }
-      }
-      `);
+      const builtSchema = config.schema
+      const parsedAst = req.body.query
 
       let variables;
       if(req.body.variables) variables = req.body.variables;
       variables = {
-        "costValue": 3,
-        "paginationLimitValue": 10
-      }
+          "limitValue": 15
+        }
 
       let requestIP = req.ip
 
