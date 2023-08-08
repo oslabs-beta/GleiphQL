@@ -1,4 +1,0 @@
-**/*
-!dist/*
-!dist/middleware/monitoring/*
-!package.json
