@@ -33,23 +33,22 @@ const extractObjectTypes = (query: DocumentNode): string[] => {
   return objectTypes;
 }; 
 
-// default endpointData
-const endpointData: EndpointData = {
-  depth: 0,
-  ip: '',
-  url: '',
-  timestamp: '',
-  objectTypes: {},
-  queryString: '',
-  complexityScore: 0,
-  blocked: false,
-  complexityLimit: 0,
-  email: '',
-  password: '',
-};
-
 const expressEndpointMonitor = function (config: MonitorConfig) : (req: Request, res: Response, next: NextFunction) => Promise<void> {
-  return async (req: Request, res: Response, next: NextFunction) : Promise<void> => {    
+  return async (req: Request, res: Response, next: NextFunction) : Promise<void> => {  
+    // default endpointData
+    const endpointData: EndpointData = {
+      depth: 0,
+      ip: '',
+      url: '',
+      timestamp: '',
+      objectTypes: {},
+      queryString: '',
+      complexityScore: 0,
+      blocked: false,
+      complexityLimit: 0,
+      email: '',
+      password: '',
+    };  
     if (req.body.query) {
       const query: DocumentNode = parse(req.body.query);
       
@@ -91,6 +90,20 @@ const apolloEndpointMonitor = (config: MonitorConfig) => {
     async requestDidStart(requestContext: any) {
       return {
         async willSendResponse(requestContext: any) {
+          // default endpointData
+          const endpointData: EndpointData = {
+            depth: 0,
+            ip: '',
+            url: '',
+            timestamp: '',
+            objectTypes: {},
+            queryString: '',
+            complexityScore: 0,
+            blocked: false,
+            complexityLimit: 0,
+            email: '',
+            password: '',
+          };
           if (requestContext.operationName !== 'IntrospectionQuery') {
             const query: DocumentNode = requestContext.document;
     
