@@ -38,6 +38,7 @@ Usage:
 ```
 import { apolloRateLimiter, apolloEndpointMonitor, gleiphqlContext } from 'gleiphql';
 import { startStandaloneServer } from '@apollo/server/standalone';
+import { ApolloServer } from '@apollo/server';
 
 
 // Configuration for the expressEndpointMonitor middleware.
