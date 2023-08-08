@@ -74,7 +74,7 @@ const expressEndpointMonitor = function (config: MonitorConfig) : (req: Request,
       endpointData.complexityScore = res.locals.complexityScore;
       endpointData.timestamp = Date();
       endpointData.objectTypes = extractObjectTypes(query);
-      endpointData.email = config.gliephqlUsername;
+      endpointData.email = config.gleiphqlUsername;
       endpointData.password = config.gleiphqlPassword;
       if (query.loc) {
         endpointData.queryString = query.loc.source.body;
@@ -127,7 +127,7 @@ const apolloEndpointMonitor = (config: MonitorConfig) => {
             endpointData.complexityScore = requestContext.contextValue.complexityScore;
             endpointData.timestamp = Date();
             endpointData.objectTypes = extractObjectTypes(query);
-            endpointData.email = config.gliephqlUsername;
+            endpointData.email = config.gleiphqlUsername;
             endpointData.password = config.gleiphqlPassword;
             if (query.loc) {
               endpointData.queryString = query.loc.source.body;
