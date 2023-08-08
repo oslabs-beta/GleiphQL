@@ -429,9 +429,6 @@ const expressRateLimiter = function (config: any) {
 
       let variables;
       if(req.body.variables) variables = req.body.variables;
-      variables = {
-          "limitValue": 15
-        }
 
       let requestIP = req.ip
 
