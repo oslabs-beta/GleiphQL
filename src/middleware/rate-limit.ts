@@ -45,6 +45,7 @@ import apolloCache from './apollo-cache.js';
 //Resolve Relay convention breaking analysis <= check later
 //Resolve argument calls nested in list casing => should be resolved
 //Do some work with variables
+//Take into account @skip directives
 
 //relevant interfaces
 interface TokenBucket {
@@ -74,11 +75,15 @@ class ComplexityAnalysis {
   private currMult: number = 1;
   private complexityScore = 0;
   private typeComplexity = 0;
+  private variables: any;
+  private slicingArgs: string[] = ['limit', 'first', 'last']
+  private allowedDirectives: string[] = ['skip', 'include']
 
-  constructor(schema: GraphQLSchema, parsedAst: DocumentNode, config: any) {
+  constructor(schema: GraphQLSchema, parsedAst: DocumentNode, config: any, variables: any) {
     this.config = config;
     this.parsedAst = parsedAst;
     this.schema = schema
+    this.variables = variables;
   }
 
   traverseAST () {
@@ -192,20 +197,45 @@ class ComplexityAnalysis {
 
       if(selection.kind === Kind.FIELD) {
         const fieldName = selection.name.value;
+        let checkSkip: Record<string, number | boolean> | undefined;
+        let skip: boolean = false;
+
+        // This correctly retrieves values for cost argument, just need to case so that it only runs
+        // if the variable is actually populated then otherwise does other stuff, also probably
+        // move to helper function
+        if(this.variables) {
+          checkSkip = this.checkSkip(selection);
+        }
+
         console.log('name of node?', fieldName);
+        console.log('CHECK SKIP?', checkSkip);
+        let newMult = mult;
+
         const fieldDef = objectType.getFields()[fieldName];
-        const costDirective = this.parseDirectives(fieldDef, 0);
-        const argumentCosts = this.parseArgumentDirectives(fieldDef);
         const fieldType = fieldDef.type;
         const nullableType = getNullableType(fieldType);
         const unwrappedType = getNamedType(fieldType);
-        // console.log('fieldType?', fieldType)
         const subSelection = selection.selectionSet
-        costDirective.costDirective ? cost += Number(costDirective.costDirective) * mult : cost += mult;
-        // console.log('type of argCosts', typeof argumentCosts);
+        const slicingArguments = this.parseSlicingArguments(selection)
+        let argCosts;
 
-        let newMult = mult;
+        if(slicingArguments && slicingArguments.length) {
+          argCosts = this.parseArgumentDirectives(fieldDef, slicingArguments)
+        }
+
+        if(checkSkip && (checkSkip.skip === true || checkSkip.include === false)) skip = true;
+        // console.log('fieldType?', fieldType)
+        const costDirective = this.parseDirectives(fieldDef, 0);
+        if(argCosts && argCosts.length) cost += Number(argCosts[0].directiveValue) * mult
+
+        console.log('SKIP???', skip)
+
+        if(skip === false) costDirective.costDirective ? cost += Number(costDirective.costDirective) * mult : cost += mult;
+        // console.log('type of argCosts', typeof argumentCosts);
         if(isListType(nullableType)) costDirective.paginationLimit ? newMult *= costDirective.paginationLimit : newMult *= this.config.paginationLimit
+        if(isListType(nullableType) && slicingArguments.length) slicingArguments[0].argumentValue ? newMult = mult * slicingArguments[0].argumentValue : newMult = newMult;
+        console.log('newMult?', newMult)
+
 
         if(subSelection && (isInterfaceType(unwrappedType) || isObjectType(unwrappedType)) || isUnionType(unwrappedType)) {
           const types = isInterfaceType(unwrappedType) || isUnionType(unwrappedType) ? this.schema.getPossibleTypes(unwrappedType) : [unwrappedType];
@@ -236,7 +266,71 @@ class ComplexityAnalysis {
     return cost;
   }
 
-  private parseArgumentDirectives(fieldDef: GraphQLField<unknown, unknown, any>) {
+  private checkSkip(selection: any) {
+    let variables: Record<string, number | boolean> = {};
+
+    if(!selection.directives.length) return;
+
+    for (let i = 0; i < selection.directives.length; i++) {
+      console.log('IN NODE DIRECTIVES FOR LOOP')
+      const directive = selection.directives[i];
+      const directiveName = directive.name.value;
+
+      if(!this.allowedDirectives.includes(directiveName)) continue;
+
+      const directiveArguments = directive.arguments;
+      // console.log('NODE DIRECTIVE ARGUMENTS', directiveArguments);
+
+      if(!directiveArguments.length) continue;
+      if(directiveArguments[0].value.kind !== 'Variable') continue;
+
+      const variable = directiveArguments[0].value.name.value;
+      console.log('VARIABLE NAME?', variable);
+      console.log('VARIABLE STORE?', this.variables)
+      if(this.variables[variable] === undefined) {
+        console.log('There is no association in the variable object with for the variable:', variable);
+        continue;
+      }
+
+      console.log('VARIABLE????', this.variables, 'VARIABLE VALUE????', this.variables[variable]);
+
+      if(directiveName === 'skip') variables[directiveName] = this.variables[variable];
+      if(directiveName === 'include') variables[directiveName] = this.variables[variable];
+    }
+
+    console.log('FINAL VARIABLES DETECTED?', variables)
+    return variables;
+  }
+
+  private parseSlicingArguments(selection: any) {
+    // console.log('SELECTION?', selection)
+    if(!selection.arguments) return;
+
+    const argumentDirectives = selection.arguments.flatMap((arg: any) => {
+      const argName = arg.name.value;
+      let argValue = arg.value.value;
+      if(arg.value.kind === 'Variable') {
+        console.log('variable argument detected:', arg.value);
+        if(this.variables) argValue = this.variables[arg.value.name.value]
+      }
+      return {
+        argumentName: argName,
+        argumentValue: argValue
+      };
+    })
+
+    console.log('ARGVARDIRECTIVES???', argumentDirectives)
+
+    return argumentDirectives.filter((arg: any) => {
+      if(!this.slicingArgs.includes(arg.argumentName)) {
+        console.log('not a slicing arg')
+        return;
+      }
+      return arg;
+    })
+  }
+
+  private parseArgumentDirectives(fieldDef: GraphQLField<unknown, unknown, any>, args: any[]) {
     if(!fieldDef.astNode?.arguments) return
 
     //since the directive costs within directives placed in arguments are deeply nested, we have to use flatMap to efficiently extract them
@@ -251,8 +345,8 @@ class ComplexityAnalysis {
         }));
       });
       console.log('argumentDirectives', argumentDirectives);
-      const argumentCosts = argumentDirectives.filter((directive: any) => directive.directiveName === 'cost');
-      // console.log('arg costs', argumentCosts);
+      const argumentCosts = argumentDirectives.filter((directive: any, index) => (directive.directiveName === 'cost' && args[index].argumentName === directive.argName));
+      console.log('arg costs', argumentCosts);
       return argumentCosts;
   }
 
@@ -278,6 +372,7 @@ class ComplexityAnalysis {
 
     return directives;
   }
+
 
   private getCostDirectives(directives: DirectivesInfo[], baseVal: number) {
     if(!directives.length) return
@@ -306,8 +401,6 @@ class ComplexityAnalysis {
 
 //end of class
 
-
-
 // helper function to send data to web-app
 const sendData = async (endpointData: any) => {
   console.log('Monitor data: ', endpointData)
@@ -330,9 +423,12 @@ const expressRateLimiter = function (config: any) {
 
   let tokenBucket: TokenBucket = {};
   return async (req: Request, res: Response, next: NextFunction) => {
-    if(req.body.query && !req.body.query.includes('IntrospectionQuery')) {
+    if(req.body.query) {
       const builtSchema = config.schema
-      const parsedAst = parse(req.body.query);
+      const parsedAst = req.body.query
+
+      let variables;
+      if(req.body.variables) variables = req.body.variables;
 
       let requestIP = req.ip
 
@@ -341,7 +437,7 @@ const expressRateLimiter = function (config: any) {
         requestIP = requestIP.replace('::ffff:', '');
       }
 
-      const analysis = new ComplexityAnalysis(builtSchema, parsedAst, config);
+      const analysis = new ComplexityAnalysis(builtSchema, parsedAst, config, variables);
 
       const complexityScore = analysis.traverseAST();
 
@@ -411,6 +507,7 @@ const apolloRateLimiter = (config: any) => {
         async didResolveOperation(requestContext: any) {
           if (requestContext.operationName !== 'IntrospectionQuery') {
             console.log('Validation started!');
+            const variables = requestContext.variables;
             const builtSchema = requestContext.schema
             const parsedAst = requestContext.document
             config.requestContext = requestContext
@@ -421,7 +518,7 @@ const apolloRateLimiter = (config: any) => {
               requestIP = requestIP.replace('::ffff:', '');
             }
 
-            const analysis = new ComplexityAnalysis(builtSchema, parsedAst, config);
+            const analysis = new ComplexityAnalysis(builtSchema, parsedAst, config, variables);
 
             const complexityScore = analysis.traverseAST();
             requestContext.contextValue.complexityScore = complexityScore

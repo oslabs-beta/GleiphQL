@@ -37,7 +37,7 @@ const countries = createYoga({
 const pm = createYoga({
   schema: pmTEST.builtSchema,
   graphiql: true,
-  graphqlEndpoint: '/pmTest',
+  graphqlEndpoint: '/pmtest',
 });
 
 
@@ -106,7 +106,7 @@ await apolloServer.start();
 //   context: async ({ req }) => {
 //     const clientIP =
 //       req.headers['x-forwarded-for'] || // For reverse proxies
-//       req.socket.remoteAddress;  
+//       req.socket.remoteAddress;
 //     return { clientIP };
 //   },
 // });
@@ -118,7 +118,7 @@ app.use('/apollo', expressMiddleware(apolloServer, {
 app.use('/spacex', expressEndpointMonitor(monitorConfig), expressRateLimiter(spacexConfig), spacex);
 app.use('/starwars', expressEndpointMonitor(monitorConfig), expressRateLimiter(swapiConfig), swapi);
 app.use('/countries', expressRateLimiter(countriesConfig), expressEndpointMonitor(monitorConfig), countries);
-app.use('/pmTest', expressEndpointMonitor(monitorConfig), expressRateLimiter(pmConfig), pm);
+app.use('/pmtest', expressEndpointMonitor(monitorConfig), expressRateLimiter(pmConfig), pm);
 
 app.listen(port, () => {
     console.info(`Server is running on http://localhost:${port}/spacex http://localhost:${port}/starwars http://localhost:${port}/countries`);
