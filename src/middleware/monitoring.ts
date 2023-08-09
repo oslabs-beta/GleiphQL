@@ -50,9 +50,25 @@ const endpointData: EndpointData = {
 
 const expressEndpointMonitor = function (config: MonitorConfig) : (req: Request, res: Response, next: NextFunction) => Promise<void> {
   return async (req: Request, res: Response, next: NextFunction) : Promise<void> => {
+const expressEndpointMonitor = function (config: MonitorConfig) : (req: Request, res: Response, next: NextFunction) => Promise<void> {
+  return async (req: Request, res: Response, next: NextFunction) : Promise<void> => {
+    // default endpointData
+    const endpointData: EndpointData = {
+      depth: 0,
+      ip: '',
+      url: '',
+      timestamp: '',
+      objectTypes: {},
+      queryString: '',
+      complexityScore: 0,
+      blocked: false,
+      complexityLimit: 0,
+      email: '',
+      password: '',
+    };
     if (req.body.query) {
       const query: DocumentNode = parse(req.body.query);
-      
+
       endpointData.ip = req.ip;
       if (endpointData.ip.includes('::ffff:')) {
         endpointData.ip = endpointData.ip.replace('::ffff:', '');
@@ -66,7 +82,7 @@ const expressEndpointMonitor = function (config: MonitorConfig) : (req: Request,
       endpointData.complexityScore = res.locals.complexityScore;
       endpointData.timestamp = Date();
       endpointData.objectTypes = extractObjectTypes(query);
-      endpointData.email = config.gliephqlUsername;
+      endpointData.email = config.gleiphqlUsername;
       endpointData.password = config.gleiphqlPassword;
       endpointData.depth = res.locals.depth
       if (query.loc) {
@@ -83,6 +99,20 @@ const apolloEndpointMonitor = (config: MonitorConfig) => {
     async requestDidStart(requestContext: any) {
       return {
         async willSendResponse(requestContext: any) {
+          // default endpointData
+          const endpointData: EndpointData = {
+            depth: 0,
+            ip: '',
+            url: '',
+            timestamp: '',
+            objectTypes: {},
+            queryString: '',
+            complexityScore: 0,
+            blocked: false,
+            complexityLimit: 0,
+            email: '',
+            password: '',
+          };
           if (requestContext.operationName !== 'IntrospectionQuery') {
             const query: DocumentNode = requestContext.document;
 
@@ -97,7 +127,7 @@ const apolloEndpointMonitor = (config: MonitorConfig) => {
             endpointData.depth = requestContext.contextValue.depth
             endpointData.timestamp = Date();
             endpointData.objectTypes = extractObjectTypes(query);
-            endpointData.email = config.gliephqlUsername;
+            endpointData.email = config.gleiphqlUsername;
             endpointData.password = config.gleiphqlPassword;
             if (query.loc) {
               endpointData.queryString = query.loc.source.body;

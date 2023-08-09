@@ -27,7 +27,7 @@ export interface ApolloConfig {
 };
 
 export interface MonitorConfig {
-  gliephqlUsername: string,
+  gleiphqlUsername: string,
   gleiphqlPassword: string,
 };
 
