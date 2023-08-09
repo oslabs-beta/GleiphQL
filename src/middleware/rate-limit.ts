@@ -39,6 +39,7 @@ import graphql from 'graphql';
 import fetch from 'node-fetch';
 import expressCache from './express-cache.js';
 import apolloCache from './apollo-cache.js';
+import { TimeSeriesAggregationType } from 'redis';
 
 //To-dos
 
@@ -78,6 +79,7 @@ class ComplexityAnalysis {
   private variables: any;
   private slicingArgs: string[] = ['limit', 'first', 'last']
   private allowedDirectives: string[] = ['skip', 'include']
+  private excessDepth: boolean = false;
 
   constructor(schema: GraphQLSchema, parsedAst: DocumentNode, config: any, variables: any) {
     this.config = config;
@@ -106,7 +108,7 @@ class ComplexityAnalysis {
 
           let baseMult = 1;
 
-          const fragDefStore: Record<string, number> = {};
+          const fragDefStore: Record<string, any> = {};
 
           for(let i = 0; i < node.definitions.length; i++) {
             const def = node.definitions[i] as DefinitionNode;
@@ -117,8 +119,15 @@ class ComplexityAnalysis {
               const typeCondition = fragDef.typeCondition.name.value
               const type = this.schema.getType(typeCondition);
               selectionSet = fragDef.selectionSet;
+              const fragDepthState = {exceeded: false};
+              const fragDepth = this.checkDepth(selectionSet, fragDepthState);
+              if(fragDepthState.exceeded) {
+                console.log('exceeded maximum user-defined depth on fragment def')
+                this.excessDepth = true;
+                return;
+              }
               const totalFragCost = this.resolveSelectionSet(selectionSet, type, schemaType, baseMult, [node], node, fragDefStore);
-              fragDefStore[typeCondition] = totalFragCost;
+              fragDefStore[typeCondition] = {totalFragCost, fragDepth};
             }
           }
 
@@ -133,6 +142,13 @@ class ComplexityAnalysis {
               const rootType = this.schema.getQueryType();
               if(operationType === 'query') selectionSet = operationDef.selectionSet;
               // console.log('selectionSet?', selectionSet)
+              const queryDepthState = {exceeded: false};
+              const queryDepth = this.checkDepth(selectionSet, queryDepthState)
+              if(queryDepthState.exceeded) {
+                console.log('exceeded maximum user-defined depth on query')
+                this.excessDepth = true;
+                return;
+              }
               const totalCost = this.resolveSelectionSet(selectionSet, rootType, schemaType, baseMult, [node], node, fragDefStore)
               this.typeComplexity += totalCost;
             }
@@ -146,10 +162,10 @@ class ComplexityAnalysis {
 
     this.complexityScore = this.typeComplexity;
 
-    return {complexityScore: this.complexityScore, typeComplexity: this.typeComplexity};
+    return {complexityScore: this.complexityScore, typeComplexity: this.typeComplexity, excessDepth: this.excessDepth};
   }
 
-  private resolveSelectionSet(selectionSet: any, objectType: any, schemaType: TypeInfo, mult: number = 1, ancestors : any[], document: DocumentNode, fragDefs: Record<string, number>) {
+  private resolveSelectionSet(selectionSet: any, objectType: any, schemaType: TypeInfo, mult: number = 1, ancestors : any[], document: DocumentNode, fragDefs: Record<string, any>) {
     console.log('inside resolveSelectionSet')
     console.log('mult of current selectionSet?', mult);
     let cost = 0;
@@ -172,7 +188,7 @@ class ComplexityAnalysis {
         if(!fragDef) return;
         //@ts-ignore
         const typeName = fragDef.typeCondition.name.value;
-        if(fragDefs[typeName]) fragSpreadCost = fragDefs[typeName];
+        if(fragDefs[typeName]) fragSpreadCost = fragDefs[typeName].totalFragCost;
 
         fragStore[fragName] = fragSpreadCost * fragSpreadMult;
         console.log('fragSpreadCost?', fragSpreadCost);
@@ -212,6 +228,7 @@ class ComplexityAnalysis {
         let newMult = mult;
 
         const fieldDef = objectType.getFields()[fieldName];
+        if(!fieldDef) return;
         const fieldType = fieldDef.type;
         const nullableType = getNullableType(fieldType);
         const unwrappedType = getNamedType(fieldType);
@@ -264,6 +281,25 @@ class ComplexityAnalysis {
     if(Object.values(fragStore).length) cost += Object.values(fragStore).reduce((a, b) => Math.max(a, b));
 
     return cost;
+  }
+
+  private checkDepth(selection: any, state: { exceeded: boolean }, depth: number = 0, limit: number = 2) {
+    if (state.exceeded) {
+      return;
+    }
+
+    if (depth > limit) {
+      console.log('fragment or query depth exceeds limit defined by user configuration, blocking query');
+      state.exceeded = true;
+      return;
+    }
+
+    const selectionSet = selection.selections;
+    selectionSet.forEach((selection: any) => {
+      if (selection.selectionSet) {
+        this.checkDepth(selection.selectionSet, state, depth + 1, limit);
+      }
+    });
   }
 
   private checkSkip(selection: any) {
@@ -425,7 +461,7 @@ const expressRateLimiter = function (config: any) {
   return async (req: Request, res: Response, next: NextFunction) => {
     if(req.body.query) {
       const builtSchema = config.schema
-      const parsedAst = req.body.query
+      const parsedAst = parse(req.body.query)
 
       let variables;
       if(req.body.variables) variables = req.body.variables;
@@ -455,7 +491,7 @@ const expressRateLimiter = function (config: any) {
       // if the user does not want to use redis, the cache will be saved in the "tokenBucket" object
       else if (config.redis !== true) {
         tokenBucket = expressCache.nonRedis(config, complexityScore.complexityScore, tokenBucket, req)
-        if (complexityScore.complexityScore >= tokenBucket[requestIP].tokens) {
+        if (complexityScore.complexityScore >= tokenBucket[requestIP].tokens || complexityScore.excessDepth) {
           if (res.locals.gleiphqlData) {
             res.locals.gleiphqlData.blocked = true
             res.locals.gleiphqlData.complexityLimit = config.complexityLimit

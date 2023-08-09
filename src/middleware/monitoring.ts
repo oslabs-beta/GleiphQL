@@ -31,7 +31,7 @@ const extractObjectTypes = (query: DocumentNode): string[] => {
   });
 
   return objectTypes;
-}; 
+};
 
 // default endpointData
 const endpointData: EndpointData = {
@@ -49,13 +49,13 @@ const endpointData: EndpointData = {
 };
 
 const expressEndpointMonitor = function (config: MonitorConfig) : (req: Request, res: Response, next: NextFunction) => Promise<void> {
-  return async (req: Request, res: Response, next: NextFunction) : Promise<void> => {    
+  return async (req: Request, res: Response, next: NextFunction) : Promise<void> => {
     if (req.body.query) {
       const query: DocumentNode = parse(req.body.query);
-      
+
       if (query.definitions.length > 0 && query.definitions[0].kind === Kind.OPERATION_DEFINITION) {
         const operation: DefinitionNode = query.definitions[0];
-        
+
         // Ensure the operation has a selectionSet
         if (operation.selectionSet) {
           const depth: number = calculateQueryDepth(query.definitions[0].selectionSet.selections);
@@ -66,8 +66,8 @@ const expressEndpointMonitor = function (config: MonitorConfig) : (req: Request,
       if (endpointData.ip.includes('::ffff:')) {
         endpointData.ip = endpointData.ip.replace('::ffff:', '');
       }
-      // when working with proxy servers or load balancers, the IP address may be forwarded 
-      // in a different request header such as X-Forwarded-For or X-Real-IP. In such cases, 
+      // when working with proxy servers or load balancers, the IP address may be forwarded
+      // in a different request header such as X-Forwarded-For or X-Real-IP. In such cases,
       // you would need to check those headers to obtain the original client IP address.
       const host: string | undefined = req.get('host');
       const url: string = `${req.protocol}://${host}${req.originalUrl}`;
@@ -93,10 +93,10 @@ const apolloEndpointMonitor = (config: MonitorConfig) => {
         async willSendResponse(requestContext: any) {
           if (requestContext.operationName !== 'IntrospectionQuery') {
             const query: DocumentNode = requestContext.document;
-    
+
             if (query.definitions.length > 0 && query.definitions[0].kind === Kind.OPERATION_DEFINITION) {
               const operation: DefinitionNode = query.definitions[0];
-              
+
               // Ensure the operation has a selectionSet
               if (operation.selectionSet) {
                 const depth: number = calculateQueryDepth(query.definitions[0].selectionSet.selections);
@@ -124,7 +124,7 @@ const apolloEndpointMonitor = (config: MonitorConfig) => {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
-                }, 
+                },
                 body: JSON.stringify(endpointData)
               });
             }

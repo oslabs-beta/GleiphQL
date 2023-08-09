@@ -1,10 +1,51 @@
-import { 
-  buildSchema, 
-  GraphQLSchema, 
-  parse, 
+import {
+  buildSchema,
+  GraphQLSchema,
+  parse,
   TypeInfo,
   DocumentNode
 } from 'graphql';
+
+const testSDLPolymorphism2 = `
+  directive @cost(value: Int) on FIELD_DEFINITION | ARGUMENT_DEFINITION
+  directive @paginationLimit(value: Int) on FIELD_DEFINITION
+
+  type Related {
+    content: [Content!]!
+  }
+
+  interface Content {
+    id: ID!
+    title: String!
+    related: Related
+  }
+
+  type Post implements Content {
+    id: ID! @cost(value: 3)
+    title: String! @cost(value: 4)
+    body: String! @cost(value: 10)
+    tags: [String!]! @cost(value: 5)
+    related: Related
+  }
+
+  type Image implements Content {
+    id: ID! @cost(value: 5)
+    title: String! @cost(value: 6)
+    uri: String! @cost(value: 2)
+    related: Related
+  }
+
+  union UnionContent = Post | Image
+
+  type Query {
+    content: [Content] @paginationLimit(value: 10)
+    posts: [Post] @cost(value: 3) @paginationLimit(value: 10)
+    images: [Image] @cost(value: 5) @paginationLimit(value: 10)
+    related: [Related] @paginationLimit(value: 10)
+    unionContent: [UnionContent] @paginationLimit(value: 10)
+  }
+`
+
 
 const testSDL: string = `
   directive @cost(value: Int) on FIELD_DEFINITION | ARGUMENT_DEFINITION
@@ -88,7 +129,7 @@ const testQueryFrag: string = `
   }
 `;
 
-const builtSchema: GraphQLSchema = buildSchema(testSDLPolymorphism);
+const builtSchema: GraphQLSchema = buildSchema(testSDLPolymorphism2);
 const parsedAst: DocumentNode = parse(testQueryPolymorphism);
 const schemaType: TypeInfo = new TypeInfo(builtSchema);
 const pmTEST = {
