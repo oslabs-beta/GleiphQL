@@ -50,8 +50,6 @@ const endpointData: EndpointData = {
 
 const expressEndpointMonitor = function (config: MonitorConfig) : (req: Request, res: Response, next: NextFunction) => Promise<void> {
   return async (req: Request, res: Response, next: NextFunction) : Promise<void> => {
-const expressEndpointMonitor = function (config: MonitorConfig) : (req: Request, res: Response, next: NextFunction) => Promise<void> {
-  return async (req: Request, res: Response, next: NextFunction) : Promise<void> => {
     // default endpointData
     const endpointData: EndpointData = {
       depth: 0,
@@ -151,4 +149,4 @@ const apolloEndpointMonitor = (config: MonitorConfig) => {
   }
 };
 
-export  { expressEndpointMonitor, apolloEndpointMonitor };
+export  { expressEndpointMonitor, apolloEndpointMonitor }
