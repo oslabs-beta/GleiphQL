@@ -80,12 +80,17 @@ class ComplexityAnalysis {
   private slicingArgs: string[] = ['limit', 'first', 'last']
   private allowedDirectives: string[] = ['skip', 'include']
   private excessDepth: boolean = false;
+  private defaultPaginationLimit: number = 10;
+  private defaultDepthLimit: number = 10;
+  private depth: number = 1;
 
   constructor(schema: GraphQLSchema, parsedAst: DocumentNode, config: any, variables: any) {
     this.config = config;
     this.parsedAst = parsedAst;
     this.schema = schema
     this.variables = variables;
+    this.defaultPaginationLimit = this.config.paginationLimit
+    this.defaultDepthLimit = this.config.maxDepth
   }
 
   traverseAST () {
@@ -119,7 +124,7 @@ class ComplexityAnalysis {
               const typeCondition = fragDef.typeCondition.name.value
               const type = this.schema.getType(typeCondition);
               selectionSet = fragDef.selectionSet;
-              const fragDepthState = {exceeded: false};
+              const fragDepthState = {exceeded: false, depth: this.depth};
               const fragDepth = this.checkDepth(selectionSet, fragDepthState);
               if(fragDepthState.exceeded) {
                 console.log('exceeded maximum user-defined depth on fragment def')
@@ -142,13 +147,14 @@ class ComplexityAnalysis {
               const rootType = this.schema.getQueryType();
               if(operationType === 'query') selectionSet = operationDef.selectionSet;
               // console.log('selectionSet?', selectionSet)
-              const queryDepthState = {exceeded: false};
+              const queryDepthState = {exceeded: false, depth: this.depth};
               const queryDepth = this.checkDepth(selectionSet, queryDepthState)
               if(queryDepthState.exceeded) {
                 console.log('exceeded maximum user-defined depth on query')
                 this.excessDepth = true;
                 return;
               }
+              this.depth = queryDepthState.depth;
               const totalCost = this.resolveSelectionSet(selectionSet, rootType, schemaType, baseMult, [node], node, fragDefStore)
               this.typeComplexity += totalCost;
             }
@@ -162,7 +168,7 @@ class ComplexityAnalysis {
 
     this.complexityScore = this.typeComplexity;
 
-    return {complexityScore: this.complexityScore, typeComplexity: this.typeComplexity, excessDepth: this.excessDepth};
+    return {complexityScore: this.complexityScore, typeComplexity: this.typeComplexity, excessDepth: this.excessDepth, depth: this.depth};
   }
 
   private resolveSelectionSet(selectionSet: any, objectType: any, schemaType: TypeInfo, mult: number = 1, ancestors : any[], document: DocumentNode, fragDefs: Record<string, any>) {
@@ -249,7 +255,7 @@ class ComplexityAnalysis {
 
         if(skip === false) costDirective.costDirective ? cost += Number(costDirective.costDirective) * mult : cost += mult;
         // console.log('type of argCosts', typeof argumentCosts);
-        if(isListType(nullableType)) costDirective.paginationLimit ? newMult *= costDirective.paginationLimit : newMult *= this.config.paginationLimit
+        if(isListType(nullableType)) costDirective.paginationLimit ? newMult *= costDirective.paginationLimit : newMult *= this.defaultPaginationLimit
         if(isListType(nullableType) && slicingArguments.length) slicingArguments[0].argumentValue ? newMult = mult * slicingArguments[0].argumentValue : newMult = newMult;
         console.log('newMult?', newMult)
 
@@ -283,20 +289,23 @@ class ComplexityAnalysis {
     return cost;
   }
 
-  private checkDepth(selection: any, state: { exceeded: boolean }, depth: number = 0, limit: number = 2) {
+  private checkDepth(selection: any, state: { exceeded: boolean, depth: number }, depth: number = 1, limit: number = this.defaultDepthLimit) {
     if (state.exceeded) {
       return;
     }
 
     if (depth > limit) {
       console.log('fragment or query depth exceeds limit defined by user configuration, blocking query');
+      state.depth = depth;
       state.exceeded = true;
       return;
     }
 
     const selectionSet = selection.selections;
     selectionSet.forEach((selection: any) => {
+      // console.log('DEPTH LIMIT?', limit)
       if (selection.selectionSet) {
+        state.depth = depth;
         this.checkDepth(selection.selectionSet, state, depth + 1, limit);
       }
     });
@@ -496,6 +505,7 @@ const expressRateLimiter = function (config: any) {
             res.locals.gleiphqlData.blocked = true
             res.locals.gleiphqlData.complexityLimit = config.complexityLimit
             res.locals.gleiphqlData.complexityScore = complexityScore
+            res.locals.gleiphqlData.depth = complexityScore.depth
             sendData(res.locals.gleiphqlData)
           }
           const error = {
@@ -559,6 +569,7 @@ const apolloRateLimiter = (config: any) => {
             const complexityScore = analysis.traverseAST();
             requestContext.contextValue.complexityScore = complexityScore
             requestContext.contextValue.complexityLimit = config.complexityLimit
+            requestContext.contextValue.depth = {depth: complexityScore.depth, excessDepth: complexityScore.excessDepth}
             console.log('This is the type complexity', complexityScore.typeComplexity);
             console.log('This is the complexity score:', complexityScore.complexityScore);
 

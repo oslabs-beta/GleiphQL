@@ -52,16 +52,7 @@ const expressEndpointMonitor = function (config: MonitorConfig) : (req: Request,
   return async (req: Request, res: Response, next: NextFunction) : Promise<void> => {
     if (req.body.query) {
       const query: DocumentNode = parse(req.body.query);
-
-      if (query.definitions.length > 0 && query.definitions[0].kind === Kind.OPERATION_DEFINITION) {
-        const operation: DefinitionNode = query.definitions[0];
-
-        // Ensure the operation has a selectionSet
-        if (operation.selectionSet) {
-          const depth: number = calculateQueryDepth(query.definitions[0].selectionSet.selections);
-          endpointData.depth = depth;
-        }
-      }
+      
       endpointData.ip = req.ip;
       if (endpointData.ip.includes('::ffff:')) {
         endpointData.ip = endpointData.ip.replace('::ffff:', '');
@@ -77,6 +68,7 @@ const expressEndpointMonitor = function (config: MonitorConfig) : (req: Request,
       endpointData.objectTypes = extractObjectTypes(query);
       endpointData.email = config.gliephqlUsername;
       endpointData.password = config.gleiphqlPassword;
+      endpointData.depth = res.locals.depth
       if (query.loc) {
         endpointData.queryString = query.loc.source.body;
       }
@@ -94,16 +86,6 @@ const apolloEndpointMonitor = (config: MonitorConfig) => {
           if (requestContext.operationName !== 'IntrospectionQuery') {
             const query: DocumentNode = requestContext.document;
 
-            if (query.definitions.length > 0 && query.definitions[0].kind === Kind.OPERATION_DEFINITION) {
-              const operation: DefinitionNode = query.definitions[0];
-
-              // Ensure the operation has a selectionSet
-              if (operation.selectionSet) {
-                const depth: number = calculateQueryDepth(query.definitions[0].selectionSet.selections);
-                endpointData.depth = depth;
-              }
-            }
-
             endpointData.ip = requestContext.contextValue.clientIP;
             if (endpointData.ip.includes('::ffff:')) {
               endpointData.ip = endpointData.ip.replace('::ffff:', '');
@@ -112,6 +94,7 @@ const apolloEndpointMonitor = (config: MonitorConfig) => {
             endpointData.complexityLimit = requestContext.contextValue.complexityLimit;
             endpointData.url = requestContext.request.http.headers.get('referer');
             endpointData.complexityScore = requestContext.contextValue.complexityScore;
+            endpointData.depth = requestContext.contextValue.depth
             endpointData.timestamp = Date();
             endpointData.objectTypes = extractObjectTypes(query);
             endpointData.email = config.gliephqlUsername;
