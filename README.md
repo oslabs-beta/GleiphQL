@@ -43,8 +43,8 @@ import { ApolloServer } from '@apollo/server';
 
 // Configuration for the expressEndpointMonitor middleware.
 const monitorConfig = {
-  gliephqlUsername: process.env.GLEIPHQL_USERNAME,
-  gliephqlPassword: process.env.GLEIPHQL_PASSWORD,
+  gleiphqlUsername: process.env.GLEIPHQL_USERNAME,
+  gleiphqlPassword: process.env.GLEIPHQL_PASSWORD,
 };
 
 // Apply the apolloEndpointMonitor plugin along with the apolloRateLimiter middleware.
@@ -64,8 +64,8 @@ console.log(`🚀 Server ready at ${url}`);
 ```
 
 The `apolloEndpointMonitor` plugin takes a configuration object with the following properties:
-* `gliephqlUsername`: The username to access the web application where the metrics will be displayed.
-* `gliephqlPassword`: The password for the web application authentication.
+* `gleiphqlUsername`: The username to access the web application where the metrics will be displayed.
+* `gleiphqlPassword`: The password for the web application authentication.
 
 ## Express Installation and Usage
 If you would like to monitor your endpoint with Express, follow the instructions in this section. The `expressEndpointMonitor` middleware is intended to be used alongside the `expressRateLimiter` middleware, with the expressRateLimiter middleware placed AFTER the expressEndpointMonitor middleware in the middleware chain.
@@ -85,8 +85,8 @@ const app = express();
 
 // Configuration for the expressEndpointMonitor middleware.
 const monitorConfig = {
-  gliephqlUsername: process.env.GLEIPHQL_USERNAME,
-  gliephqlPassword: process.env.GLEIPHQL_PASSWORD,
+  gleiphqlUsername: process.env.GLEIPHQL_USERNAME,
+  gleiphqlPassword: process.env.GLEIPHQL_PASSWORD,
 };
 
 // Apply the expressEndpointMonitor middleware before the expressRateLimiter middleware.
@@ -102,8 +102,8 @@ app.listen(3000, () => {
 ```
 
 The `expressEndpointMonitor` middleware takes a configuration object with the following properties:
-* `gliephqlUsername`: The username to access the web application where the metrics will be displayed.
-* `gliephqlPassword`: The password for the web application authentication.
+* `gleiphqlUsername`: The username to access the web application where the metrics will be displayed.
+* `gleiphqlPassword`: The password for the web application authentication.
 
 ## Contributing
 If you find any issues or have suggestions for improvements, please feel free to open an issue or submit a pull request on our GitHub repository.
