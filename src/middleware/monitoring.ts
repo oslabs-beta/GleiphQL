@@ -3,18 +3,6 @@ import { parse, visit, FieldNode, Kind, DocumentNode, DefinitionNode } from 'gra
 import fetch from 'node-fetch';
 import { MonitorConfig, EndpointData } from '../types';
 
-// function to calulate query depth
-const calculateQueryDepth = (selections: any): number => {
-  let maxDepth: number = 0;
-  for (const selection of selections) {
-    if (selection.selectionSet) {
-      const currentDepth: number = calculateQueryDepth(selection.selectionSet.selections);
-      maxDepth = Math.max(maxDepth, currentDepth + 1);
-    }
-  }
-  return maxDepth;
-};
-
 // function to find all object types
 const extractObjectTypes = (query: DocumentNode): string[] => {
   const objectTypes: string[] = [];
@@ -31,10 +19,25 @@ const extractObjectTypes = (query: DocumentNode): string[] => {
   });
 
   return objectTypes;
-}; 
+};
+
+// default endpointData
+const endpointData: EndpointData = {
+  depth: 0,
+  ip: '',
+  url: '',
+  timestamp: '',
+  objectTypes: {},
+  queryString: '',
+  complexityScore: 0,
+  blocked: false,
+  complexityLimit: 0,
+  email: '',
+  password: '',
+};
 
 const expressEndpointMonitor = function (config: MonitorConfig) : (req: Request, res: Response, next: NextFunction) => Promise<void> {
-  return async (req: Request, res: Response, next: NextFunction) : Promise<void> => {  
+  return async (req: Request, res: Response, next: NextFunction) : Promise<void> => {
     // default endpointData
     const endpointData: EndpointData = {
       depth: 0,
@@ -48,25 +51,16 @@ const expressEndpointMonitor = function (config: MonitorConfig) : (req: Request,
       complexityLimit: 0,
       email: '',
       password: '',
-    };  
+    };
     if (req.body.query) {
       const query: DocumentNode = parse(req.body.query);
-      
-      if (query.definitions.length > 0 && query.definitions[0].kind === Kind.OPERATION_DEFINITION) {
-        const operation: DefinitionNode = query.definitions[0];
-        
-        // Ensure the operation has a selectionSet
-        if (operation.selectionSet) {
-          const depth: number = calculateQueryDepth(query.definitions[0].selectionSet.selections);
-          endpointData.depth = depth;
-        }
-      }
+
       endpointData.ip = req.ip;
       if (endpointData.ip.includes('::ffff:')) {
         endpointData.ip = endpointData.ip.replace('::ffff:', '');
       }
-      // when working with proxy servers or load balancers, the IP address may be forwarded 
-      // in a different request header such as X-Forwarded-For or X-Real-IP. In such cases, 
+      // when working with proxy servers or load balancers, the IP address may be forwarded
+      // in a different request header such as X-Forwarded-For or X-Real-IP. In such cases,
       // you would need to check those headers to obtain the original client IP address.
       const host: string | undefined = req.get('host');
       const url: string = `${req.protocol}://${host}${req.originalUrl}`;
@@ -76,6 +70,7 @@ const expressEndpointMonitor = function (config: MonitorConfig) : (req: Request,
       endpointData.objectTypes = extractObjectTypes(query);
       endpointData.email = config.gleiphqlUsername;
       endpointData.password = config.gleiphqlPassword;
+      // endpointData.depth = res.locals.complexityScore.depth.depth
       if (query.loc) {
         endpointData.queryString = query.loc.source.body;
       }
@@ -106,22 +101,16 @@ const apolloEndpointMonitor = (config: MonitorConfig) => {
           };
           if (requestContext.operationName !== 'IntrospectionQuery') {
             const query: DocumentNode = requestContext.document;
-    
-            if (query.definitions.length > 0 && query.definitions[0].kind === Kind.OPERATION_DEFINITION) {
-              const operation: DefinitionNode = query.definitions[0];
-              
-              // Ensure the operation has a selectionSet
-              if (operation.selectionSet) {
-                const depth: number = calculateQueryDepth(query.definitions[0].selectionSet.selections);
-                endpointData.depth = depth;
-              }
-            }
 
             endpointData.ip = requestContext.contextValue.clientIP;
             if (endpointData.ip.includes('::ffff:')) {
               endpointData.ip = endpointData.ip.replace('::ffff:', '');
             }
-            if (requestContext.contextValue.blocked) endpointData.blocked = requestContext.contextValue.blocked;
+            endpointData.depth = requestContext.contextValue.depth.depth
+            if (requestContext.contextValue.blocked) {
+              endpointData.blocked = requestContext.contextValue.blocked;
+              endpointData.depth ++;
+            }
             endpointData.complexityLimit = requestContext.contextValue.complexityLimit;
             endpointData.url = requestContext.request.http.headers.get('referer');
             endpointData.complexityScore = requestContext.contextValue.complexityScore;
@@ -137,7 +126,7 @@ const apolloEndpointMonitor = (config: MonitorConfig) => {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
-                }, 
+                },
                 body: JSON.stringify(endpointData)
               });
             }
@@ -151,4 +140,4 @@ const apolloEndpointMonitor = (config: MonitorConfig) => {
   }
 };
 
-export  { expressEndpointMonitor, apolloEndpointMonitor };
+export  { expressEndpointMonitor, apolloEndpointMonitor }

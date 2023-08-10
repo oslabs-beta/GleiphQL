@@ -13,7 +13,8 @@ export interface RateLimitConfig {
   schema: GraphQLSchema,
   refillTime: number,
   refillAmount: number,
-  redis?: boolean
+  redis?: boolean,
+  maxDepth: number
 };
 
 export interface ApolloConfig {
@@ -21,7 +22,8 @@ export interface ApolloConfig {
   paginationLimit: number,
   refillTime: number,
   refillAmount: number,
-  redis?: boolean
+  redis?: boolean,
+  maxDepth: number
 };
 
 export interface MonitorConfig {

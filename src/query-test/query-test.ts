@@ -53,7 +53,8 @@ const spacexConfig: RateLimitConfig = {
   schema: spaceXSchema,
   refillTime: 300000,   // 5 minutes
   refillAmount: 1000,
-  redis: false
+  redis: false,
+  maxDepth: 5
 }
 
 const swapiConfig: RateLimitConfig = {
@@ -62,7 +63,8 @@ const swapiConfig: RateLimitConfig = {
   schema: swapiSchema,
   refillTime: 300000,   // 5 minutes
   refillAmount: 1000,
-  redis: false
+  redis: false,
+  maxDepth: 1,
 }
 
 const countriesConfig: RateLimitConfig = {
@@ -71,7 +73,8 @@ const countriesConfig: RateLimitConfig = {
   schema: countriesSchema,
   refillTime: 86400000,   // 24 hours
   refillAmount: 3000,
-  redis: false
+  redis: false,
+  maxDepth: 5
 }
 
 const pmConfig: RateLimitConfig = {
@@ -80,7 +83,8 @@ const pmConfig: RateLimitConfig = {
   schema: pmTEST.builtSchema,
   refillTime: 300000,   // 5 minutes
   refillAmount: 1000,
-  redis: false
+  redis: false,
+  maxDepth: 2
 }
 
 const apolloConfig: ApolloConfig = {
@@ -89,6 +93,7 @@ const apolloConfig: ApolloConfig = {
   refillTime: 300000,   // 5 minutes
   refillAmount: 1000,
   redis: false,
+  maxDepth: 1
 }
 
 app.use(express.json());
@@ -112,7 +117,7 @@ await apolloServer.start();
 // });
 // console.log(`🚀 Server ready at ${url}`);
 
-app.use('/apollo', expressMiddleware(apolloServer, {
+app.use('/graphql', expressMiddleware(apolloServer, {
     context: gleiphqlContext
 }))
 app.use('/spacex', expressEndpointMonitor(monitorConfig), expressRateLimiter(spacexConfig), spacex);

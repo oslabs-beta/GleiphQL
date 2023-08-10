@@ -39,6 +39,7 @@ import graphql from 'graphql';
 import fetch from 'node-fetch';
 import expressCache from './express-cache.js';
 import apolloCache from './apollo-cache.js';
+import { TimeSeriesAggregationType } from 'redis';
 
 //To-dos
 
@@ -78,12 +79,18 @@ class ComplexityAnalysis {
   private variables: any;
   private slicingArgs: string[] = ['limit', 'first', 'last']
   private allowedDirectives: string[] = ['skip', 'include']
+  private excessDepth: boolean = false;
+  private defaultPaginationLimit: number = 10;
+  private defaultDepthLimit: number = 10;
+  private depth: number = 1;
 
   constructor(schema: GraphQLSchema, parsedAst: DocumentNode, config: any, variables: any) {
     this.config = config;
     this.parsedAst = parsedAst;
     this.schema = schema
     this.variables = variables;
+    this.defaultPaginationLimit = this.config.paginationLimit
+    this.defaultDepthLimit = this.config.maxDepth
   }
 
   traverseAST () {
@@ -106,7 +113,7 @@ class ComplexityAnalysis {
 
           let baseMult = 1;
 
-          const fragDefStore: Record<string, number> = {};
+          const fragDefStore: Record<string, any> = {};
 
           for(let i = 0; i < node.definitions.length; i++) {
             const def = node.definitions[i] as DefinitionNode;
@@ -117,8 +124,15 @@ class ComplexityAnalysis {
               const typeCondition = fragDef.typeCondition.name.value
               const type = this.schema.getType(typeCondition);
               selectionSet = fragDef.selectionSet;
+              const fragDepthState = {exceeded: false, depth: this.depth};
+              const fragDepth = this.checkDepth(selectionSet, fragDepthState);
+              if(fragDepthState.exceeded) {
+                console.log('exceeded maximum user-defined depth on fragment def')
+                this.excessDepth = true;
+                return;
+              }
               const totalFragCost = this.resolveSelectionSet(selectionSet, type, schemaType, baseMult, [node], node, fragDefStore);
-              fragDefStore[typeCondition] = totalFragCost;
+              fragDefStore[typeCondition] = {totalFragCost, fragDepth};
             }
           }
 
@@ -133,6 +147,14 @@ class ComplexityAnalysis {
               const rootType = this.schema.getQueryType();
               if(operationType === 'query') selectionSet = operationDef.selectionSet;
               // console.log('selectionSet?', selectionSet)
+              const queryDepthState = {exceeded: false, depth: this.depth};
+              const queryDepth = this.checkDepth(selectionSet, queryDepthState)
+              if(queryDepthState.exceeded) {
+                console.log('exceeded maximum user-defined depth on query')
+                this.excessDepth = true;
+                return;
+              }
+              this.depth = queryDepthState.depth;
               const totalCost = this.resolveSelectionSet(selectionSet, rootType, schemaType, baseMult, [node], node, fragDefStore)
               this.typeComplexity += totalCost;
             }
@@ -146,10 +168,10 @@ class ComplexityAnalysis {
 
     this.complexityScore = this.typeComplexity;
 
-    return {complexityScore: this.complexityScore, typeComplexity: this.typeComplexity};
+    return {complexityScore: this.complexityScore, typeComplexity: this.typeComplexity, excessDepth: this.excessDepth, depth: this.depth};
   }
 
-  private resolveSelectionSet(selectionSet: any, objectType: any, schemaType: TypeInfo, mult: number = 1, ancestors : any[], document: DocumentNode, fragDefs: Record<string, number>) {
+  private resolveSelectionSet(selectionSet: any, objectType: any, schemaType: TypeInfo, mult: number = 1, ancestors : any[], document: DocumentNode, fragDefs: Record<string, any>) {
     console.log('inside resolveSelectionSet')
     console.log('mult of current selectionSet?', mult);
     let cost = 0;
@@ -172,7 +194,7 @@ class ComplexityAnalysis {
         if(!fragDef) return;
         //@ts-ignore
         const typeName = fragDef.typeCondition.name.value;
-        if(fragDefs[typeName]) fragSpreadCost = fragDefs[typeName];
+        if(fragDefs[typeName]) fragSpreadCost = fragDefs[typeName].totalFragCost;
 
         fragStore[fragName] = fragSpreadCost * fragSpreadMult;
         console.log('fragSpreadCost?', fragSpreadCost);
@@ -212,6 +234,7 @@ class ComplexityAnalysis {
         let newMult = mult;
 
         const fieldDef = objectType.getFields()[fieldName];
+        if(!fieldDef) return;
         const fieldType = fieldDef.type;
         const nullableType = getNullableType(fieldType);
         const unwrappedType = getNamedType(fieldType);
@@ -232,7 +255,7 @@ class ComplexityAnalysis {
 
         if(skip === false) costDirective.costDirective ? cost += Number(costDirective.costDirective) * mult : cost += mult;
         // console.log('type of argCosts', typeof argumentCosts);
-        if(isListType(nullableType)) costDirective.paginationLimit ? newMult *= costDirective.paginationLimit : newMult *= this.config.paginationLimit
+        if(isListType(nullableType)) costDirective.paginationLimit ? newMult *= costDirective.paginationLimit : newMult *= this.defaultPaginationLimit
         if(isListType(nullableType) && slicingArguments.length) slicingArguments[0].argumentValue ? newMult = mult * slicingArguments[0].argumentValue : newMult = newMult;
         console.log('newMult?', newMult)
 
@@ -264,6 +287,28 @@ class ComplexityAnalysis {
     if(Object.values(fragStore).length) cost += Object.values(fragStore).reduce((a, b) => Math.max(a, b));
 
     return cost;
+  }
+
+  private checkDepth(selection: any, state: { exceeded: boolean, depth: number }, depth: number = 1, limit: number = this.defaultDepthLimit) {
+    if (state.exceeded) {
+      return;
+    }
+
+    if (depth > limit) {
+      console.log('fragment or query depth exceeds limit defined by user configuration, blocking query');
+      state.depth = depth;
+      state.exceeded = true;
+      return;
+    }
+
+    const selectionSet = selection.selections;
+    selectionSet.forEach((selection: any) => {
+      // console.log('DEPTH LIMIT?', limit)
+      if (selection.selectionSet) {
+        state.depth = depth;
+        this.checkDepth(selection.selectionSet, state, depth + 1, limit);
+      }
+    });
   }
 
   private checkSkip(selection: any) {
@@ -425,7 +470,7 @@ const expressRateLimiter = function (config: any) {
   return async (req: Request, res: Response, next: NextFunction) => {
     if(req.body.query) {
       const builtSchema = config.schema
-      const parsedAst = req.body.query
+      const parsedAst = parse(req.body.query)
 
       let variables;
       if(req.body.variables) variables = req.body.variables;
@@ -455,11 +500,12 @@ const expressRateLimiter = function (config: any) {
       // if the user does not want to use redis, the cache will be saved in the "tokenBucket" object
       else if (config.redis !== true) {
         tokenBucket = expressCache.nonRedis(config, complexityScore.complexityScore, tokenBucket, req)
-        if (complexityScore.complexityScore >= tokenBucket[requestIP].tokens) {
+        if (complexityScore.complexityScore >= tokenBucket[requestIP].tokens || complexityScore.excessDepth === true) {
           if (res.locals.gleiphqlData) {
             res.locals.gleiphqlData.blocked = true
             res.locals.gleiphqlData.complexityLimit = config.complexityLimit
             res.locals.gleiphqlData.complexityScore = complexityScore
+            res.locals.gleiphqlData.depth = complexityScore.depth
             sendData(res.locals.gleiphqlData)
           }
           const error = {
@@ -469,8 +515,10 @@ const expressRateLimiter = function (config: any) {
                 extensions: {
                   cost: {
                     requestedQueryCost: complexityScore.complexityScore,
+                    requestedQueryDepth: (complexityScore.depth + 1),
                     currentTokensAvailable:  Number(tokenBucket[requestIP].tokens.toFixed(2)),
                     maximumTokensAvailable: config.complexityLimit,
+                    queryDepthLimit: config.maxDepth,
                   },
                   responseDetails: {
                     status: 429,
@@ -490,6 +538,7 @@ const expressRateLimiter = function (config: any) {
         if (res.locals.gleiphqlData) {
           res.locals.gleiphqlData.complexityLimit = config.complexityLimit
           res.locals.gleiphqlData.complexityScore = complexityScore
+          res.locals.gleiphqlData.depth = complexityScore.depth
           sendData(res.locals.gleiphqlData)
         }
       }
@@ -523,6 +572,7 @@ const apolloRateLimiter = (config: any) => {
             const complexityScore = analysis.traverseAST();
             requestContext.contextValue.complexityScore = complexityScore
             requestContext.contextValue.complexityLimit = config.complexityLimit
+            requestContext.contextValue.depth = {depth: complexityScore.depth, excessDepth: complexityScore.excessDepth}
             console.log('This is the type complexity', complexityScore.typeComplexity);
             console.log('This is the complexity score:', complexityScore.complexityScore);
 
@@ -534,15 +584,17 @@ const apolloRateLimiter = (config: any) => {
             else if (config.redis !== true) {
               tokenBucket = apolloCache.nonRedis(config, complexityScore.complexityScore, tokenBucket)
 
-              if (complexityScore.complexityScore >= tokenBucket[requestIP].tokens) {
+              if (complexityScore.complexityScore >= tokenBucket[requestIP].tokens || complexityScore.excessDepth === true) {
                 requestContext.contextValue.blocked = true
                 console.log('Complexity of this query is too high');
                 throw new GraphQLError('Complexity of this query is too high', {
                   extensions: {
                     cost: {
                       requestedQueryCost: complexityScore.complexityScore,
+                      requestedQueryDepth: (complexityScore.depth + 1),
                       currentTokensAvailable:  Number(tokenBucket[requestIP].tokens.toFixed(2)),
                       maximumTokensAvailable: config.complexityLimit,
+                      queryDepthLimit: config.maxDepth,
                     }
                   },
                 });
