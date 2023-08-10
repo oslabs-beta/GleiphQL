@@ -1,3 +1,9 @@
+# Summary
+
+This package is intended to be a combined monitoring/rate limiting solution for GraphQL, with pre-query execution static complexity analysis. The primary opinionation of this cost analysis implementation is that the user's schema should be augmented with an @cost directive on relevant non-polymorphic fields and that lists should be provided with an @paginationLimit directive that detail the expected bounds of said list. These directives being applied to the schema are the primary vehicle for user configurability, along with a configuration object that defines default parameters such as whether or not you opt into usage of the monitoring portion of our package, default pagination limits to be applied to lists without an @paginationLimit directive assigned to them, maximum depth etc.
+
+This project derived significant inspiration from this paper by [IBM](https://arxiv.org/abs/2009.05632) and certain aspects of their specification for cost analysis, such as the @cost directive.
+
 # GraphQL Endpoint Monitor
 The GraphQL Endpoint Monitor is a package designed to log and monitor traffic metrics for a GraphQL endpoint. The package is available as a plugin for Apollo server or as an Express Middlware. It sends the collected data to our [Developer Portal](gleiphql.com) for visualization. This package is intended to be used alongside our rate limiter package.
 
@@ -22,7 +28,7 @@ These metrics will be sent to the web application for visualization and monitori
 ## Prerequisites
 1. Signup/login to the [GleiphQL developer portal](gleiphql.com).
 
-2. Add the endpoint URL to your account. Make sure the endpoint url you enter in the developer portal matches the endpoint URL of your graphQL API. 
+2. Add the endpoint URL to your account. Make sure the endpoint url you enter in the developer portal matches the endpoint URL of your graphQL API.
 
 3. Import and configure the [GleiphQL rate-limiting package](https://www.npmjs.com/)
 
@@ -110,11 +116,11 @@ The `expressEndpointMonitor` middleware takes a configuration object with the fo
 
 The GraphQL Rate-limiter is a package that rate-limits incoming queries based on user defined @cost and @paginationLimit directives applied on the schema level. Infinitely recursive queries are handled by a user-defined depth limit. The default value for maximum depth is 10 if not explicitly configured. The package is available as an Express Middleware or as a plugin for Apollo server. This package can be used with or without the monitoring package.
 
-## Prerequisites 
+## Prerequisites
 
 The primary opinionation of this complexity analysis is that the user augments any relevant non-abstract/polymorphic fields and relevant arguments (generally slicing arguments) with a @cost directive. Lists can be augmented with a @paginationLimit directive, or the default paginationLimit defined in the configuration object will be applied to any lists that are encountered.
 
-An example SDL with these specifications is as follows: 
+An example SDL with these specifications is as follows:
 
 ```
       directive @cost(value: Int) on FIELD_DEFINITION | ARGUMENT_DEFINITION
@@ -157,7 +163,7 @@ An example SDL with these specifications is as follows:
 ```
 
 
-Each field is augmented with a @cost directive that assigns a cost to each field of the schema based on user input. The @cost directive is strictly there to ensure the cost data is accessible to the complexity analysis portion of the package, it should have no functionality assigned to it beyond that. Without these directives a default value of 1 will be applied to each field. While the cost analysis will still run without augmenting the given schema, the results may not be usable as a heuristic for applying pre-query execution rate-limiting. 
+Each field is augmented with a @cost directive that assigns a cost to each field of the schema based on user input. The @cost directive is strictly there to ensure the cost data is accessible to the complexity analysis portion of the package, it should have no functionality assigned to it beyond that. Without these directives a default value of 1 will be applied to each field. While the cost analysis will still run without augmenting the given schema, the results may not be usable as a heuristic for applying pre-query execution rate-limiting.
 
 ## Express Installation and Usage
 
