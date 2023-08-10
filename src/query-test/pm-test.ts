@@ -6,7 +6,7 @@ import {
   DocumentNode
 } from 'graphql';
 
-const testSDLPolymorphism2 = `
+const testSDLPolymorphism2: string = `
   directive @cost(value: Int) on FIELD_DEFINITION | ARGUMENT_DEFINITION
   directive @paginationLimit(value: Int) on FIELD_DEFINITION
 
