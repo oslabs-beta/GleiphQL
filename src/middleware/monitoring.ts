@@ -3,18 +3,6 @@ import { parse, visit, FieldNode, Kind, DocumentNode, DefinitionNode } from 'gra
 import fetch from 'node-fetch';
 import { MonitorConfig, EndpointData } from '../types';
 
-// function to calulate query depth
-const calculateQueryDepth = (selections: any): number => {
-  let maxDepth: number = 0;
-  for (const selection of selections) {
-    if (selection.selectionSet) {
-      const currentDepth: number = calculateQueryDepth(selection.selectionSet.selections);
-      maxDepth = Math.max(maxDepth, currentDepth + 1);
-    }
-  }
-  return maxDepth;
-};
-
 // function to find all object types
 const extractObjectTypes = (query: DocumentNode): string[] => {
   const objectTypes: string[] = [];
@@ -82,7 +70,7 @@ const expressEndpointMonitor = function (config: MonitorConfig) : (req: Request,
       endpointData.objectTypes = extractObjectTypes(query);
       endpointData.email = config.gleiphqlUsername;
       endpointData.password = config.gleiphqlPassword;
-      endpointData.depth = res.locals.depth
+      endpointData.depth = res.locals.complexityScore.depth.depth
       if (query.loc) {
         endpointData.queryString = query.loc.source.body;
       }
@@ -122,7 +110,7 @@ const apolloEndpointMonitor = (config: MonitorConfig) => {
             endpointData.complexityLimit = requestContext.contextValue.complexityLimit;
             endpointData.url = requestContext.request.http.headers.get('referer');
             endpointData.complexityScore = requestContext.contextValue.complexityScore;
-            endpointData.depth = requestContext.contextValue.depth
+            endpointData.depth = requestContext.contextValue.depth.depth
             endpointData.timestamp = Date();
             endpointData.objectTypes = extractObjectTypes(query);
             endpointData.email = config.gleiphqlUsername;

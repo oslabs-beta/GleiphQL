@@ -500,7 +500,7 @@ const expressRateLimiter = function (config: any) {
       // if the user does not want to use redis, the cache will be saved in the "tokenBucket" object
       else if (config.redis !== true) {
         tokenBucket = expressCache.nonRedis(config, complexityScore.complexityScore, tokenBucket, req)
-        if (complexityScore.complexityScore >= tokenBucket[requestIP].tokens || complexityScore.excessDepth) {
+        if (complexityScore.complexityScore >= tokenBucket[requestIP].tokens || complexityScore.excessDepth === true) {
           if (res.locals.gleiphqlData) {
             res.locals.gleiphqlData.blocked = true
             res.locals.gleiphqlData.complexityLimit = config.complexityLimit
@@ -536,6 +536,7 @@ const expressRateLimiter = function (config: any) {
         if (res.locals.gleiphqlData) {
           res.locals.gleiphqlData.complexityLimit = config.complexityLimit
           res.locals.gleiphqlData.complexityScore = complexityScore
+          res.locals.gleiphqlData.depth = complexityScore.depth
           sendData(res.locals.gleiphqlData)
         }
       }
@@ -581,13 +582,14 @@ const apolloRateLimiter = (config: any) => {
             else if (config.redis !== true) {
               tokenBucket = apolloCache.nonRedis(config, complexityScore.complexityScore, tokenBucket)
 
-              if (complexityScore.complexityScore >= tokenBucket[requestIP].tokens) {
+              if (complexityScore.complexityScore >= tokenBucket[requestIP].tokens || complexityScore.excessDepth === true) {
                 requestContext.contextValue.blocked = true
                 console.log('Complexity of this query is too high');
                 throw new GraphQLError('Complexity of this query is too high', {
                   extensions: {
                     cost: {
                       requestedQueryCost: complexityScore.complexityScore,
+                      requestedQueryDepth: complexityScore.depth,
                       currentTokensAvailable:  Number(tokenBucket[requestIP].tokens.toFixed(2)),
                       maximumTokensAvailable: config.complexityLimit,
                     }
