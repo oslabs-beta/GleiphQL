@@ -70,7 +70,7 @@ const expressEndpointMonitor = function (config: MonitorConfig) : (req: Request,
       endpointData.objectTypes = extractObjectTypes(query);
       endpointData.email = config.gleiphqlUsername;
       endpointData.password = config.gleiphqlPassword;
-      endpointData.depth = res.locals.complexityScore.depth.depth
+      // endpointData.depth = res.locals.complexityScore.depth.depth
       if (query.loc) {
         endpointData.queryString = query.loc.source.body;
       }
@@ -106,11 +106,14 @@ const apolloEndpointMonitor = (config: MonitorConfig) => {
             if (endpointData.ip.includes('::ffff:')) {
               endpointData.ip = endpointData.ip.replace('::ffff:', '');
             }
-            if (requestContext.contextValue.blocked) endpointData.blocked = requestContext.contextValue.blocked;
+            endpointData.depth = requestContext.contextValue.depth.depth
+            if (requestContext.contextValue.blocked) {
+              endpointData.blocked = requestContext.contextValue.blocked;
+              endpointData.depth ++;
+            }
             endpointData.complexityLimit = requestContext.contextValue.complexityLimit;
             endpointData.url = requestContext.request.http.headers.get('referer');
             endpointData.complexityScore = requestContext.contextValue.complexityScore;
-            endpointData.depth = requestContext.contextValue.depth.depth
             endpointData.timestamp = Date();
             endpointData.objectTypes = extractObjectTypes(query);
             endpointData.email = config.gleiphqlUsername;

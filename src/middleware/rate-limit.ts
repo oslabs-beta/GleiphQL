@@ -515,8 +515,10 @@ const expressRateLimiter = function (config: any) {
                 extensions: {
                   cost: {
                     requestedQueryCost: complexityScore.complexityScore,
+                    requestedQueryDepth: (complexityScore.depth + 1),
                     currentTokensAvailable:  Number(tokenBucket[requestIP].tokens.toFixed(2)),
                     maximumTokensAvailable: config.complexityLimit,
+                    queryDepthLimit: config.maxDepth,
                   },
                   responseDetails: {
                     status: 429,
@@ -589,9 +591,10 @@ const apolloRateLimiter = (config: any) => {
                   extensions: {
                     cost: {
                       requestedQueryCost: complexityScore.complexityScore,
-                      requestedQueryDepth: complexityScore.depth,
+                      requestedQueryDepth: (complexityScore.depth + 1),
                       currentTokensAvailable:  Number(tokenBucket[requestIP].tokens.toFixed(2)),
                       maximumTokensAvailable: config.complexityLimit,
+                      queryDepthLimit: config.maxDepth,
                     }
                   },
                 });
