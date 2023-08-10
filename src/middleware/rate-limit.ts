@@ -402,7 +402,7 @@ class ComplexityAnalysis {
 const sendData = async (endpointData: any) => {
   console.log('Monitor data: ', endpointData)
   try {
-    const response = await fetch('http://localhost:3000/api/data', {
+    const response = await fetch('https://gleiphql.azurewebsites.net/api/data', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
