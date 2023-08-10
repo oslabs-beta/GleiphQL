@@ -101,24 +101,22 @@ class ComplexityAnalysis {
 
       const schemaType = new TypeInfo(this.schema)
 
+      //traverse selection sets propagating from document node
+
       visit(this.parsedAst, visitWithTypeInfo(schemaType, {
-        //use arrow function here within higher-order function in order to allow access to surrounding scope
         enter: (node, key, parent,  path, ancestors) => {
 
           if(node.kind === Kind.DOCUMENT) {
-          console.log('ENTERING DOCUMENT NODE');
-          console.log('DOCUMENT NODE', node);
-          //casing for fragment definition, need to maintain parentTypeStack, and acknowledge fragDef exists
-          //but otherwise disregard
 
           let baseMult = 1;
 
           const fragDefStore: Record<string, any> = {};
 
+          //define cost of fragment spreads
+
           for(let i = 0; i < node.definitions.length; i++) {
             const def = node.definitions[i] as DefinitionNode;
             if(def.kind === 'FragmentDefinition'){
-              console.log('INSIDE FRAGMENT DEFINITIONS')
               let selectionSet;
               const fragDef = def as FragmentDefinitionNode;
               const typeCondition = fragDef.typeCondition.name.value
@@ -127,7 +125,6 @@ class ComplexityAnalysis {
               const fragDepthState = {exceeded: false, depth: this.depth};
               const fragDepth = this.checkDepth(selectionSet, fragDepthState);
               if(fragDepthState.exceeded) {
-                console.log('exceeded maximum user-defined depth on fragment def')
                 this.excessDepth = true;
                 return;
               }
@@ -136,7 +133,6 @@ class ComplexityAnalysis {
             }
           }
 
-          console.log('fragment spread costs?', fragDefStore);
 
           for(let i = 0; i < node.definitions.length; i++) {
             const def = node.definitions[i] as DefinitionNode;
@@ -146,11 +142,9 @@ class ComplexityAnalysis {
               const operationType = operationDef.operation;
               const rootType = this.schema.getQueryType();
               if(operationType === 'query') selectionSet = operationDef.selectionSet;
-              // console.log('selectionSet?', selectionSet)
               const queryDepthState = {exceeded: false, depth: this.depth};
               const queryDepth = this.checkDepth(selectionSet, queryDepthState)
               if(queryDepthState.exceeded) {
-                console.log('exceeded maximum user-defined depth on query')
                 this.excessDepth = true;
                 return;
               }
@@ -159,8 +153,6 @@ class ComplexityAnalysis {
               this.typeComplexity += totalCost;
             }
           }
-          //must create interface casing, grabbing implememting types if fragment spreads are used to query an interface
-          //TO-DO
             }
           },
     }))
@@ -171,12 +163,11 @@ class ComplexityAnalysis {
     return {complexityScore: this.complexityScore, typeComplexity: this.typeComplexity, excessDepth: this.excessDepth, depth: this.depth};
   }
 
+  //helper function recursively resolves the cost of each selection set
   private resolveSelectionSet(selectionSet: any, objectType: any, schemaType: TypeInfo, mult: number = 1, ancestors : any[], document: DocumentNode, fragDefs: Record<string, any>) {
-    console.log('inside resolveSelectionSet')
-    console.log('mult of current selectionSet?', mult);
+
     let cost = 0;
     const fragStore: Record<string, number> = {};
-    // console.log('ancestors?', ancestors);
 
     selectionSet.selections.forEach((selection: any) => {
 
@@ -184,12 +175,8 @@ class ComplexityAnalysis {
         let fragSpreadMult = mult;
         let fragSpreadCost = 0;
         const fragName = selection.name.value;
-        console.log('This is the node:', fragName);
         //@ts-ignore
-
-        // console.log('doc?', document);
         const fragDef = document?.definitions.find(def => def.kind === 'FragmentDefinition' && def.name.value === fragName);
-        // console.log('fragDef?', fragDef);
         //@ts-ignore
         if(!fragDef) return;
         //@ts-ignore
@@ -197,14 +184,9 @@ class ComplexityAnalysis {
         if(fragDefs[typeName]) fragSpreadCost = fragDefs[typeName].totalFragCost;
 
         fragStore[fragName] = fragSpreadCost * fragSpreadMult;
-        console.log('fragSpreadCost?', fragSpreadCost);
       }
 
       if(selection.kind === Kind.INLINE_FRAGMENT) {
-        console.log('ancestors in inline-frag?', ancestors)
-        //need to resolve in-line fragments within an interface
-        //some casing here is causing it to fully aggregate the cost of the potential interface resolutions
-        //rather than picking the largest
         const typeName = selection.typeCondition.name.value;
         const type = this.schema.getType(typeName);
 
@@ -222,15 +204,10 @@ class ComplexityAnalysis {
         let checkSkip: Record<string, number | boolean> | undefined;
         let skip: boolean = false;
 
-        // This correctly retrieves values for cost argument, just need to case so that it only runs
-        // if the variable is actually populated then otherwise does other stuff, also probably
-        // move to helper function
         if(this.variables) {
           checkSkip = this.checkSkip(selection);
         }
 
-        console.log('name of node?', fieldName);
-        console.log('CHECK SKIP?', checkSkip);
         let newMult = mult;
 
         const fieldDef = objectType.getFields()[fieldName];
@@ -247,34 +224,25 @@ class ComplexityAnalysis {
         }
 
         if(checkSkip && (checkSkip.skip === true || checkSkip.include === false)) skip = true;
-        // console.log('fieldType?', fieldType)
         const costDirective = this.parseDirectives(fieldDef, 0);
         if(argCosts && argCosts.length) cost += Number(argCosts[0].directiveValue) * mult
 
-        console.log('SKIP???', skip)
-
         if(skip === false) costDirective.costDirective ? cost += Number(costDirective.costDirective) * mult : cost += mult;
-        // console.log('type of argCosts', typeof argumentCosts);
         if(isListType(nullableType)) costDirective.paginationLimit ? newMult *= costDirective.paginationLimit : newMult *= this.defaultPaginationLimit
         if(isListType(nullableType) && slicingArguments.length) slicingArguments[0].argumentValue ? newMult = mult * slicingArguments[0].argumentValue : newMult = newMult;
-        console.log('newMult?', newMult)
+
 
 
         if(subSelection && (isInterfaceType(unwrappedType) || isObjectType(unwrappedType)) || isUnionType(unwrappedType)) {
           const types = isInterfaceType(unwrappedType) || isUnionType(unwrappedType) ? this.schema.getPossibleTypes(unwrappedType) : [unwrappedType];
           const store: Record<string, number> = {};
           ancestors.push(objectType);
-          if(isInterfaceType(unwrappedType)) console.log('SUBSELECTION:', subSelection);
 
-          // console.log('implementingTypes?', types)
           types.forEach(type => {
-            console.log('CURRENT STORE STATE:', store);
             store[type.name] = store[type.name] || 0;
             store[type.name] = Math.max(store[type.name], this.resolveSelectionSet(subSelection, type, schemaType, newMult, ancestors, document, fragDefs));
-            // store[type.name] += this.resolveSelectionSet(subSelection, type, schemaType, newMult, ancestors, document, fragDefs)
           })
 
-          console.log('internal store?', store);
           const maxInterface = Object.values(store).reduce((a, b) => Math.max(a, b));
           cost += maxInterface;
 
@@ -289,13 +257,13 @@ class ComplexityAnalysis {
     return cost;
   }
 
+  //helper recursively finds the depth of fragments/queries, aborts if depth exceeds preconfigured depth limit
   private checkDepth(selection: any, state: { exceeded: boolean, depth: number }, depth: number = 1, limit: number = this.defaultDepthLimit) {
     if (state.exceeded) {
       return;
     }
 
     if (depth > limit) {
-      console.log('fragment or query depth exceeds limit defined by user configuration, blocking query');
       state.depth = depth;
       state.exceeded = true;
       return;
@@ -303,7 +271,6 @@ class ComplexityAnalysis {
 
     const selectionSet = selection.selections;
     selectionSet.forEach((selection: any) => {
-      // console.log('DEPTH LIMIT?', limit)
       if (selection.selectionSet) {
         state.depth = depth;
         this.checkDepth(selection.selectionSet, state, depth + 1, limit);
@@ -311,51 +278,43 @@ class ComplexityAnalysis {
     });
   }
 
+  //finds @skip/@include directives exposed by query and disregards fields as appropriate
   private checkSkip(selection: any) {
     let variables: Record<string, number | boolean> = {};
 
     if(!selection.directives.length) return;
 
     for (let i = 0; i < selection.directives.length; i++) {
-      console.log('IN NODE DIRECTIVES FOR LOOP')
       const directive = selection.directives[i];
       const directiveName = directive.name.value;
 
       if(!this.allowedDirectives.includes(directiveName)) continue;
 
       const directiveArguments = directive.arguments;
-      // console.log('NODE DIRECTIVE ARGUMENTS', directiveArguments);
 
       if(!directiveArguments.length) continue;
       if(directiveArguments[0].value.kind !== 'Variable') continue;
 
       const variable = directiveArguments[0].value.name.value;
-      console.log('VARIABLE NAME?', variable);
-      console.log('VARIABLE STORE?', this.variables)
       if(this.variables[variable] === undefined) {
-        console.log('There is no association in the variable object with for the variable:', variable);
         continue;
       }
-
-      console.log('VARIABLE????', this.variables, 'VARIABLE VALUE????', this.variables[variable]);
 
       if(directiveName === 'skip') variables[directiveName] = this.variables[variable];
       if(directiveName === 'include') variables[directiveName] = this.variables[variable];
     }
 
-    console.log('FINAL VARIABLES DETECTED?', variables)
     return variables;
   }
 
+  //detects and retrieves slicing arguments (first, last etc.)
   private parseSlicingArguments(selection: any) {
-    // console.log('SELECTION?', selection)
     if(!selection.arguments) return;
 
     const argumentDirectives = selection.arguments.flatMap((arg: any) => {
       const argName = arg.name.value;
       let argValue = arg.value.value;
       if(arg.value.kind === 'Variable') {
-        console.log('variable argument detected:', arg.value);
         if(this.variables) argValue = this.variables[arg.value.name.value]
       }
       return {
@@ -364,22 +323,18 @@ class ComplexityAnalysis {
       };
     })
 
-    console.log('ARGVARDIRECTIVES???', argumentDirectives)
-
     return argumentDirectives.filter((arg: any) => {
       if(!this.slicingArgs.includes(arg.argumentName)) {
-        console.log('not a slicing arg')
         return;
       }
       return arg;
     })
   }
 
+  //helper retrieves @cost directives applied to arguments
   private parseArgumentDirectives(fieldDef: GraphQLField<unknown, unknown, any>, args: any[]) {
     if(!fieldDef.astNode?.arguments) return
 
-    //since the directive costs within directives placed in arguments are deeply nested, we have to use flatMap to efficiently extract them
-    //flatMap's under the hood implementation is very similar to the flattenArray things we've done before, it just integrates mapping with that process
     const argumentDirectives = fieldDef.astNode.arguments.flatMap((arg: any) => {
       const argName = arg.name.value;
       return arg.directives?.map((directive: any) => ({
@@ -389,12 +344,11 @@ class ComplexityAnalysis {
         directiveValue: directive.arguments?.find(arg => arg.name.value === 'value')?.value.value,
         }));
       });
-      console.log('argumentDirectives', argumentDirectives);
       const argumentCosts = argumentDirectives.filter((directive: any, index) => (directive.directiveName === 'cost' && args[index].argumentName === directive.argName));
-      console.log('arg costs', argumentCosts);
       return argumentCosts;
   }
 
+  //helper retrieves @cost directives applied to fields
   private parseDirectives(fieldDef: GraphQLField<unknown, unknown, any>, baseVal: number) {
     if(!fieldDef.astNode?.directives) return {costDirective: baseVal, paginationLimit: null};
 
@@ -409,6 +363,7 @@ class ComplexityAnalysis {
     return {costDirective: baseVal, paginationLimit: costPaginationDirectives?.paginationLimit};
   }
 
+  //sub helper for parseDirectives
   private getDirectives(astNodeDirectives: readonly graphql.ConstDirectiveNode[]) {
     const directives: DirectivesInfo[] = astNodeDirectives.map(directives => ({
       name: directives.name,
@@ -418,7 +373,7 @@ class ComplexityAnalysis {
     return directives;
   }
 
-
+  //sub-helper for parseDirectives
   private getCostDirectives(directives: DirectivesInfo[], baseVal: number) {
     if(!directives.length) return
 
@@ -435,9 +390,6 @@ class ComplexityAnalysis {
         if(directives.name === 'paginationLimit' && directives.value) listLimit = directives.value.value;
       })
     }
-
-    console.log('This is the value of baseVal after accounting for directives', baseVal);
-    console.log('This is the paginationLimit assigned by the directives', listLimit);
 
     return {costDirective: baseVal, paginationLimit: listLimit}
   }
