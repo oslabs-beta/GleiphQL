@@ -122,7 +122,7 @@ const apolloEndpointMonitor = (config: MonitorConfig) => {
               endpointData.queryString = query.loc.source.body;
             }
             try {
-              await fetch('http://localhost:3000/api/data', {
+              await fetch('https://gleiphql.azurewebsites.net/api/data', {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',

@@ -57,7 +57,7 @@ const redis = async function (config: any, complexityScore: number, req: Request
     if (res.locals.gleiphqlData) {
       res.locals.gleiphqlData.complexityScore = complexityScore;
       try {
-        await fetch('http://localhost:3000/api/data', {
+        await fetch('https://gleiphql.azurewebsites.net/api/data', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -98,7 +98,7 @@ const redis = async function (config: any, complexityScore: number, req: Request
   if (res.locals.gleiphqlData) {
     res.locals.gleiphqlData.complexityScore = complexityScore;
     try {
-      await fetch('http://localhost:3000/api/data', {
+      await fetch('https://gleiphql.azurewebsites.net/api/data', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
