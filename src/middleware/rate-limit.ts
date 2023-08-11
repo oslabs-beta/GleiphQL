@@ -94,10 +94,7 @@ class ComplexityAnalysis {
   }
 
   traverseAST () {
-    console.log('in traverseAST');
     if (this.parsedAst) {
-
-      console.log('This is the current currMult', this.currMult)
 
       const schemaType = new TypeInfo(this.schema)
 
@@ -251,7 +248,6 @@ class ComplexityAnalysis {
       }
     })
 
-    console.log(fragStore);
     if(Object.values(fragStore).length) cost += Object.values(fragStore).reduce((a, b) => Math.max(a, b));
 
     return cost;
@@ -400,7 +396,6 @@ class ComplexityAnalysis {
 
 // helper function to send data to web-app
 const sendData = async (endpointData: any) => {
-  console.log('Monitor data: ', endpointData)
   try {
     const response = await fetch('https://gleiphql.azurewebsites.net/api/data', {
       method: 'POST',
@@ -438,8 +433,7 @@ const expressRateLimiter = function (config: any) {
 
       const complexityScore = analysis.traverseAST();
 
-      console.log('This is the type complexity', complexityScore.typeComplexity);
-      console.log('This is the complexity score:', complexityScore.complexityScore);
+      console.log('This is the complexity score:', complexityScore);
 
       //returns error if complexity heuristic reads complexity score over limit
       res.locals.complexityScore = complexityScore;
@@ -484,9 +478,7 @@ const expressRateLimiter = function (config: any) {
           res.status(429).json(error);
           return next(Error);
         }
-        console.log('Tokens before subtraction: ', tokenBucket[requestIP].tokens)
         tokenBucket[requestIP].tokens -= complexityScore.complexityScore;
-        console.log('Tokens after subtraction: ', tokenBucket[requestIP].tokens)
         if (res.locals.gleiphqlData) {
           res.locals.gleiphqlData.complexityLimit = config.complexityLimit
           res.locals.gleiphqlData.complexityScore = complexityScore
@@ -525,8 +517,7 @@ const apolloRateLimiter = (config: any) => {
             requestContext.contextValue.complexityScore = complexityScore
             requestContext.contextValue.complexityLimit = config.complexityLimit
             requestContext.contextValue.depth = {depth: complexityScore.depth, excessDepth: complexityScore.excessDepth}
-            console.log('This is the type complexity', complexityScore.typeComplexity);
-            console.log('This is the complexity score:', complexityScore.complexityScore);
+            console.log('This is the complexity score:', complexityScore);
 
             // if the user wants to use redis, a redis client will be created and used as a cache
             if (config.redis === true) {
@@ -552,9 +543,7 @@ const apolloRateLimiter = (config: any) => {
                 });
 
               }
-              console.log('Tokens before subtraction: ', tokenBucket[requestIP].tokens)
               tokenBucket[requestIP].tokens -= complexityScore.complexityScore;
-              console.log('Tokens after subtraction: ', tokenBucket[requestIP].tokens)
             }
           }
         },
