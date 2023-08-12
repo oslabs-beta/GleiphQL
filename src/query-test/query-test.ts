@@ -58,13 +58,13 @@ const spacexConfig: RateLimitConfig = {
 }
 
 const swapiConfig: RateLimitConfig = {
-  complexityLimit: 3000,
+  complexityLimit: 1000,
   paginationLimit: 10,
   schema: swapiSchema,
   refillTime: 300000,   // 5 minutes
   refillAmount: 1000,
   redis: false,
-  maxDepth: 1,
+  maxDepth: 5,
 }
 
 const countriesConfig: RateLimitConfig = {
@@ -93,7 +93,7 @@ const apolloConfig: ApolloConfig = {
   refillTime: 300000,   // 5 minutes
   refillAmount: 1000,
   redis: false,
-  maxDepth: 1
+  maxDepth: 4
 }
 
 app.use(express.json());
@@ -126,5 +126,5 @@ app.use('/countries', expressRateLimiter(countriesConfig), expressEndpointMonito
 app.use('/pmtest', expressEndpointMonitor(monitorConfig), expressRateLimiter(pmConfig), pm);
 
 app.listen(port, () => {
-    console.info(`Server is running on http://localhost:${port}/spacex http://localhost:${port}/starwars http://localhost:${port}/countries`);
+    console.info(`Server is running on http://localhost:${port}/spacex http://localhost:${port}/starwars http://localhost:${port}/graphql`);
 });

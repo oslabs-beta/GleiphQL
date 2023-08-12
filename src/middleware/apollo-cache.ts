@@ -55,9 +55,9 @@ const redis = async function (config: any, complexityScore: number, requestConte
   parsedRequest = JSON.parse(currRequest);
   if (complexityScore >= parsedRequest.tokens) {
     requestContext.contextValue.blocked = true;
-    console.log('Complexity of this query is too high');
+    console.log('Complexity or depth of this query is too high');
     await client.disconnect();
-    throw new GraphQLError('Complexity of this query is too high', {
+    throw new GraphQLError('Complexity or depth of this query is too high', {
       extensions: {
         cost: {
           requestedQueryCost: complexityScore,
@@ -67,9 +67,7 @@ const redis = async function (config: any, complexityScore: number, requestConte
       },
     });
   }
-  console.log('Tokens before subtraction: ', parsedRequest.tokens);
   parsedRequest.tokens -= complexityScore;
-  console.log('Tokens after subtraction: ', parsedRequest.tokens);
   await client.set(requestIP, JSON.stringify(parsedRequest));
 
   // disconnect from the redis client

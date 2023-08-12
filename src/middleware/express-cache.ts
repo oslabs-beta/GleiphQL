@@ -87,14 +87,12 @@ const redis = async function (config: any, complexityScore: number, req: Request
         }
       ]
     }
-    console.log('Complexity of this query is too high');
+    console.log('Complexity or depth of this query is too high');
     await client.disconnect();
     res.status(429).json(error);
     return next(Error);
   }
-  console.log('Tokens before subtraction: ', parsedRequest.tokens);
   parsedRequest.tokens -= complexityScore;
-  console.log('Tokens after subtraction: ', parsedRequest.tokens);
   if (res.locals.gleiphqlData) {
     res.locals.gleiphqlData.complexityScore = complexityScore;
     try {
