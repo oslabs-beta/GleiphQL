@@ -32,7 +32,7 @@ export interface MonitorConfig {
 };
 
 export interface EndpointData {
-  depth: number;
+  depth: number | null;
   ip: string;
   url: string;
   timestamp: string;

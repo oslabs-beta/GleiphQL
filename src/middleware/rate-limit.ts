@@ -40,6 +40,7 @@ import fetch from 'node-fetch';
 import expressCache from './express-cache.js';
 import apolloCache from './apollo-cache.js';
 import { TimeSeriesAggregationType } from 'redis';
+import { infoPrefix } from 'graphql-yoga';
 
 //To-dos
 
@@ -254,12 +255,12 @@ class ComplexityAnalysis {
   }
 
   //helper recursively finds the depth of fragments/queries, aborts if depth exceeds preconfigured depth limit
-  private checkDepth(selection: any, state: { exceeded: boolean, depth: number }, depth: number = 1, limit: number = this.defaultDepthLimit) {
+  private checkDepth(selection: any, state: { exceeded: boolean, depth: number }, depth: number = 2, limit: number = this.defaultDepthLimit) {
     if (state.exceeded) {
       return;
     }
 
-    if (depth > limit) {
+    if (depth > limit + 1) {
       state.depth = depth;
       state.exceeded = true;
       return;
@@ -397,7 +398,7 @@ class ComplexityAnalysis {
 // helper function to send data to web-app
 const sendData = async (endpointData: any) => {
   try {
-    const response = await fetch('https://gleiphql.azurewebsites.net/api/data', {
+    const response = await fetch('http://localhost:3000/api/data', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -451,7 +452,7 @@ const expressRateLimiter = function (config: any) {
             res.locals.gleiphqlData.blocked = true
             res.locals.gleiphqlData.complexityLimit = config.complexityLimit
             res.locals.gleiphqlData.complexityScore = complexityScore
-            res.locals.gleiphqlData.depth = complexityScore.depth
+            complexityScore.excessDepth === true ? res.locals.gleiphqlData.depth =  null : res.locals.gleiphqlData.depth = complexityScore.depth
             sendData(res.locals.gleiphqlData)
           }
           const error = {
@@ -461,9 +462,9 @@ const expressRateLimiter = function (config: any) {
                 extensions: {
                   cost: {
                     requestedQueryCost: complexityScore.complexityScore,
-                    requestedQueryDepth: (complexityScore.depth + 1),
                     currentTokensAvailable:  Number(tokenBucket[requestIP].tokens.toFixed(2)),
                     maximumTokensAvailable: config.complexityLimit,
+                    depthLimitExceeded: complexityScore.excessDepth,
                     queryDepthLimit: config.maxDepth,
                   },
                   responseDetails: {
@@ -474,7 +475,7 @@ const expressRateLimiter = function (config: any) {
               }
             ]
           }
-          console.log('Complexity of this query is too high');
+          console.log('Complexity or depth of this query is too high');
           res.status(429).json(error);
           return next(Error);
         }
@@ -499,7 +500,6 @@ const apolloRateLimiter = (config: any) => {
       return {
         async didResolveOperation(requestContext: any) {
           if (requestContext.operationName !== 'IntrospectionQuery') {
-            console.log('Validation started!');
             const variables = requestContext.variables;
             const builtSchema = requestContext.schema
             const parsedAst = requestContext.document
@@ -529,14 +529,15 @@ const apolloRateLimiter = (config: any) => {
 
               if (complexityScore.complexityScore >= tokenBucket[requestIP].tokens || complexityScore.excessDepth === true) {
                 requestContext.contextValue.blocked = true
-                console.log('Complexity of this query is too high');
-                throw new GraphQLError('Complexity of this query is too high', {
+                if (complexityScore.excessDepth === true) requestContext.contextValue.excessDepth = true 
+                console.log('Complexity or depth of this query is too high');
+                throw new GraphQLError('Complexity or depth of this query is too high', {
                   extensions: {
                     cost: {
                       requestedQueryCost: complexityScore.complexityScore,
-                      requestedQueryDepth: (complexityScore.depth + 1),
                       currentTokensAvailable:  Number(tokenBucket[requestIP].tokens.toFixed(2)),
                       maximumTokensAvailable: config.complexityLimit,
+                      depthLimitExceeded: complexityScore.excessDepth,
                       queryDepthLimit: config.maxDepth,
                     }
                   },

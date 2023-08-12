@@ -5,7 +5,7 @@ This package is intended to be a combined monitoring/rate limiting solution for 
 This project derived significant inspiration from this paper by [IBM](https://arxiv.org/abs/2009.05632) and certain aspects of their specification for cost analysis, such as the @cost directive.
 
 # GraphQL Endpoint Monitor
-The GraphQL Endpoint Monitor is a package designed to log and monitor traffic metrics for a GraphQL endpoint. The package is available as a plugin for Apollo server or as an Express Middlware. It sends the collected data to our [Developer Portal](gleiphql.com) for visualization. This package is intended to be used alongside our rate limiter package.
+The GraphQL Endpoint Monitor is a package designed to log and monitor traffic metrics for a GraphQL endpoint. The package is available as a plugin for Apollo server or as an Express Middlware. It sends the collected data to our [Developer Portal](https://gleiphql.dev) for visualization. This package is intended to be used alongside our rate limiter package.
 
 ## Metrics Collected
 The `apolloEndpointMonitor` plugin and `expressEndpointMonitor` middleware collects the following metrics for each GraphQL request:
@@ -26,11 +26,11 @@ The `apolloEndpointMonitor` plugin and `expressEndpointMonitor` middleware colle
 These metrics will be sent to the web application for visualization and monitoring.
 
 ## Prerequisites
-1. Signup/login to the [GleiphQL developer portal](gleiphql.com).
+1. Signup/login to the [GleiphQL developer portal](https://gleiphql.dev).
 
 2. Add the endpoint URL to your account. Make sure the endpoint url you enter in the developer portal matches the endpoint URL of your graphQL API.
 
-3. Import and configure the [GleiphQL rate-limiting package](https://www.npmjs.com/)
+3. Import and configure the [GleiphQL rate-limiting package](https://www.npmjs.com/package/gleiphql)
 
 ## Apollo Server Installation and Usage
 If you would like to monitor your endpoint with Apollo server, follow the instructions in this section. The `apolloEndpointMonitor` plugin is intended to be used alongside the `apolloRateLimiter` plugin and the `gleiphqlContext` function, with the apolloEndpointMonitor plugin placed alongside the apolloRateLimiter plugin in the Apollo server.
@@ -155,7 +155,7 @@ An example SDL with these specifications is as follows:
 
       type Query {
         content: [Content] @paginationLimit(value: 10)
-        posts(limit: Int @cost(value:10): [Post] @cost(value: 3) @paginationLimit(value: 10)
+        posts(limit: Int @cost(value:10): [Post] @cost(value: 3) @paginationLimit(value: 10))
         images: [Image] @cost(value: 5) @paginationLimit(value: 10)
         related: [Related] @paginationLimit(value: 10)
         unionContent: [UnionContent] @paginationLimit(value: 10)

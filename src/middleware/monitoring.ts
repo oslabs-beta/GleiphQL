@@ -109,7 +109,7 @@ const apolloEndpointMonitor = (config: MonitorConfig) => {
             endpointData.depth = requestContext.contextValue.depth.depth
             if (requestContext.contextValue.blocked) {
               endpointData.blocked = requestContext.contextValue.blocked;
-              endpointData.depth ++;
+              if (requestContext.contextValue.excessDepth) endpointData.depth = null;
             }
             endpointData.complexityLimit = requestContext.contextValue.complexityLimit;
             endpointData.url = requestContext.request.http.headers.get('referer');
