@@ -398,7 +398,7 @@ class ComplexityAnalysis {
 // helper function to send data to web-app
 const sendData = async (endpointData: any) => {
   try {
-    const response = await fetch('http://localhost:3000/api/data', {
+    const response = await fetch('https://gleiphql.azurewebsites.net:3000/api/data', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
